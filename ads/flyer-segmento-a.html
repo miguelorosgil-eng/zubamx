@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZUBA — Flyer Segmento A</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    background: #FF6B35;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+
+  /* ── Logo ── */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-icon span {
+    font-size: 32px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+  .logo-wordmark {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+  }
+
+  /* ── Body ── */
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .tag {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .headline {
+    font-size: 76px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    margin-bottom: 40px;
+  }
+  .headline em {
+    font-style: normal;
+    color: #080808;
+  }
+
+  .agitate {
+    font-size: 26px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.5;
+    max-width: 760px;
+    margin-bottom: 48px;
+  }
+  .agitate strong {
+    color: #fff;
+    font-weight: 800;
+  }
+
+  /* ── Proof bar ── */
+  .proof {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 0;
+  }
+  .proof-item {
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px;
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .proof-number {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+  }
+  .proof-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    border-radius: 50px;
+    padding: 20px 40px;
+  }
+  .cta-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .cta-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .cta-action {
+    font-size: 20px;
+    font-weight: 900;
+    color: #080808;
+  }
+  .cta-sub {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  .url {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-wordmark">ZUBA</span>
+  </div>
+
+  <!-- Body copy (PAS) -->
+  <div class="body">
+    <p class="tag">Para restauranteros en Uber Eats · DiDi · Rappi</p>
+
+    <!-- PROBLEMA -->
+    <h1 class="headline">
+      ¿Tu restaurante<br>está en las plataformas<br>y <em>no vende</em><br>lo que debería?
+    </h1>
+
+    <!-- AGITAR -->
+    <p class="agitate">
+      El problema no es tu comida.<br>
+      Es que el algoritmo <strong>no te está mostrando</strong>.<br>
+      Rating bajo. Fotos malas. Menú sin estructura.<br>
+      Cada pedido que no llega <strong>se lo lleva la competencia</strong>.
+    </p>
+
+    <!-- PRUEBA SOCIAL -->
+    <div class="proof">
+      <div class="proof-item">
+        <span class="proof-number">3.8 → 4.7</span>
+        <span class="proof-label">Rating real</span>
+      </div>
+      <div class="proof-item">
+        <span class="proof-number">×3</span>
+        <span class="proof-label">Conversión con foto HD</span>
+      </div>
+      <div class="proof-item">
+        <span class="proof-number">Top 3</span>
+        <span class="proof-label">Categoría · sin pauta</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (SOLUCIÓN + CTA) -->
+  <div class="footer">
+    <div class="cta">
+      <!-- WhatsApp icon SVG -->
+      <svg class="cta-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="18" cy="18" r="18" fill="#25D366"/>
+        <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+      </svg>
+      <div class="cta-text">
+        <span class="cta-action">Escríbenos gratis</span>
+        <span class="cta-sub">Auditoría sin costo · Sin compromiso</span>
+      </div>
+    </div>
+    <span class="url">zubamx.vercel.app</span>
+  </div>
+
+</body>
+</html>
