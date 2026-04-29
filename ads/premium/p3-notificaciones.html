@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #0A0C10;
+  --orange:   #FF4D00;
+  --orange-glow: rgba(255,77,0,0.45);
+  --green:    #00E676;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.09);
+  --muted:    rgba(255,255,255,0.45);
+  --subtle:   rgba(255,255,255,0.06);
+}
+
+body {
+  width:1080px; height:1350px;
+  background:var(--bg);
+  font-family:'Inter',-apple-system,sans-serif;
+  overflow:hidden; position:relative;
+}
+
+/* depth */
+.bg-radial {
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 700px 500px at 65% 55%, rgba(0,230,118,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 400px at 20% 30%, rgba(255,77,0,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 80% 15%, rgba(0,100,255,0.03) 0%, transparent 55%);
+}
+.bg-scanlines {
+  position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px);
+}
+
+/* ── LOGO ── */
+.logo {
+  position:absolute; top:48px; left:56px; z-index:50;
+  display:flex; align-items:center; gap:14px;
+}
+.logo-icon {
+  width:48px; height:48px; background:var(--orange); border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 1px rgba(255,77,0,0.4),0 0 24px var(--orange-glow),0 0 60px rgba(255,77,0,0.15);
+}
+.logo-icon span { font-size:24px; font-weight:900; color:#fff; }
+.logo-name { font-size:22px; font-weight:900; color:#fff; letter-spacing:5px; }
+.logo-tagline { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+
+/* ── HEADLINE AREA ── */
+.headline-block {
+  position:absolute; top:130px; left:56px; z-index:40; max-width:560px;
+}
+.eyebrow {
+  font-size:12px; font-weight:700; color:var(--orange);
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:14px;
+  display:flex; align-items:center; gap:10px;
+}
+.eyebrow::before { content:''; width:24px; height:2px; background:var(--orange); display:block; }
+.headline {
+  font-size:72px; font-weight:900; color:#fff;
+  line-height:0.9; letter-spacing:-4px; margin-bottom:20px;
+}
+.headline em { color:var(--orange); font-style:normal; text-shadow:0 0 30px var(--orange-glow); }
+.sub {
+  font-size:20px; font-weight:600; color:var(--muted);
+  line-height:1.5; max-width:480px;
+}
+.sub strong { color:#fff; font-weight:800; }
+
+/* ── PHONE MOCKUP ── */
+.phone-scene {
+  position:absolute; right:48px; top:120px; z-index:40;
+  width:320px;
+}
+/* Glow behind phone */
+.phone-glow {
+  position:absolute; inset:-40px;
+  background:radial-gradient(ellipse at 50% 50%, rgba(0,230,118,0.1) 0%, transparent 70%);
+  pointer-events:none;
+}
+.phone {
+  width:320px; height:640px;
+  background:#0d0f14;
+  border-radius:42px;
+  border:2px solid rgba(255,255,255,0.1);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 40px 80px rgba(0,0,0,0.7),
+    inset 0 0 40px rgba(0,0,0,0.4);
+  overflow:hidden; position:relative;
+}
+/* Notch */
+.notch {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:90px; height:26px; background:#0d0f14;
+  border-radius:0 0 16px 16px; z-index:10;
+}
+/* Screen */
+.screen {
+  position:absolute; inset:0; padding:36px 14px 14px;
+  background: linear-gradient(180deg, #0f1318 0%, #0a0d10 100%);
+  overflow:hidden;
+}
+/* App status bar */
+.status-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 6px; margin-bottom:10px;
+}
+.status-time { font-size:11px; font-weight:700; color:rgba(255,255,255,0.7); }
+.status-icons { display:flex; gap:5px; align-items:center; }
+.status-icons span { font-size:10px; color:rgba(255,255,255,0.5); }
+/* App header */
+.app-header {
+  display:flex; align-items:center; gap:8px; margin-bottom:12px;
+  background:rgba(255,255,255,0.04); border-radius:10px; padding:8px 10px;
+}
+.app-icon-ue {
+  width:24px; height:24px; background:#06C167; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:900; color:#fff;
+  box-shadow:0 0 8px rgba(6,193,103,0.4);
+}
+.app-name-s { font-size:11px; font-weight:700; color:rgba(255,255,255,0.8); }
+.live-dot {
+  margin-left:auto; display:flex; align-items:center; gap:4px;
+}
+.live-dot span { width:6px; height:6px; background:#00E676; border-radius:50%; box-shadow:0 0 6px rgba(0,230,118,0.7); }
+.live-dot small { font-size:9px; font-weight:700; color:#00E676; text-transform:uppercase; letter-spacing:1px; }
+
+/* Notif card */
+.notif-card {
+  border-radius:12px; padding:10px 10px;
+  margin-bottom:7px; display:flex; align-items:flex-start; gap:8px;
+  position:relative; overflow:hidden;
+}
+.notif-card.new {
+  background:rgba(0,230,118,0.06);
+  border:1px solid rgba(0,230,118,0.18);
+}
+.notif-card.new::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:var(--green); border-radius:2px 0 0 2px;
+}
+.notif-card.regular {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+}
+.notif-icon {
+  width:30px; height:30px; border-radius:8px;
+  background:radial-gradient(135deg, #c44a00, #1e0600);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; flex-shrink:0;
+}
+.notif-body { flex:1; min-width:0; }
+.notif-title { font-size:10px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.notif-sub { font-size:9px; color:var(--muted); margin-top:1px; }
+.notif-amount { font-size:12px; font-weight:900; color:var(--green); flex-shrink:0; }
+
+/* Revenue block in phone */
+.revenue-block {
+  background:rgba(0,230,118,0.06);
+  border:1px solid rgba(0,230,118,0.15);
+  border-radius:12px; padding:10px 12px;
+  margin-top:2px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.rev-left .rev-lbl { font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.rev-left .rev-val { font-size:18px; font-weight:900; color:var(--green); letter-spacing:-0.5px; }
+.rev-right { text-align:right; }
+.rev-right .rev-lbl { font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.rev-right .rev-change { font-size:14px; font-weight:900; color:var(--green); }
+
+/* Notification counter badge */
+.counter-badge {
+  position:absolute; top:-12px; right:-10px; z-index:60;
+  background:var(--orange); color:#fff;
+  width:38px; height:38px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:900;
+  box-shadow:0 0 0 3px var(--bg), 0 0 20px var(--orange-glow), 0 0 40px rgba(255,77,0,0.2);
+}
+
+/* Floating notification bubble outside phone */
+.float-notif {
+  position:absolute; z-index:45;
+  background:var(--glass-bg); backdrop-filter:blur(10px);
+  border:1px solid var(--glass-border); border-radius:14px;
+  padding:10px 14px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.4);
+  display:flex; align-items:center; gap:10px;
+  white-space:nowrap;
+}
+.fn-icon { font-size:18px; }
+.fn-text { font-size:12px; font-weight:700; color:#fff; }
+.fn-text small { display:block; font-size:10px; font-weight:600; color:var(--muted); margin-top:1px; }
+.fn-val { font-size:14px; font-weight:900; margin-left:4px; }
+.fn-val.green { color:var(--green); }
+.fn-val.orange { color:var(--orange); }
+
+/* ── METRIC STRIP ── */
+.metric-strip {
+  position:absolute; top:820px; left:56px; right:56px; z-index:40;
+  display:flex; gap:12px;
+}
+.ms-card {
+  flex:1; background:var(--glass-bg); backdrop-filter:blur(10px);
+  border:1px solid var(--glass-border); border-radius:16px;
+  padding:20px 16px; text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,0.3);
+  position:relative; overflow:hidden;
+}
+.ms-card::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+  border-radius:0 0 16px 16px;
+}
+.ms-card.c-orange::before { background:var(--orange); box-shadow:0 0 10px var(--orange-glow); }
+.ms-card.c-green::before { background:var(--green); box-shadow:0 0 10px rgba(0,230,118,0.4); }
+.ms-card.c-white::before { background:rgba(255,255,255,0.2); }
+
+.ms-val {
+  font-size:44px; font-weight:900; line-height:1;
+  letter-spacing:-2px; display:block;
+}
+.ms-val.orange { color:var(--orange); text-shadow:0 0 24px var(--orange-glow); }
+.ms-val.green { color:var(--green); text-shadow:0 0 20px rgba(0,230,118,0.4); }
+.ms-val.white { color:#fff; }
+.ms-sub { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-top:8px; display:block; }
+
+/* ── KEY PROOF ── */
+.key-proof {
+  position:absolute; top:960px; left:56px; right:56px; z-index:40;
+  display:flex; flex-direction:column; gap:10px;
+}
+.kp-row {
+  background:var(--glass-bg); backdrop-filter:blur(10px);
+  border:1px solid var(--glass-border); border-radius:14px;
+  padding:16px 20px;
+  display:flex; align-items:center; gap:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.3);
+}
+.kp-icon { font-size:20px; flex-shrink:0; }
+.kp-text { font-size:16px; font-weight:600; color:rgba(255,255,255,0.7); line-height:1.35; }
+.kp-text strong { color:#fff; font-weight:800; }
+.kp-badge {
+  margin-left:auto; flex-shrink:0;
+  font-size:13px; font-weight:900; border-radius:8px; padding:5px 14px;
+  background:rgba(255,77,0,0.1); color:var(--orange);
+  border:1px solid rgba(255,77,0,0.2);
+}
+.kp-badge.green { background:rgba(0,230,118,0.08); color:var(--green); border-color:rgba(0,230,118,0.15); }
+
+/* ── CTA BAR ── */
+.cta-bar {
+  position:absolute; bottom:0; left:0; right:0; z-index:50;
+  padding:0 56px 52px;
+}
+.cta-inner {
+  background:var(--orange); border-radius:20px;
+  padding:26px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 0 0 1px rgba(255,77,0,0.5),0 0 40px rgba(255,77,0,0.35),0 0 80px rgba(255,77,0,0.15),0 20px 50px rgba(0,0,0,0.5);
+}
+.cta-main { font-size:28px; font-weight:900; color:#000; letter-spacing:-0.5px; }
+.cta-sub { font-size:14px; font-weight:700; color:rgba(0,0,0,0.55); margin-top:4px; }
+.wa-btn {
+  background:#000; border-radius:14px; padding:14px 20px;
+  display:flex; align-items:center; gap:10px;
+}
+.wa-btn svg { width:28px; height:28px; }
+.wa-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; }
+.wa-num { font-size:18px; font-weight:900; color:#fff; letter-spacing:0.5px; }
+</style>
+</head>
+<body>
+  <div class="bg-radial"></div>
+  <div class="bg-scanlines"></div>
+
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <div>
+      <div class="logo-name">ZUBA</div>
+      <div class="logo-tagline">Delivery Performance</div>
+    </div>
+  </div>
+
+  <!-- Headline -->
+  <div class="headline-block">
+    <div class="eyebrow">Así se ve el resultado</div>
+    <h1 class="headline">
+      Tu celular<br>debería<br><em>no parar.</em>
+    </h1>
+    <p class="sub">
+      Este es el celular de un restaurante<br>
+      bien configurado.<br>
+      <strong>El tuyo puede verse igual.</strong>
+    </p>
+  </div>
+
+  <!-- Phone -->
+  <div class="phone-scene">
+    <div class="phone-glow"></div>
+    <div class="counter-badge">9+</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="status-bar">
+          <span class="status-time">9:41</span>
+          <div class="status-icons">
+            <span>▶▶</span><span>WiFi</span><span>🔋</span>
+          </div>
+        </div>
+        <div class="app-header">
+          <div class="app-icon-ue">U</div>
+          <span class="app-name-s">Uber Eats — Pedidos</span>
+          <div class="live-dot">
+            <span></span><small>Live</small>
+          </div>
+        </div>
+
+        <div class="notif-card new">
+          <div class="notif-icon">🌮</div>
+          <div class="notif-body">
+            <div class="notif-title">Nuevo pedido #4824</div>
+            <div class="notif-sub">hace 1 min · 3 items</div>
+          </div>
+          <span class="notif-amount">$243</span>
+        </div>
+        <div class="notif-card new">
+          <div class="notif-icon">🌮</div>
+          <div class="notif-body">
+            <div class="notif-title">Nuevo pedido #4823</div>
+            <div class="notif-sub">hace 4 min · 2 items</div>
+          </div>
+          <span class="notif-amount">$186</span>
+        </div>
+        <div class="notif-card regular">
+          <div class="notif-icon">🌮</div>
+          <div class="notif-body">
+            <div class="notif-title">Entregado ✓ — Reseña ⭐⭐⭐⭐⭐</div>
+            <div class="notif-sub">hace 18 min</div>
+          </div>
+          <span class="notif-amount">$312</span>
+        </div>
+        <div class="notif-card regular">
+          <div class="notif-icon">🌮</div>
+          <div class="notif-body">
+            <div class="notif-title">Entregado ✓ — Reseña ⭐⭐⭐⭐⭐</div>
+            <div class="notif-sub">hace 31 min</div>
+          </div>
+          <span class="notif-amount">$158</span>
+        </div>
+        <div class="notif-card regular">
+          <div class="notif-icon">☕</div>
+          <div class="notif-body">
+            <div class="notif-title">Entregado ✓ · DiDi Food</div>
+            <div class="notif-sub">hace 44 min</div>
+          </div>
+          <span class="notif-amount">$95</span>
+        </div>
+        <div class="revenue-block">
+          <div class="rev-left">
+            <div class="rev-lbl">Ingresos hoy</div>
+            <div class="rev-val">$4,820 MXN</div>
+          </div>
+          <div class="rev-right">
+            <div class="rev-lbl">vs ayer</div>
+            <div class="rev-change">+38% ↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating notification bubbles -->
+  <div class="float-notif" style="left:56px; top:530px;">
+    <span class="fn-icon">⭐</span>
+    <div class="fn-text">Rating <span class="fn-val orange">4.7</span><small>arriba de 4.3 → algoritmo te favorece</small></div>
+  </div>
+  <div class="float-notif" style="left:56px; top:610px;">
+    <span class="fn-icon">📍</span>
+    <div class="fn-text">Posición <span class="fn-val green">Top 3</span><small>búsqueda orgánica · sin pauta</small></div>
+  </div>
+  <div class="float-notif" style="left:56px; top:690px;">
+    <span class="fn-icon">📷</span>
+    <div class="fn-text">Fotos HD <span class="fn-val green">×3</span><small>conversión vs sin foto</small></div>
+  </div>
+
+  <!-- Metric strip -->
+  <div class="metric-strip">
+    <div class="ms-card c-orange">
+      <span class="ms-val orange">3.8</span>
+      <span class="ms-val orange" style="font-size:24px;margin-top:4px;">→ 4.7</span>
+      <span class="ms-sub">Rating real</span>
+    </div>
+    <div class="ms-card c-green">
+      <span class="ms-val green">×3</span>
+      <span class="ms-sub">Más pedidos</span>
+    </div>
+    <div class="ms-card c-white">
+      <span class="ms-val white">$0</span>
+      <span class="ms-sub">Sin pauta</span>
+    </div>
+  </div>
+
+  <!-- Key proof -->
+  <div class="key-proof">
+    <div class="kp-row">
+      <span class="kp-icon">💡</span>
+      <span class="kp-text">El 80% del tráfico en plataformas va a los <strong>primeros 3 resultados</strong>.</span>
+      <span class="kp-badge">El problema</span>
+    </div>
+    <div class="kp-row">
+      <span class="kp-icon">⚙️</span>
+      <span class="kp-text">En ZUBA configuramos todo para que seas <strong>tú el primero</strong>.</span>
+      <span class="kp-badge green">La solución</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-bar">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-main">Escríbenos ahora →</div>
+        <div class="cta-sub">Auditoría gratis · 20 minutos · Sin compromiso</div>
+      </div>
+      <div class="wa-btn">
+        <svg viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="18" fill="#25D366"/>
+          <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+        </svg>
+        <div>
+          <div class="wa-lbl">WhatsApp</div>
+          <div class="wa-num">564 292 6243</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

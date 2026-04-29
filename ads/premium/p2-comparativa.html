@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #0A0C10;
+  --orange:   #FF4D00;
+  --orange-glow: rgba(255,77,0,0.45);
+  --green:    #00E676;
+  --red:      #FF1744;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.09);
+  --muted:    rgba(255,255,255,0.45);
+  --subtle:   rgba(255,255,255,0.06);
+}
+
+body {
+  width:1080px; height:1350px;
+  background:var(--bg);
+  font-family:'Inter', -apple-system, sans-serif;
+  overflow:hidden; position:relative;
+}
+
+/* ── depth layers ── */
+.bg-radial {
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 700px 600px at 25% 55%, rgba(255,23,68,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 600px at 75% 55%, rgba(0,230,118,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 800px 300px at 50% 10%, rgba(255,77,0,0.05) 0%, transparent 55%);
+}
+.bg-scanlines {
+  position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px);
+}
+/* Center divider glow */
+.center-glow {
+  position:absolute; top:200px; bottom:0; left:50%; transform:translateX(-50%);
+  width:2px; background:linear-gradient(to bottom, transparent, rgba(255,77,0,0.3) 20%, rgba(255,77,0,0.15) 80%, transparent);
+  pointer-events:none; z-index:5;
+}
+
+/* ── LOGO ── */
+.logo {
+  position:absolute; top:48px; left:56px; z-index:50;
+  display:flex; align-items:center; gap:14px;
+}
+.logo-icon {
+  width:48px; height:48px; background:var(--orange); border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 1px rgba(255,77,0,0.4),0 0 24px var(--orange-glow),0 0 60px rgba(255,77,0,0.15);
+}
+.logo-icon span { font-size:24px; font-weight:900; color:#fff; }
+.logo-name { font-size:22px; font-weight:900; color:#fff; letter-spacing:5px; }
+.logo-tagline { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+
+/* ── HEADLINE ── */
+.headline-block {
+  position:absolute; top:130px; left:56px; right:56px; z-index:40; text-align:center;
+}
+.eyebrow {
+  font-size:12px; font-weight:700; color:var(--orange);
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:14px;
+}
+.headline {
+  font-size:64px; font-weight:900; color:#fff;
+  line-height:0.95; letter-spacing:-3px;
+}
+.headline em { color:var(--orange); font-style:normal; text-shadow:0 0 30px var(--orange-glow); }
+
+/* ── VS BADGE ── */
+.vs-badge {
+  position:absolute; top:392px; left:50%; transform:translateX(-50%);
+  z-index:60;
+  background:var(--orange); color:#000;
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:900; letter-spacing:1px;
+  box-shadow:0 0 0 4px var(--bg), 0 0 24px var(--orange-glow), 0 0 50px rgba(255,77,0,0.2);
+}
+
+/* ── PROFILE PANELS ── */
+.panels {
+  position:absolute; top:240px; left:56px; right:56px; z-index:40;
+  display:flex; gap:16px;
+}
+
+.panel {
+  flex:1; border-radius:20px; overflow:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,0.5);
+}
+.panel.bad {
+  border:1px solid rgba(255,23,68,0.25);
+  box-shadow:0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,23,68,0.12), inset 0 0 30px rgba(255,23,68,0.03);
+}
+.panel.good {
+  border:1px solid rgba(0,230,118,0.25);
+  box-shadow:0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,230,118,0.1), inset 0 0 30px rgba(0,230,118,0.03);
+}
+
+/* Panel header */
+.panel-header {
+  padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel.bad .panel-header { background:rgba(255,23,68,0.06); border-bottom:1px solid rgba(255,23,68,0.12); }
+.panel.good .panel-header { background:rgba(0,230,118,0.05); border-bottom:1px solid rgba(0,230,118,0.1); }
+.ph-dots { display:flex; gap:5px; }
+.dot { width:8px; height:8px; border-radius:50%; }
+.ph-label { font-size:11px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; }
+.panel.bad .ph-label { color:var(--red); }
+.panel.good .ph-label { color:var(--green); }
+
+/* Photo zone */
+.photo-zone {
+  height:170px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.photo-zone.empty-zone {
+  background:rgba(255,255,255,0.02);
+}
+.empty-center { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.empty-icon { font-size:36px; opacity:0.18; }
+.empty-label { font-size:11px; font-weight:700; color:rgba(255,255,255,0.2); text-transform:uppercase; letter-spacing:2px; }
+.photo-zone.food-zone {
+  background:radial-gradient(ellipse at 40% 35%, #c44a00 0%, #1e0800 100%);
+}
+.food-emoji { font-size:80px; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.6)); }
+.hd-badge {
+  position:absolute; bottom:8px; right:8px;
+  background:rgba(0,230,118,0.9); color:#000;
+  font-size:10px; font-weight:900; border-radius:6px; padding:3px 8px;
+  letter-spacing:1px;
+}
+
+/* Metrics grid */
+.metrics-grid {
+  padding:14px 16px; display:flex; flex-direction:column; gap:0;
+  background:rgba(10,12,16,0.8);
+}
+.metric-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.metric-row:last-child { border-bottom:none; }
+.m-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.m-val-bad { font-size:16px; font-weight:900; color:var(--red); }
+.m-val-good { font-size:16px; font-weight:900; color:var(--green); }
+.m-val-neutral { font-size:16px; font-weight:900; color:rgba(255,255,255,0.2); }
+.m-badge { font-size:11px; font-weight:800; border-radius:6px; padding:3px 8px; }
+.m-badge.red { background:rgba(255,23,68,0.12); color:var(--red); }
+.m-badge.green { background:rgba(0,230,118,0.1); color:var(--green); }
+.m-badge.orange { background:rgba(255,77,0,0.12); color:var(--orange); }
+
+/* Menu strip */
+.menu-strip {
+  display:flex; gap:6px; padding:10px 16px;
+  background:rgba(8,10,14,0.9);
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+.menu-slot {
+  flex:1; border-radius:8px; padding:8px 6px; text-align:center;
+}
+.menu-slot.empty-slot { background:rgba(255,255,255,0.03); }
+.menu-slot.filled-slot { background:rgba(0,230,118,0.05); border:1px solid rgba(0,230,118,0.12); }
+.slot-emoji { font-size:18px; display:block; margin-bottom:3px; }
+.slot-emoji.dim { opacity:0.2; }
+.slot-price { font-size:10px; font-weight:700; }
+.slot-price.no-price { color:rgba(255,255,255,0.15); }
+.slot-price.has-price { color:var(--green); }
+
+/* ── KEY INSIGHTS BELOW ── */
+.insight-row {
+  position:absolute; top:870px; left:56px; right:56px; z-index:40;
+  display:flex; flex-direction:column; gap:10px;
+}
+.insight-card {
+  background:var(--glass-bg); backdrop-filter:blur(10px);
+  border:1px solid var(--glass-border); border-radius:14px;
+  padding:16px 20px;
+  display:flex; align-items:center; gap:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+.ic-num {
+  font-size:42px; font-weight:900; flex-shrink:0; line-height:1;
+  letter-spacing:-2px;
+}
+.ic-num.orange { color:var(--orange); text-shadow:0 0 20px var(--orange-glow); }
+.ic-num.green { color:var(--green); text-shadow:0 0 15px rgba(0,230,118,0.4); }
+.ic-text { font-size:16px; font-weight:600; color:rgba(255,255,255,0.7); line-height:1.45; }
+.ic-text strong { color:#fff; font-weight:800; }
+.ic-tag {
+  margin-left:auto; flex-shrink:0;
+  font-size:11px; font-weight:800; border-radius:8px; padding:5px 12px;
+}
+.ic-tag.orange { background:rgba(255,77,0,0.12); color:var(--orange); border:1px solid rgba(255,77,0,0.2); }
+.ic-tag.green { background:rgba(0,230,118,0.08); color:var(--green); border:1px solid rgba(0,230,118,0.15); }
+
+/* ── CTA BAR ── */
+.cta-bar {
+  position:absolute; bottom:0; left:0; right:0; z-index:50;
+  padding:0 56px 52px;
+}
+.cta-inner {
+  background:var(--orange); border-radius:20px;
+  padding:26px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 0 0 1px rgba(255,77,0,0.5),0 0 40px rgba(255,77,0,0.35),0 0 80px rgba(255,77,0,0.15),0 20px 50px rgba(0,0,0,0.5);
+}
+.cta-main { font-size:28px; font-weight:900; color:#000; letter-spacing:-0.5px; }
+.cta-sub { font-size:14px; font-weight:700; color:rgba(0,0,0,0.55); margin-top:4px; }
+.wa-btn {
+  background:#000; border-radius:14px; padding:14px 20px;
+  display:flex; align-items:center; gap:10px;
+}
+.wa-btn svg { width:28px; height:28px; }
+.wa-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; }
+.wa-num { font-size:18px; font-weight:900; color:#fff; letter-spacing:0.5px; }
+</style>
+</head>
+<body>
+  <div class="bg-radial"></div>
+  <div class="bg-scanlines"></div>
+  <div class="center-glow"></div>
+
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <div>
+      <div class="logo-name">ZUBA</div>
+      <div class="logo-tagline">Delivery Performance</div>
+    </div>
+  </div>
+
+  <div class="headline-block">
+    <div class="eyebrow">Mismo restaurante · Dos realidades</div>
+    <h1 class="headline">¿Cuál de los dos<br>restaurantes <em>eliges?</em></h1>
+  </div>
+
+  <div class="vs-badge">VS</div>
+
+  <div class="panels">
+    <!-- BAD -->
+    <div class="panel bad">
+      <div class="panel-header">
+        <div class="ph-dots">
+          <div class="dot" style="background:#e82020"></div>
+          <div class="dot" style="background:#444"></div>
+          <div class="dot" style="background:#444"></div>
+        </div>
+        <span class="ph-label">Sin optimizar</span>
+      </div>
+      <div class="photo-zone empty-zone">
+        <div class="empty-center">
+          <span class="empty-icon">📷</span>
+          <span class="empty-label">Sin fotos</span>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-row">
+          <span class="m-label">Rating</span>
+          <span class="m-val-bad">⭐ 3.8 ↓</span>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Posición</span>
+          <div class="m-badge red">#18 de 24</div>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Tiempo</span>
+          <span class="m-val-bad">54 min</span>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Pedidos hoy</span>
+          <span class="m-val-neutral">3 pedidos</span>
+        </div>
+      </div>
+      <div class="menu-strip">
+        <div class="menu-slot empty-slot"><span class="slot-emoji dim">🌮</span><span class="slot-price no-price">sin foto</span></div>
+        <div class="menu-slot empty-slot"><span class="slot-emoji dim">🍖</span><span class="slot-price no-price">sin foto</span></div>
+        <div class="menu-slot empty-slot"><span class="slot-emoji dim">🥤</span><span class="slot-price no-price">sin foto</span></div>
+      </div>
+    </div>
+
+    <!-- GOOD -->
+    <div class="panel good">
+      <div class="panel-header">
+        <div class="ph-dots">
+          <div class="dot" style="background:#00E676"></div>
+          <div class="dot" style="background:#00E676;opacity:.5"></div>
+          <div class="dot" style="background:#00E676;opacity:.25"></div>
+        </div>
+        <span class="ph-label">Con ZUBA ✓</span>
+      </div>
+      <div class="photo-zone food-zone">
+        <div class="food-emoji">🌮</div>
+        <div class="hd-badge">HD ✓</div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-row">
+          <span class="m-label">Rating</span>
+          <span class="m-val-good">⭐ 4.7 ↑</span>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Posición</span>
+          <div class="m-badge orange">🏆 Top 3</div>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Tiempo</span>
+          <span class="m-val-good">27 min</span>
+        </div>
+        <div class="metric-row">
+          <span class="m-label">Pedidos hoy</span>
+          <span class="m-val-good">52 pedidos</span>
+        </div>
+      </div>
+      <div class="menu-strip">
+        <div class="menu-slot filled-slot"><span class="slot-emoji">🌮</span><span class="slot-price has-price">$89</span></div>
+        <div class="menu-slot filled-slot"><span class="slot-emoji">🍖</span><span class="slot-price has-price">$145</span></div>
+        <div class="menu-slot filled-slot"><span class="slot-emoji">🥤</span><span class="slot-price has-price">$35</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="insight-row">
+    <div class="insight-card">
+      <span class="ic-num orange">3s</span>
+      <span class="ic-text">El cliente decide en <strong>3 segundos</strong>. Sin foto → sin clic. Fin.</span>
+      <span class="ic-tag orange">El problema</span>
+    </div>
+    <div class="insight-card">
+      <span class="ic-num green">×17</span>
+      <span class="ic-text">De 3 pedidos a 52 pedidos en el mismo día. <strong>Mismo restaurante.</strong></span>
+      <span class="ic-tag green">Con ZUBA</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-bar">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-main">Escríbenos ahora →</div>
+        <div class="cta-sub">Auditoría gratis · 20 minutos · Sin compromiso</div>
+      </div>
+      <div class="wa-btn">
+        <svg viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="18" fill="#25D366"/>
+          <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+        </svg>
+        <div>
+          <div class="wa-lbl">WhatsApp</div>
+          <div class="wa-num">564 292 6243</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
