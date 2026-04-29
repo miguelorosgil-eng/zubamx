@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1350px;
+  overflow:hidden; position:relative;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  background:#1a0a00;
+}
+
+/* ══ FOOD BACKGROUND — taco scene ══ */
+.food-bg {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 900px 700px at 75% 65%, #c44a00 0%, #7a2500 35%, #2d0d00 70%, #1a0a00 100%);
+}
+
+/* Tortilla base — large circle */
+.tortilla-1 {
+  position:absolute;
+  width:780px; height:780px;
+  right:-80px; bottom:-60px;
+  border-radius:50%;
+  background: radial-gradient(ellipse at 40% 35%,
+    #f5d08a 0%, #e8b44c 25%, #c8882a 50%, #8b5a18 75%, #5a3510 100%);
+  box-shadow:
+    inset -40px -40px 80px rgba(0,0,0,0.5),
+    inset 20px 20px 60px rgba(255,220,150,0.2),
+    0 20px 80px rgba(0,0,0,0.8);
+  transform: rotate(-12deg) skewX(-5deg);
+}
+
+/* Tortilla char marks */
+.tortilla-1::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 40px 15px at 30% 40%, rgba(60,20,0,0.7) 0%, transparent 100%),
+    radial-gradient(ellipse 25px 10px at 55% 30%, rgba(60,20,0,0.6) 0%, transparent 100%),
+    radial-gradient(ellipse 35px 12px at 70% 55%, rgba(60,20,0,0.5) 0%, transparent 100%),
+    radial-gradient(ellipse 20px 8px at 45% 65%, rgba(60,20,0,0.4) 0%, transparent 100%);
+}
+
+/* Tortilla 2 — peeking behind */
+.tortilla-2 {
+  position:absolute;
+  width:720px; height:720px;
+  right:-120px; bottom:-80px;
+  border-radius:50%;
+  background: radial-gradient(ellipse at 45% 40%,
+    #dba040 0%, #b87020 40%, #7a4510 70%, #4a2a08 100%);
+  box-shadow: inset -20px -20px 60px rgba(0,0,0,0.6);
+  transform: rotate(8deg) skewX(3deg);
+  z-index:-1;
+}
+
+/* FILLING — carne asada layer */
+.carne {
+  position:absolute;
+  width:520px; height:180px;
+  right:40px; bottom:320px;
+  background:
+    radial-gradient(ellipse at 30% 40%, #8b3a0a 0%, #5c2008 40%, #3a1405 100%);
+  border-radius:60% 40% 55% 45% / 35% 45% 35% 45%;
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.7),
+    inset 0 -10px 20px rgba(0,0,0,0.5),
+    inset 0 5px 15px rgba(180,80,20,0.3);
+  transform: rotate(-8deg);
+}
+.carne::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, transparent 30%, rgba(220,120,30,0.3) 50%, transparent 70%),
+    repeating-linear-gradient(25deg,
+      transparent, transparent 4px,
+      rgba(80,20,0,0.4) 4px, rgba(80,20,0,0.4) 6px);
+}
+
+/* Cebolla y cilantro */
+.onion-cilantro {
+  position:absolute;
+  width:400px; height:100px;
+  right:100px; bottom:420px;
+  background:
+    radial-gradient(ellipse 20px 12px at 15% 50%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(ellipse 18px 10px at 30% 40%, rgba(255,255,255,0.8) 0%, transparent 100%),
+    radial-gradient(ellipse 22px 11px at 45% 60%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(ellipse 16px 9px at 60% 45%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(ellipse 20px 12px at 75% 55%, rgba(255,255,255,0.8) 0%, transparent 100%),
+    /* cilantro green */
+    radial-gradient(ellipse 15px 20px at 22% 30%, rgba(50,140,40,0.9) 0%, transparent 100%),
+    radial-gradient(ellipse 12px 18px at 38% 65%, rgba(40,130,30,0.85) 0%, transparent 100%),
+    radial-gradient(ellipse 14px 22px at 55% 35%, rgba(60,150,45,0.9) 0%, transparent 100%),
+    radial-gradient(ellipse 11px 17px at 70% 60%, rgba(45,135,35,0.8) 0%, transparent 100%);
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+}
+
+/* Salsa roja drip */
+.salsa {
+  position:absolute;
+  right:160px; bottom:390px;
+  width:180px; height:120px;
+  background: radial-gradient(ellipse at 40% 30%,
+    #e82020 0%, #c01010 50%, #800808 100%);
+  border-radius: 40% 60% 70% 30% / 50% 40% 60% 50%;
+  box-shadow: 0 4px 20px rgba(200,0,0,0.4);
+  filter: blur(1px);
+  opacity:0.9;
+}
+
+/* Lime wedge */
+.lime {
+  position:absolute;
+  width:90px; height:90px;
+  right:60px; bottom:410px;
+  background: conic-gradient(
+    #2a8a20 0deg 45deg,
+    #1a6a12 45deg 90deg,
+    #3aa030 90deg 135deg,
+    #228018 135deg 180deg,
+    #3aa030 180deg 225deg,
+    #1a6a12 225deg 270deg,
+    #2a8a20 270deg 315deg,
+    #228018 315deg 360deg
+  );
+  border-radius:50% 0 50% 0;
+  transform: rotate(25deg);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,200,0.2);
+}
+.lime::after {
+  content:'';
+  position:absolute; inset:4px;
+  background: radial-gradient(ellipse at 40% 40%, rgba(150,220,100,0.3) 0%, transparent 70%);
+  border-radius: inherit;
+}
+
+/* Steam wisps */
+.steam {
+  position:absolute; right:200px; bottom:500px;
+}
+.steam-wisp {
+  position:absolute;
+  width:4px; height:80px;
+  background: linear-gradient(to top, rgba(255,255,255,0.6), transparent);
+  border-radius:50%;
+  filter: blur(3px);
+  animation: none;
+}
+.steam-wisp:nth-child(1) { left:0; transform:rotate(-15deg); }
+.steam-wisp:nth-child(2) { left:25px; height:60px; transform:rotate(10deg); opacity:0.8; }
+.steam-wisp:nth-child(3) { left:50px; height:90px; transform:rotate(-5deg); opacity:0.7; }
+.steam-wisp:nth-child(4) { left:80px; height:50px; transform:rotate(20deg); opacity:0.6; }
+
+/* ══ OVERLAY — dark top for text ══ */
+.overlay {
+  position:absolute; inset:0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.88) 0%,
+    rgba(0,0,0,0.75) 25%,
+    rgba(0,0,0,0.45) 45%,
+    rgba(0,0,0,0.15) 60%,
+    transparent 75%
+  );
+}
+
+/* Right side darker vignette */
+.vignette-right {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 0% 50%, transparent 50%, rgba(0,0,0,0.6) 100%);
+}
+
+/* ══ LOGO ══ */
+.logo {
+  position:absolute; top:44px; left:52px; z-index:20;
+  display:flex; align-items:center; gap:12px;
+}
+.logo-icon {
+  width:44px; height:44px; background:#FF6B35;
+  border-radius:11px; display:flex; align-items:center; justify-content:center;
+}
+.logo-icon span { font-size:22px; font-weight:900; color:#fff; }
+.logo-name { font-size:20px; font-weight:900; color:#fff; letter-spacing:4px; }
+
+/* ══ BADGE ══ */
+.top-badge {
+  position:absolute; top:44px; right:52px; z-index:20;
+  background:rgba(255,107,53,0.15);
+  border:1px solid rgba(255,107,53,0.5);
+  color:#FF6B35; border-radius:50px;
+  padding:8px 20px;
+  font-size:13px; font-weight:700; letter-spacing:1px;
+}
+
+/* ══ MAIN COPY ══ */
+.copy {
+  position:absolute; top:140px; left:52px; z-index:20;
+  max-width:680px;
+}
+.eyebrow {
+  font-size:14px; font-weight:800; color:#FF6B35;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:20px;
+  display:flex; align-items:center; gap:10px;
+}
+.eyebrow::before { content:''; width:28px; height:2px; background:#FF6B35; display:block; }
+
+.headline {
+  font-size:84px; font-weight:900; color:#fff;
+  line-height:0.9; letter-spacing:-4px;
+  margin-bottom:28px;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+}
+.headline em { color:#FF6B35; font-style:normal; display:block; }
+
+.subline {
+  font-size:24px; font-weight:500;
+  color:rgba(255,255,255,0.8); line-height:1.45;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+.subline strong { color:#fff; font-weight:700; }
+
+/* ══ FLOATING BADGES ══ */
+.badge-star {
+  position:absolute; z-index:20;
+  background:#fff; border-radius:14px;
+  padding:14px 20px;
+  display:flex; align-items:center; gap:10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  left:52px; top:560px;
+}
+.badge-star .stars { font-size:20px; }
+.badge-star .rating { font-size:24px; font-weight:900; color:#080808; }
+.badge-star .sublbl { font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:1px; }
+
+.badge-top {
+  position:absolute; z-index:20;
+  background:#FF6B35; border-radius:50px;
+  padding:12px 22px;
+  font-size:16px; font-weight:900; color:#fff;
+  box-shadow: 0 8px 32px rgba(255,107,53,0.5);
+  left:52px; top:640px;
+  letter-spacing:0.5px;
+}
+
+.badge-x3 {
+  position:absolute; z-index:20;
+  background:#080808; border:2px solid rgba(255,255,255,0.15);
+  border-radius:14px;
+  padding:14px 20px;
+  left:52px; top:710px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.badge-x3 .big { font-size:28px; font-weight:900; color:#FF6B35; }
+.badge-x3 .sm { font-size:12px; font-weight:600; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:1px; display:block; margin-top:2px; }
+
+/* ══ ARROW pointing to food ══ */
+.arrow-food {
+  position:absolute; z-index:20;
+  left:280px; top:640px;
+  transform: rotate(35deg);
+  opacity:0.6;
+}
+.arrow-food svg { width:60px; }
+
+/* ══ CTA ══ */
+.cta-block {
+  position:absolute; bottom:0; left:0; right:0; z-index:20;
+  padding:0 52px 52px;
+}
+.cta-inner {
+  background:#FF6B35; border-radius:24px;
+  padding:28px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow: 0 16px 60px rgba(255,107,53,0.4);
+}
+.cta-left { display:flex; flex-direction:column; gap:5px; }
+.cta-main { font-size:30px; font-weight:900; color:#fff; }
+.cta-sub { font-size:15px; font-weight:600; color:rgba(255,255,255,0.75); }
+.cta-right { display:flex; align-items:center; gap:16px; }
+.wa-circle {
+  background:#fff; border-radius:50%;
+  width:60px; height:60px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.wa-circle svg { width:34px; }
+.phone-wrap { display:flex; flex-direction:column; gap:2px; }
+.phone-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:1px; }
+.phone-num { font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+  <!-- Food scene -->
+  <div class="food-bg"></div>
+  <div class="tortilla-2"></div>
+  <div class="tortilla-1"></div>
+  <div class="salsa"></div>
+  <div class="carne"></div>
+  <div class="onion-cilantro"></div>
+  <div class="lime"></div>
+  <div class="steam">
+    <div class="steam-wisp"></div>
+    <div class="steam-wisp"></div>
+    <div class="steam-wisp"></div>
+    <div class="steam-wisp"></div>
+  </div>
+
+  <!-- Overlays -->
+  <div class="overlay"></div>
+  <div class="vignette-right"></div>
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-name">ZUBA</span>
+  </div>
+  <div class="top-badge">Delivery · México</div>
+
+  <!-- Copy -->
+  <div class="copy">
+    <div class="eyebrow">Para restauranteros en plataformas</div>
+    <h1 class="headline">
+      Esto ya lo<br>vende tu<br><em>competencia.</em>
+    </h1>
+    <p class="subline">
+      Tus tacos merecen estar<br>
+      en el <strong>Top 3 de Uber Eats</strong>.
+    </p>
+  </div>
+
+  <!-- Social proof badges -->
+  <div class="badge-star">
+    <span class="stars">⭐⭐⭐⭐⭐</span>
+    <div>
+      <div class="rating">4.7</div>
+      <div class="sublbl">Rating real · CDMX</div>
+    </div>
+  </div>
+
+  <div class="badge-top">🏆 Top 3 Categoría · Sin pauta</div>
+
+  <div class="badge-x3">
+    <span class="big">×3</span>
+    <span class="sm">más pedidos con foto HD</span>
+  </div>
+
+  <!-- Arrow -->
+  <div class="arrow-food">
+    <svg viewBox="0 0 60 80" fill="none">
+      <path d="M30 5 Q35 40 20 70" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M12 62 L20 72 L28 62" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-inner">
+      <div class="cta-left">
+        <span class="cta-main">Escríbenos ahora →</span>
+        <span class="cta-sub">Auditoría gratis · 20 min · Sin compromiso</span>
+      </div>
+      <div class="cta-right">
+        <div class="wa-circle">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#25D366"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+        </div>
+        <div class="phone-wrap">
+          <span class="phone-lbl">WhatsApp</span>
+          <span class="phone-num">564 292 6243</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

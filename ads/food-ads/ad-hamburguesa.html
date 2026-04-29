@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1350px;
+  overflow:hidden; position:relative;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  background:#0d0800;
+}
+
+/* ══ FOOD SCENE — hamburger ══ */
+.food-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse 1000px 900px at 60% 70%,
+    #b84800 0%, #7a2e00 30%, #3d1500 60%, #0d0800 100%);
+}
+
+/* Sesame bun TOP */
+.bun-top {
+  position:absolute;
+  width:620px; height:310px;
+  left:50%; bottom:550px;
+  transform:translateX(-50%);
+  background: radial-gradient(ellipse at 40% 30%,
+    #f5c842 0%, #d4960e 30%, #a86e08 60%, #7a4e05 100%);
+  border-radius:50% 50% 20% 20%;
+  box-shadow:
+    0 -20px 60px rgba(200,120,0,0.4),
+    inset 0 -20px 40px rgba(0,0,0,0.3),
+    inset 0 10px 30px rgba(255,220,100,0.2),
+    0 30px 60px rgba(0,0,0,0.7);
+}
+/* Sesame seeds */
+.bun-top::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  background:
+    radial-gradient(ellipse 12px 7px at 25% 35%, #f0e0a0 0%, rgba(240,224,160,0) 100%),
+    radial-gradient(ellipse 10px 6px at 40% 25%, #eedd98 0%, transparent 100%),
+    radial-gradient(ellipse 11px 6px at 55% 40%, #f0e0a0 0%, transparent 100%),
+    radial-gradient(ellipse 9px 5px at 68% 28%, #eedd98 0%, transparent 100%),
+    radial-gradient(ellipse 12px 7px at 78% 38%, #f0e0a0 0%, transparent 100%),
+    radial-gradient(ellipse 10px 6px at 33% 55%, #eedd98 0%, transparent 100%),
+    radial-gradient(ellipse 11px 6px at 62% 55%, #f0e0a0 0%, transparent 100%),
+    radial-gradient(ellipse 8px 5px at 48% 48%, #eedd98 0%, transparent 100%);
+}
+/* Shine on bun */
+.bun-top::after {
+  content:'';
+  position:absolute; top:15px; left:15%;
+  width:35%; height:45%;
+  background: radial-gradient(ellipse at 40% 40%,
+    rgba(255,240,180,0.35) 0%, transparent 70%);
+  border-radius:50%;
+}
+
+/* Cheese layer */
+.cheese {
+  position:absolute;
+  width:640px; height:60px;
+  left:50%; bottom:540px;
+  transform:translateX(-50%);
+  background: linear-gradient(to bottom,
+    #f5c20a 0%, #e8a800 50%, #c48200 100%);
+  clip-path: polygon(
+    0% 0%, 100% 0%,
+    100% 60%, 96% 100%,
+    88% 60%, 80% 100%,
+    72% 60%, 64% 100%,
+    56% 60%, 48% 100%,
+    40% 60%, 32% 100%,
+    24% 60%, 16% 100%,
+    8% 60%, 4% 100%,
+    0% 60%
+  );
+  box-shadow: 0 4px 20px rgba(200,130,0,0.5);
+  z-index:3;
+}
+
+/* Beef patty */
+.patty {
+  position:absolute;
+  width:600px; height:100px;
+  left:50%; bottom:490px;
+  transform:translateX(-50%);
+  background: radial-gradient(ellipse at 35% 30%,
+    #6b2a08 0%, #4a1a04 40%, #2d1002 100%);
+  border-radius:12px;
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.7),
+    inset 0 4px 10px rgba(180,80,20,0.15);
+  z-index:2;
+}
+/* Patty texture — grill marks */
+.patty::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  background: repeating-linear-gradient(
+    80deg,
+    transparent, transparent 12px,
+    rgba(0,0,0,0.35) 12px, rgba(0,0,0,0.35) 15px
+  );
+}
+/* Patty edge highlight */
+.patty::after {
+  content:'';
+  position:absolute; top:6px; left:10px; right:10px; height:15px;
+  background: linear-gradient(to bottom, rgba(200,100,30,0.25), transparent);
+  border-radius:8px;
+}
+
+/* Lettuce */
+.lettuce {
+  position:absolute;
+  width:640px; height:55px;
+  left:50%; bottom:570px;
+  transform:translateX(-50%);
+  background: linear-gradient(to bottom, #3a9a20 0%, #2a7a12 100%);
+  clip-path: polygon(
+    0% 100%, 0% 40%,
+    4% 0%, 8% 50%, 12% 10%, 16% 55%, 20% 8%,
+    24% 52%, 28% 12%, 32% 58%, 36% 6%,
+    40% 54%, 44% 10%, 48% 56%, 52% 8%,
+    56% 52%, 60% 12%, 64% 58%, 68% 6%,
+    72% 54%, 76% 10%, 80% 56%, 84% 8%,
+    88% 52%, 92% 14%, 96% 50%, 100% 40%,
+    100% 100%
+  );
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index:4;
+}
+
+/* Tomato slice */
+.tomato {
+  position:absolute;
+  width:480px; height:45px;
+  left:50%; bottom:626px;
+  transform:translateX(-50%);
+  background: radial-gradient(ellipse at 50% 50%,
+    #e83020 0%, #c01810 50%, #900e08 100%);
+  border-radius:8px;
+  box-shadow: 0 3px 12px rgba(180,0,0,0.3);
+  z-index:5;
+}
+.tomato::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  background:
+    linear-gradient(90deg, transparent 20%, rgba(255,100,80,0.2) 50%, transparent 80%),
+    repeating-linear-gradient(90deg,
+      transparent, transparent 55px,
+      rgba(255,255,255,0.05) 55px, rgba(255,255,255,0.05) 58px);
+}
+
+/* Bottom bun */
+.bun-bottom {
+  position:absolute;
+  width:620px; height:130px;
+  left:50%; bottom:380px;
+  transform:translateX(-50%);
+  background: radial-gradient(ellipse at 50% 20%,
+    #e8b030 0%, #c08010 40%, #8a5808 80%, #5a3805 100%);
+  border-radius:10px 10px 20px 20px;
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.7),
+    inset 0 8px 20px rgba(255,200,80,0.15);
+  z-index:1;
+}
+
+/* Ketchup drip */
+.ketchup {
+  position:absolute;
+  left:50%;
+  bottom:630px;
+  transform:translateX(80px);
+  width:14px;
+  z-index:6;
+}
+.ketchup-drop {
+  background: #c8100a;
+  border-radius:50%;
+}
+.ketchup-drop:nth-child(1) { width:14px; height:14px; }
+.ketchup-drop:nth-child(2) { width:10px; height:28px; border-radius:0 0 50% 50%; margin-top:-2px; }
+.ketchup-drop:nth-child(3) { width:8px; height:20px; border-radius:0 0 50% 50%; margin-top:-2px; }
+.ketchup-drop:nth-child(4) { width:6px; height:14px; border-radius:0 0 50% 50%; margin-top:-2px; }
+
+/* Steam over burger */
+.steam {
+  position:absolute;
+  left:50%; bottom:870px; transform:translateX(-50%);
+  width:200px; display:flex; gap:30px;
+}
+.s { background:linear-gradient(to top, rgba(255,255,255,0.5), transparent); width:5px; border-radius:50%; filter:blur(4px); }
+.s:nth-child(1) { height:70px; transform:rotate(-10deg); }
+.s:nth-child(2) { height:50px; transform:rotate(8deg); margin-top:20px; }
+.s:nth-child(3) { height:80px; transform:rotate(-5deg); }
+.s:nth-child(4) { height:40px; transform:rotate(15deg); margin-top:10px; }
+
+/* ══ FAKE APP UI — Uber Eats style ══ */
+.app-ui {
+  position:absolute; left:52px; bottom:190px; z-index:20;
+  background:rgba(255,255,255,0.95);
+  border-radius:20px;
+  width:340px;
+  padding:18px 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.app-header {
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+.app-logo-ue {
+  width:32px; height:32px; background:#000; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:900; color:#fff;
+}
+.app-title { font-size:13px; font-weight:700; color:#333; }
+.app-subtitle { font-size:11px; color:#888; }
+
+.app-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.app-label { font-size:12px; color:#666; }
+.app-val-bad { font-size:14px; font-weight:800; color:#e82020; }
+.app-val-good { font-size:14px; font-weight:800; color:#25a820; }
+.app-arrow-icon { font-size:16px; font-weight:900; color:#FF6B35; }
+
+.app-divider { height:1px; background:#f0f0f0; margin:10px 0; }
+
+.app-cta-row {
+  background:#FF6B35; border-radius:10px;
+  padding:10px 14px;
+  text-align:center;
+  font-size:13px; font-weight:800; color:#fff;
+}
+
+/* ══ OVERLAYS ══ */
+.overlay {
+  position:absolute; inset:0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.85) 0%,
+    rgba(0,0,0,0.6) 25%,
+    rgba(0,0,0,0.2) 50%,
+    rgba(0,0,0,0.1) 65%,
+    rgba(0,0,0,0.6) 85%,
+    rgba(0,0,0,0.8) 100%
+  );
+}
+
+/* ══ LOGO ══ */
+.logo {
+  position:absolute; top:44px; left:52px; z-index:20;
+  display:flex; align-items:center; gap:12px;
+}
+.logo-icon {
+  width:44px; height:44px; background:#FF6B35;
+  border-radius:11px; display:flex; align-items:center; justify-content:center;
+}
+.logo-icon span { font-size:22px; font-weight:900; color:#fff; }
+.logo-name { font-size:20px; font-weight:900; color:#fff; letter-spacing:4px; }
+
+/* ══ COPY ══ */
+.copy {
+  position:absolute; top:138px; left:52px; z-index:20;
+  max-width:660px;
+}
+.eyebrow {
+  font-size:14px; font-weight:800; color:#FF6B35;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:20px;
+  display:flex; align-items:center; gap:10px;
+}
+.eyebrow::before { content:''; width:28px; height:2px; background:#FF6B35; display:block; }
+.headline {
+  font-size:88px; font-weight:900; color:#fff;
+  line-height:0.9; letter-spacing:-4px;
+  text-shadow:0 4px 30px rgba(0,0,0,0.9);
+  margin-bottom:28px;
+}
+.headline em { color:#FF6B35; font-style:normal; display:block; }
+.subline {
+  font-size:24px; font-weight:500;
+  color:rgba(255,255,255,0.8); line-height:1.45;
+  text-shadow:0 2px 10px rgba(0,0,0,0.8);
+}
+.subline strong { color:#fff; font-weight:700; }
+
+/* ══ ARROW pointing to burger ══ */
+.arrow-wrap {
+  position:absolute; z-index:20;
+  right:72px; top:520px;
+  transform:rotate(20deg);
+  opacity:0.7;
+}
+.arrow-wrap svg { width:50px; }
+
+/* ══ CTA ══ */
+.cta-block {
+  position:absolute; bottom:0; left:0; right:0; z-index:20;
+  padding:0 52px 52px;
+}
+.cta-inner {
+  background:#FF6B35; border-radius:24px;
+  padding:28px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 16px 60px rgba(255,107,53,0.45);
+}
+.cta-main { font-size:30px; font-weight:900; color:#fff; }
+.cta-sub { font-size:15px; font-weight:600; color:rgba(255,255,255,0.75); margin-top:4px; }
+.wa-circle {
+  background:#fff; border-radius:50%;
+  width:60px; height:60px;
+  display:flex; align-items:center; justify-content:center;
+}
+.wa-circle svg { width:34px; }
+.phone-wrap { display:flex; flex-direction:column; gap:2px; margin-left:12px; }
+.phone-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:1px; }
+.phone-num { font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; }
+.cta-right { display:flex; align-items:center; }
+</style>
+</head>
+<body>
+
+  <div class="food-bg"></div>
+
+  <!-- Burger layers (bottom to top) -->
+  <div class="bun-bottom"></div>
+  <div class="tomato"></div>
+  <div class="lettuce"></div>
+  <div class="patty"></div>
+  <div class="cheese"></div>
+  <div class="ketchup">
+    <div class="ketchup-drop"></div>
+    <div class="ketchup-drop"></div>
+    <div class="ketchup-drop"></div>
+    <div class="ketchup-drop"></div>
+  </div>
+  <div class="bun-top"></div>
+  <div class="steam">
+    <div class="s"></div><div class="s"></div>
+    <div class="s"></div><div class="s"></div>
+  </div>
+
+  <!-- Overlays -->
+  <div class="overlay"></div>
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-name">ZUBA</span>
+  </div>
+
+  <!-- Copy -->
+  <div class="copy">
+    <div class="eyebrow">Para restaurantes en Uber Eats</div>
+    <h1 class="headline">
+      Estás<br>perdiendo<br><em>pedidos.</em>
+    </h1>
+    <p class="subline">
+      No es tu comida.<br>
+      Es tu <strong>posición en el algoritmo</strong>.
+    </p>
+  </div>
+
+  <!-- Arrow to burger -->
+  <div class="arrow-wrap">
+    <svg viewBox="0 0 50 80" fill="none">
+      <path d="M40 5 Q10 40 25 75" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M17 67 L25 77 L33 67" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Fake app UI -->
+  <div class="app-ui">
+    <div class="app-header">
+      <div class="app-logo-ue">U</div>
+      <div>
+        <div class="app-title">Tu Restaurante en Uber Eats</div>
+        <div class="app-subtitle">Vista actual del algoritmo</div>
+      </div>
+    </div>
+    <div class="app-row">
+      <span class="app-label">⭐ Rating actual</span>
+      <span class="app-val-bad">3.8 ↓</span>
+    </div>
+    <div class="app-row">
+      <span class="app-label">📍 Posición en búsqueda</span>
+      <span class="app-val-bad">#18 de 24</span>
+    </div>
+    <div class="app-row">
+      <span class="app-label">📸 Fotos del menú</span>
+      <span class="app-val-bad">Sin fotos</span>
+    </div>
+    <div class="app-divider"></div>
+    <div class="app-row">
+      <span class="app-label">Con ZUBA →</span>
+      <span class="app-val-good">4.7 · Top 3 ✓</span>
+    </div>
+    <div class="app-cta-row">Así te vemos nosotros — escríbenos</div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-main">Escríbenos ahora →</div>
+        <div class="cta-sub">Auditoría gratis · 20 min · Sin compromiso</div>
+      </div>
+      <div class="cta-right">
+        <div class="wa-circle">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#25D366"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+        </div>
+        <div class="phone-wrap">
+          <span class="phone-lbl">WhatsApp</span>
+          <span class="phone-num">564 292 6243</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
