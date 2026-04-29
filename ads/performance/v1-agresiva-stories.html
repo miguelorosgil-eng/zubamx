@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1920px;
+  background:#080808;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  overflow:hidden; position:relative;
+  display:flex; flex-direction:column;
+}
+
+.bleed-top {
+  position:absolute; top:-100px; left:-100px;
+  width:600px; height:600px;
+  background:radial-gradient(circle, rgba(255,107,53,0.4) 0%, transparent 65%);
+  pointer-events:none; z-index:0;
+}
+.bleed-bot {
+  position:absolute; bottom:-100px; right:-100px;
+  width:500px; height:500px;
+  background:radial-gradient(circle, rgba(255,107,53,0.25) 0%, transparent 65%);
+  pointer-events:none; z-index:0;
+}
+
+/* Top safe zone logo */
+.topbar {
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:80px 64px 0;
+}
+.logo { display:flex; align-items:center; gap:14px; }
+.logo-icon {
+  width:52px; height:52px; background:#FF6B35;
+  border-radius:13px; display:flex; align-items:center; justify-content:center;
+}
+.logo-icon span { font-size:26px; font-weight:900; color:#fff; }
+.logo-name { font-size:24px; font-weight:900; color:#fff; letter-spacing:4px; }
+
+/* Center content */
+.center {
+  flex:1; position:relative; z-index:10;
+  display:flex; flex-direction:column;
+  justify-content:center;
+  padding:0 64px;
+  gap:0;
+}
+
+.eyebrow {
+  font-size:15px; font-weight:800; color:#FF6B35;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:28px;
+  display:flex; align-items:center; gap:12px;
+}
+.eyebrow::before { content:''; width:32px; height:3px; background:#FF6B35; display:block; }
+
+.hook {
+  font-size:110px; font-weight:900; color:#fff;
+  line-height:0.9; letter-spacing:-5px;
+  margin-bottom:48px;
+}
+.hook em { color:#FF6B35; font-style:normal; display:block; }
+
+.sub {
+  font-size:32px; font-weight:500; color:rgba(255,255,255,0.7);
+  line-height:1.45; margin-bottom:56px;
+}
+.sub strong { color:#fff; font-weight:800; }
+
+/* Stat block */
+.stats {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:16px; margin-bottom:0;
+}
+.stat {
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px; padding:28px 28px;
+}
+.stat-val { font-size:44px; font-weight:900; color:#fff; letter-spacing:-2px; }
+.stat-val em { color:#FF6B35; font-style:normal; }
+.stat-lbl { font-size:14px; font-weight:600; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; margin-top:6px; }
+
+/* Bottom CTA — safe zone bottom */
+.cta-block {
+  position:relative; z-index:10;
+  padding:0 64px 90px;
+}
+.cta-btn {
+  background:#FF6B35; border-radius:28px;
+  padding:36px 48px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cta-texts { display:flex; flex-direction:column; gap:8px; }
+.cta-main { font-size:38px; font-weight:900; color:#fff; letter-spacing:-1px; }
+.cta-detail { font-size:18px; font-weight:600; color:rgba(255,255,255,0.75); }
+.wa-wrap { display:flex; align-items:center; gap:16px; flex-direction:column; }
+.wa-icon {
+  background:#fff; border-radius:50%;
+  width:72px; height:72px;
+  display:flex; align-items:center; justify-content:center;
+}
+.wa-icon svg { width:42px; height:42px; }
+.wa-num { font-size:20px; font-weight:900; color:#fff; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="bleed-top"></div>
+  <div class="bleed-bot"></div>
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><span>Z</span></div>
+      <span class="logo-name">ZUBA</span>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="eyebrow">El problema real</div>
+    <h1 class="hook">
+      Estás<br>perdiendo<br><em>pedidos</em><br>hoy.
+    </h1>
+    <p class="sub">
+      No es tu comida.<br>
+      Es que el algoritmo<br>
+      <strong>no te está mostrando.</strong>
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val">3.8<em>→</em>4.7</div>
+        <div class="stat-lbl">Rating real</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><em>×3</em></div>
+        <div class="stat-lbl">Conversión foto HD</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">Top<em>3</em></div>
+        <div class="stat-lbl">Categoría orgánico</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><em>$0</em></div>
+        <div class="stat-lbl">En publicidad</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-block">
+    <div class="cta-btn">
+      <div class="cta-texts">
+        <span class="cta-main">Auditoría gratis →</span>
+        <span class="cta-detail">20 min · Sin compromiso</span>
+      </div>
+      <div class="wa-wrap">
+        <div class="wa-icon">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#25D366"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+        </div>
+        <span class="wa-num">564 292 6243</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

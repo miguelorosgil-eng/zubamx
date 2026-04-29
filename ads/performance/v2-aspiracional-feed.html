@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1350px;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  overflow:hidden; position:relative;
+  background:#FF6B35;
+}
+
+/* Diagonal split */
+.split-dark {
+  position:absolute;
+  top:0; right:0;
+  width:420px; height:100%;
+  background:#080808;
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* Diagonal accent line */
+.accent-line {
+  position:absolute;
+  top:0; right:420px;
+  width:6px; height:100%;
+  background:#fff;
+  transform: skewX(-6deg) translateX(24px);
+  opacity:0.15;
+}
+
+/* Pattern dots on dark side */
+.dots {
+  position:absolute; top:0; right:0; width:420px; height:100%;
+  background-image: radial-gradient(circle, rgba(255,107,53,0.15) 1px, transparent 1px);
+  background-size: 28px 28px;
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* Top bar */
+.topbar {
+  position:relative; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:36px 52px 0;
+}
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-icon {
+  width:44px; height:44px;
+  background:rgba(0,0,0,0.2); border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+}
+.logo-icon span { font-size:22px; font-weight:900; color:#fff; }
+.logo-name { font-size:20px; font-weight:900; color:#fff; letter-spacing:4px; }
+.badge {
+  background:rgba(0,0,0,0.2);
+  color:#fff; border-radius:50px; padding:8px 20px;
+  font-size:13px; font-weight:700; letter-spacing:1px;
+}
+
+/* Main content */
+.main {
+  position:relative; z-index:10;
+  padding:52px 52px 0;
+}
+
+/* Before/After arrow visual */
+.transform-bar {
+  display:flex; align-items:center; gap:0;
+  margin-bottom:44px;
+}
+.t-before {
+  background:rgba(0,0,0,0.25); border-radius:14px;
+  padding:18px 28px; text-align:center;
+}
+.t-val { font-size:38px; font-weight:900; color:rgba(255,255,255,0.6); letter-spacing:-1px; }
+.t-lbl { font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; }
+.t-arrow {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  padding:0 12px;
+}
+.t-arrow svg { width:80px; }
+.t-after {
+  background:#fff; border-radius:14px;
+  padding:18px 28px; text-align:center;
+}
+.t-after .t-val { color:#FF6B35; }
+.t-after .t-lbl { color:rgba(255,107,53,0.6); }
+
+/* Headline */
+.eyebrow {
+  font-size:14px; font-weight:800; color:rgba(255,255,255,0.7);
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:20px;
+}
+.hook {
+  font-size:88px; font-weight:900; color:#fff;
+  line-height:0.92; letter-spacing:-4px; margin-bottom:36px;
+}
+.hook em { color:#080808; font-style:normal; }
+
+.sub {
+  font-size:26px; font-weight:500; color:rgba(255,255,255,0.85);
+  line-height:1.45; max-width:660px; margin-bottom:44px;
+}
+.sub strong { color:#fff; font-weight:800; }
+
+/* Feature list */
+.features { display:flex; flex-direction:column; gap:14px; margin-bottom:0; }
+.feat {
+  display:flex; align-items:center; gap:18px;
+}
+.feat-check {
+  width:36px; height:36px; background:#fff; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.feat-check svg { width:18px; height:18px; }
+.feat-text { font-size:22px; font-weight:700; color:#fff; }
+
+/* CTA */
+.cta-block {
+  position:absolute; bottom:0; left:0; right:0; z-index:10;
+  padding:0 52px 52px;
+}
+.cta-inner {
+  background:#080808; border-radius:24px;
+  padding:30px 40px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cta-left { display:flex; flex-direction:column; gap:5px; }
+.cta-action { font-size:30px; font-weight:900; color:#fff; }
+.cta-sub { font-size:15px; font-weight:600; color:rgba(255,255,255,0.5); }
+.cta-right { display:flex; align-items:center; gap:14px; }
+.wa-pill {
+  display:flex; align-items:center; gap:14px;
+  background:#FF6B35; border-radius:50px;
+  padding:14px 28px;
+}
+.wa-pill svg { width:30px; height:30px; }
+.wa-pill span { font-size:20px; font-weight:900; color:#fff; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="split-dark"></div>
+  <div class="dots"></div>
+  <div class="accent-line"></div>
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><span>Z</span></div>
+      <span class="logo-name">ZUBA</span>
+    </div>
+    <span class="badge">Caso real · CDMX</span>
+  </div>
+
+  <div class="main">
+
+    <!-- Transformation bar -->
+    <div class="transform-bar">
+      <div class="t-before">
+        <div class="t-val">3.8 ★</div>
+        <div class="t-lbl">Antes</div>
+      </div>
+      <div class="t-arrow">
+        <svg viewBox="0 0 80 24" fill="none">
+          <path d="M0 12 H68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <path d="M60 4 L72 12 L60 20" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="t-after">
+        <div class="t-val">4.7 ★</div>
+        <div class="t-lbl">Después</div>
+      </div>
+    </div>
+
+    <p class="eyebrow">Resultado real · Sin pauta</p>
+    <h1 class="hook">
+      De invisible<br>a <em>Top 3.</em>
+    </h1>
+
+    <p class="sub">
+      Optimizamos tu perfil, fotos y menú.<br>
+      El algoritmo empieza a <strong>trabajar para ti</strong>.
+    </p>
+
+    <div class="features">
+      <div class="feat">
+        <div class="feat-check">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M3 9l4 4 8-8" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="feat-text">Fotografía HD que convierte ×3</span>
+      </div>
+      <div class="feat">
+        <div class="feat-check">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M3 9l4 4 8-8" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="feat-text">Rating protegido arriba de 4.3</span>
+      </div>
+      <div class="feat">
+        <div class="feat-check">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M3 9l4 4 8-8" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="feat-text">Menú estructurado para vender más</span>
+      </div>
+      <div class="feat">
+        <div class="feat-check">
+          <svg viewBox="0 0 18 18" fill="none"><path d="M3 9l4 4 8-8" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="feat-text">Visibilidad orgánica sin invertir en ads</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cta-block">
+    <div class="cta-inner">
+      <div class="cta-left">
+        <span class="cta-action">Escríbenos — es gratis</span>
+        <span class="cta-sub">Auditoría de 20 min · Sin compromiso</span>
+      </div>
+      <div class="cta-right">
+        <div class="wa-pill">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="rgba(255,255,255,0.2)"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+          <span>564 292 6243</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
