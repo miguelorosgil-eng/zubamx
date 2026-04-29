@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1350px;
+  background:#080808;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  overflow:hidden; position:relative;
+}
+
+/* Ambient glow — money/success color */
+.glow-green {
+  position:absolute; bottom:-100px; right:-100px;
+  width:700px; height:700px;
+  background:radial-gradient(circle, rgba(37,168,40,0.12) 0%, transparent 65%);
+  pointer-events:none;
+}
+.glow-orange {
+  position:absolute; top:-80px; left:-80px;
+  width:500px; height:500px;
+  background:radial-gradient(circle, rgba(255,107,53,0.10) 0%, transparent 65%);
+  pointer-events:none;
+}
+
+/* ══ PHONE MOCKUP ══ */
+.phone-wrap {
+  position:absolute;
+  right:72px; top:180px;
+  width:340px;
+  z-index:10;
+}
+.phone {
+  width:340px; height:680px;
+  background:#111;
+  border-radius:44px;
+  border:3px solid #2a2a2a;
+  box-shadow:
+    0 40px 100px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 0 30px rgba(0,0,0,0.5);
+  overflow:hidden;
+  position:relative;
+}
+/* Notch */
+.notch {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:100px; height:28px;
+  background:#111; border-radius:0 0 18px 18px;
+  z-index:5;
+}
+/* Screen content */
+.screen {
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, #0d1a0d 0%, #080e08 100%);
+  padding:40px 16px 16px;
+  overflow:hidden;
+}
+
+/* App header */
+.app-header {
+  display:flex; align-items:center; gap:8px;
+  margin-bottom:14px; padding:0 4px;
+}
+.app-icon {
+  width:28px; height:28px; background:#000; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:900; color:#fff;
+}
+.app-name { font-size:13px; font-weight:700; color:#fff; }
+.app-dot { width:8px; height:8px; background:#25a820; border-radius:50%; margin-left:auto; }
+
+/* Notifications stack */
+.notif {
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:10px 12px;
+  margin-bottom:8px;
+  display:flex; align-items:center; gap:10px;
+  position:relative;
+}
+.notif.new {
+  background:rgba(37,168,40,0.12);
+  border-color:rgba(37,168,40,0.25);
+  animation:none;
+}
+.notif.new::before {
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:#25a820; border-radius:3px 0 0 3px;
+}
+.notif-dot {
+  width:36px; height:36px; border-radius:10px;
+  background:linear-gradient(135deg, #c44a00, #7a2500);
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px;
+}
+.notif-text { flex:1; }
+.notif-title { font-size:11px; font-weight:700; color:#fff; }
+.notif-sub { font-size:10px; color:rgba(255,255,255,0.5); margin-top:1px; }
+.notif-amount { font-size:13px; font-weight:900; color:#25a820; flex-shrink:0; }
+
+/* Revenue total */
+.revenue-bar {
+  background:rgba(37,168,40,0.08);
+  border:1px solid rgba(37,168,40,0.2);
+  border-radius:14px;
+  padding:12px 14px;
+  margin-top:4px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.rev-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; }
+.rev-amount { font-size:18px; font-weight:900; color:#25a820; }
+
+/* Counter badge on phone */
+.badge-counter {
+  position:absolute; top:-12px; right:-12px; z-index:20;
+  background:#FF6B35; color:#fff;
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:900;
+  box-shadow:0 4px 16px rgba(255,107,53,0.5);
+}
+
+/* ══ TOP BAR ══ */
+.topbar {
+  position:absolute; top:44px; left:52px; right:52px; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-icon {
+  width:44px; height:44px; background:#FF6B35;
+  border-radius:11px; display:flex; align-items:center; justify-content:center;
+}
+.logo-icon span { font-size:22px; font-weight:900; color:#fff; }
+.logo-name { font-size:20px; font-weight:900; color:#fff; letter-spacing:4px; }
+
+/* ══ COPY — left side ══ */
+.copy {
+  position:absolute; left:52px; top:150px; z-index:20;
+  width:580px;
+}
+.eyebrow {
+  font-size:13px; font-weight:800; color:#FF6B35;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:20px;
+  display:flex; align-items:center; gap:10px;
+}
+.eyebrow::before { content:''; width:28px; height:2px; background:#FF6B35; display:block; }
+
+.headline {
+  font-size:82px; font-weight:900; color:#fff;
+  line-height:0.9; letter-spacing:-4px;
+  margin-bottom:30px;
+}
+.headline em { color:#FF6B35; font-style:normal; display:block; }
+
+.subline {
+  font-size:22px; font-weight:400; color:rgba(255,255,255,0.65);
+  line-height:1.5; max-width:500px; margin-bottom:40px;
+}
+.subline strong { color:#fff; font-weight:700; }
+
+/* ══ METRIC PILLS ══ */
+.metrics { display:flex; flex-direction:column; gap:14px; margin-bottom:0; }
+.metric {
+  display:flex; align-items:center; gap:16px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px; padding:16px 20px;
+  width:480px;
+}
+.metric-icon {
+  width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.metric-icon.green { background:rgba(37,168,40,0.15); }
+.metric-icon.orange { background:rgba(255,107,53,0.15); }
+.metric-icon.blue { background:rgba(50,130,255,0.15); }
+.metric-val {
+  font-size:22px; font-weight:900; color:#fff;
+  letter-spacing:-0.5px;
+}
+.metric-val em { color:#25a820; font-style:normal; }
+.metric-val .bad { color:#e82020; }
+.metric-lbl { font-size:12px; font-weight:600; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.metric-arrow { margin-left:auto; font-size:20px; color:#25a820; font-weight:900; }
+
+/* ══ CTA ══ */
+.cta-block {
+  position:absolute; bottom:0; left:0; right:0; z-index:20;
+  padding:0 52px 52px;
+}
+.cta-inner {
+  background:#FF6B35; border-radius:24px;
+  padding:28px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 16px 60px rgba(255,107,53,0.4);
+}
+.cta-left { display:flex; flex-direction:column; gap:4px; }
+.cta-main { font-size:30px; font-weight:900; color:#fff; }
+.cta-sub { font-size:15px; font-weight:600; color:rgba(255,255,255,0.75); }
+.cta-right { display:flex; align-items:center; gap:14px; }
+.wa-circle {
+  background:#fff; border-radius:50%; width:58px; height:58px;
+  display:flex; align-items:center; justify-content:center;
+}
+.wa-circle svg { width:33px; }
+.phone-wrap { display:flex; flex-direction:column; gap:2px; }
+.phone-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:1px; }
+.phone-num { font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="glow-green"></div>
+  <div class="glow-orange"></div>
+
+  <!-- Logo -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><span>Z</span></div>
+      <span class="logo-name">ZUBA</span>
+    </div>
+  </div>
+
+  <!-- Copy -->
+  <div class="copy">
+    <div class="eyebrow">Restaurantes en Uber Eats · Rappi · DiDi</div>
+    <h1 class="headline">
+      Tu celular<br>debería<br><em>no parar.</em>
+    </h1>
+    <p class="subline">
+      Así se ve el celular de un restaurante<br>
+      bien configurado en plataformas.<br>
+      <strong>El tuyo también puede verse así.</strong>
+    </p>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-icon green">⭐</div>
+        <div>
+          <div class="metric-val"><span class="bad">3.8</span> → <em>4.7</em></div>
+          <div class="metric-lbl">Rating · caso real CDMX</div>
+        </div>
+        <div class="metric-arrow">↑</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon orange">📍</div>
+        <div>
+          <div class="metric-val"><span class="bad">#18</span> → <em>Top 3</em></div>
+          <div class="metric-lbl">Posición en búsqueda · sin pauta</div>
+        </div>
+        <div class="metric-arrow">↑</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon blue">📦</div>
+        <div>
+          <div class="metric-val"><em>×3</em> pedidos</div>
+          <div class="metric-lbl">Conversión con foto HD + menú</div>
+        </div>
+        <div class="metric-arrow">↑</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone mockup -->
+  <div class="phone-wrap">
+    <div class="badge-counter">9+</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="app-header">
+          <div class="app-icon">U</div>
+          <span class="app-name">Uber Eats — Pedidos</span>
+          <div class="app-dot"></div>
+        </div>
+        <div class="notif new">
+          <div class="notif-dot">🌮</div>
+          <div class="notif-text">
+            <div class="notif-title">Nuevo pedido #4821</div>
+            <div class="notif-sub">hace 2 min · Taquería Norte</div>
+          </div>
+          <span class="notif-amount">$186</span>
+        </div>
+        <div class="notif new">
+          <div class="notif-dot">🍔</div>
+          <div class="notif-text">
+            <div class="notif-title">Nuevo pedido #4820</div>
+            <div class="notif-sub">hace 8 min · Taquería Norte</div>
+          </div>
+          <span class="notif-amount">$243</span>
+        </div>
+        <div class="notif">
+          <div class="notif-dot">🌮</div>
+          <div class="notif-text">
+            <div class="notif-title">Pedido entregado ✓</div>
+            <div class="notif-sub">hace 22 min · ⭐⭐⭐⭐⭐</div>
+          </div>
+          <span class="notif-amount">$158</span>
+        </div>
+        <div class="notif">
+          <div class="notif-dot">🌮</div>
+          <div class="notif-text">
+            <div class="notif-title">Pedido entregado ✓</div>
+            <div class="notif-sub">hace 35 min · ⭐⭐⭐⭐⭐</div>
+          </div>
+          <span class="notif-amount">$312</span>
+        </div>
+        <div class="notif">
+          <div class="notif-dot">☕</div>
+          <div class="notif-text">
+            <div class="notif-title">Pedido entregado ✓</div>
+            <div class="notif-sub">hace 48 min · ⭐⭐⭐⭐⭐</div>
+          </div>
+          <span class="notif-amount">$95</span>
+        </div>
+        <div class="notif">
+          <div class="notif-dot">🌮</div>
+          <div class="notif-text">
+            <div class="notif-title">Reseña nueva ⭐ 5/5</div>
+            <div class="notif-sub">"Rápido y delicioso, vuelvo pronto"</div>
+          </div>
+        </div>
+        <div class="revenue-bar">
+          <div>
+            <div class="rev-label">Ingresos hoy</div>
+            <div class="rev-amount">$4,320 MXN</div>
+          </div>
+          <div style="text-align:right">
+            <div class="rev-label">vs ayer</div>
+            <div style="font-size:14px; font-weight:800; color:#25a820;">+34% ↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-inner">
+      <div class="cta-left">
+        <span class="cta-main">Escríbenos ahora →</span>
+        <span class="cta-sub">Auditoría gratis · 20 min · Sin compromiso</span>
+      </div>
+      <div class="cta-right">
+        <div class="wa-circle">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#25D366"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+        </div>
+        <div class="phone-wrap">
+          <span class="phone-lbl">WhatsApp</span>
+          <span class="phone-num">564 292 6243</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

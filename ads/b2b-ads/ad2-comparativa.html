@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1350px;
+  background:#0a0a0a;
+  font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+  overflow:hidden; position:relative;
+}
+
+/* Subtle split background */
+.bg-left {
+  position:absolute; top:0; left:0; width:50%; height:100%;
+  background:linear-gradient(135deg, rgba(232,32,32,0.04) 0%, transparent 60%);
+}
+.bg-right {
+  position:absolute; top:0; right:0; width:50%; height:100%;
+  background:linear-gradient(225deg, rgba(37,168,40,0.06) 0%, transparent 60%);
+}
+
+/* ══ TOP BAR ══ */
+.topbar {
+  position:absolute; top:44px; left:52px; right:52px; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-icon { width:44px; height:44px; background:#FF6B35; border-radius:11px; display:flex; align-items:center; justify-content:center; }
+.logo-icon span { font-size:22px; font-weight:900; color:#fff; }
+.logo-name { font-size:20px; font-weight:900; color:#fff; letter-spacing:4px; }
+
+/* ══ HEADLINE ══ */
+.headline-block {
+  position:absolute; top:130px; left:0; right:0; z-index:20;
+  text-align:center; padding:0 52px;
+}
+.eyebrow {
+  font-size:13px; font-weight:800; color:#FF6B35;
+  letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:16px;
+}
+.headline {
+  font-size:72px; font-weight:900; color:#fff;
+  line-height:0.92; letter-spacing:-3px;
+}
+.headline em { color:#FF6B35; font-style:normal; }
+
+/* ══ VS DIVIDER ══ */
+.vs-divider {
+  position:absolute; top:360px; left:50%; z-index:30;
+  transform:translateX(-50%);
+  background:#FF6B35; color:#fff;
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:900;
+  box-shadow:0 0 0 6px #0a0a0a, 0 8px 30px rgba(255,107,53,0.4);
+}
+
+/* ══ PROFILE CARDS ══ */
+.profiles {
+  position:absolute; top:320px; left:52px; right:52px; z-index:20;
+  display:flex; gap:20px;
+}
+
+.profile-card {
+  flex:1; border-radius:20px; overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.profile-card.bad { border:2px solid rgba(232,32,32,0.3); }
+.profile-card.good { border:2px solid rgba(37,168,40,0.4); }
+
+/* Card header — fake app chrome */
+.card-chrome {
+  background:#1a1a1a; padding:12px 16px;
+  display:flex; align-items:center; gap:8px;
+}
+.chrome-dot { width:8px; height:8px; border-radius:50%; }
+.chrome-dot.r { background:#e82020; }
+.chrome-dot.y { background:#f0b020; margin:0 2px; }
+.chrome-dot.g { background:#25a820; }
+.chrome-label {
+  margin-left:auto; font-size:11px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.chrome-label.bad { color:#e82020; }
+.chrome-label.good { color:#25a820; }
+
+/* Profile photo area */
+.photo-area {
+  height:180px;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.photo-bad {
+  background:#1e1e1e;
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:8px;
+}
+.no-photo-icon { font-size:40px; opacity:0.3; }
+.no-photo-text { font-size:12px; font-weight:600; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:1px; }
+
+.photo-good {
+  width:100%; height:100%;
+  background:
+    radial-gradient(ellipse 300px 200px at 50% 60%,
+      #c44a00 0%, #7a2500 40%, #3d1500 80%);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+/* Food thumbnail — tacos */
+.food-thumb {
+  font-size:72px;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.7));
+  position:relative; z-index:2;
+}
+.photo-good::after {
+  content:'HD ✓';
+  position:absolute; bottom:8px; right:8px;
+  background:rgba(37,168,40,0.9); color:#fff;
+  font-size:11px; font-weight:800;
+  border-radius:6px; padding:3px 8px;
+  letter-spacing:1px;
+}
+
+/* Profile info */
+.profile-info {
+  background:#141414; padding:16px;
+}
+.rest-name { font-size:15px; font-weight:800; color:#fff; margin-bottom:8px; }
+.rest-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.rest-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; }
+.rest-val-bad { font-size:14px; font-weight:900; color:#e82020; }
+.rest-val-good { font-size:14px; font-weight:900; color:#25a820; }
+.rest-val-neutral { font-size:14px; font-weight:900; color:rgba(255,255,255,0.3); }
+
+/* Rating stars */
+.stars-bad { color:#e82020; font-size:13px; }
+.stars-good { color:#f0b020; font-size:13px; }
+
+/* Position badge */
+.pos-badge-bad {
+  background:rgba(232,32,32,0.12);
+  border:1px solid rgba(232,32,32,0.25);
+  color:#e82020; border-radius:8px;
+  padding:4px 10px; font-size:12px; font-weight:800;
+}
+.pos-badge-good {
+  background:rgba(37,168,40,0.12);
+  border:1px solid rgba(37,168,40,0.3);
+  color:#25a820; border-radius:8px;
+  padding:4px 10px; font-size:12px; font-weight:800;
+}
+
+/* Menu preview */
+.menu-preview {
+  margin-top:10px; padding-top:10px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex; gap:6px;
+}
+.menu-item {
+  flex:1; border-radius:8px; overflow:hidden; text-align:center;
+  padding:6px 4px;
+}
+.menu-item.empty { background:#1e1e1e; }
+.menu-item.filled { background:#1a2a1a; }
+.menu-emoji { font-size:20px; display:block; margin-bottom:3px; opacity:0.3; }
+.menu-emoji.visible { opacity:1; }
+.menu-price-bad { font-size:9px; color:rgba(255,255,255,0.2); font-weight:600; }
+.menu-price-good { font-size:9px; color:#25a820; font-weight:700; }
+
+/* ══ BOTTOM MESSAGE ══ */
+.bottom-msg {
+  position:absolute; top:870px; left:52px; right:52px; z-index:20;
+}
+.msg-line {
+  display:flex; align-items:center; gap:20px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:16px; padding:18px 24px; margin-bottom:12px;
+}
+.msg-icon { font-size:20px; flex-shrink:0; }
+.msg-text { font-size:18px; font-weight:600; color:rgba(255,255,255,0.75); line-height:1.3; }
+.msg-text strong { color:#fff; font-weight:800; }
+.msg-tag {
+  margin-left:auto; flex-shrink:0;
+  font-size:12px; font-weight:800; color:#FF6B35;
+  background:rgba(255,107,53,0.1);
+  border:1px solid rgba(255,107,53,0.2);
+  border-radius:8px; padding:5px 12px;
+  white-space:nowrap;
+}
+
+/* ══ CTA ══ */
+.cta-block {
+  position:absolute; bottom:0; left:0; right:0; z-index:20;
+  padding:0 52px 52px;
+}
+.cta-inner {
+  background:#FF6B35; border-radius:24px;
+  padding:28px 36px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 16px 60px rgba(255,107,53,0.4);
+}
+.cta-main { font-size:30px; font-weight:900; color:#fff; }
+.cta-sub { font-size:15px; font-weight:600; color:rgba(255,255,255,0.75); margin-top:4px; }
+.cta-right { display:flex; align-items:center; gap:14px; }
+.wa-circle { background:#fff; border-radius:50%; width:58px; height:58px; display:flex; align-items:center; justify-content:center; }
+.wa-circle svg { width:33px; }
+.phone-wrap { display:flex; flex-direction:column; gap:2px; }
+.phone-lbl { font-size:11px; font-weight:700; color:rgba(255,255,255,0.65); text-transform:uppercase; letter-spacing:1px; }
+.phone-num { font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="bg-left"></div>
+  <div class="bg-right"></div>
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><span>Z</span></div>
+      <span class="logo-name">ZUBA</span>
+    </div>
+  </div>
+
+  <div class="headline-block">
+    <div class="eyebrow">Así te ve el cliente antes de ordenar</div>
+    <h1 class="headline">¿Cuál de los dos<br>restaurantes <em>eliges?</em></h1>
+  </div>
+
+  <!-- Profile comparison -->
+  <div class="profiles">
+
+    <!-- BAD profile -->
+    <div class="profile-card bad">
+      <div class="card-chrome">
+        <div class="chrome-dot r"></div>
+        <div class="chrome-dot y"></div>
+        <div class="chrome-dot g"></div>
+        <span class="chrome-label bad">Sin optimizar</span>
+      </div>
+      <div class="photo-area">
+        <div class="photo-bad">
+          <span class="no-photo-icon">📷</span>
+          <span class="no-photo-text">Sin fotos</span>
+        </div>
+      </div>
+      <div class="profile-info">
+        <div class="rest-name">Taquería El Güero</div>
+        <div class="rest-row">
+          <span class="rest-label">Rating</span>
+          <span class="rest-val-bad">⭐ 3.8</span>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Posición</span>
+          <div class="pos-badge-bad">#18 de 24</div>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Fotos</span>
+          <span class="rest-val-neutral">0 fotos</span>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Tiempo estim.</span>
+          <span class="rest-val-bad">52 min</span>
+        </div>
+        <div class="menu-preview">
+          <div class="menu-item empty"><span class="menu-emoji">🌮</span><div class="menu-price-bad">sin foto</div></div>
+          <div class="menu-item empty"><span class="menu-emoji">🍖</span><div class="menu-price-bad">sin foto</div></div>
+          <div class="menu-item empty"><span class="menu-emoji">🥤</span><div class="menu-price-bad">sin foto</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOOD profile -->
+    <div class="profile-card good">
+      <div class="card-chrome">
+        <div class="chrome-dot r"></div>
+        <div class="chrome-dot y"></div>
+        <div class="chrome-dot g"></div>
+        <span class="chrome-label good">Con ZUBA ✓</span>
+      </div>
+      <div class="photo-area">
+        <div class="photo-good">
+          <div class="food-thumb">🌮</div>
+        </div>
+      </div>
+      <div class="profile-info">
+        <div class="rest-name">Taquería El Güero</div>
+        <div class="rest-row">
+          <span class="rest-label">Rating</span>
+          <span class="rest-val-good">⭐ 4.7</span>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Posición</span>
+          <div class="pos-badge-good">🏆 Top 3</div>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Fotos</span>
+          <span class="rest-val-good">12 fotos HD</span>
+        </div>
+        <div class="rest-row">
+          <span class="rest-label">Tiempo estim.</span>
+          <span class="rest-val-good">28 min</span>
+        </div>
+        <div class="menu-preview">
+          <div class="menu-item filled"><span class="menu-emoji visible">🌮</span><div class="menu-price-good">$89</div></div>
+          <div class="menu-item filled"><span class="menu-emoji visible">🍖</span><div class="menu-price-good">$145</div></div>
+          <div class="menu-item filled"><span class="menu-emoji visible">🥤</span><div class="menu-price-good">$35</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="vs-divider">VS</div>
+
+  <!-- Bottom insight lines -->
+  <div class="bottom-msg">
+    <div class="msg-line">
+      <span class="msg-icon">👁️</span>
+      <span class="msg-text">El cliente elige en <strong>3 segundos</strong>. Sin foto, sin clic.</span>
+      <span class="msg-tag">Hecho</span>
+    </div>
+    <div class="msg-line">
+      <span class="msg-icon">🧠</span>
+      <span class="msg-text">El algoritmo prioriza <strong>rating + foto + tiempo</strong>. Siempre.</span>
+      <span class="msg-tag">Hecho</span>
+    </div>
+    <div class="msg-line">
+      <span class="msg-icon">🔧</span>
+      <span class="msg-text">En ZUBA convertimos el perfil <strong>izquierdo en el derecho</strong>.</span>
+      <span class="msg-tag">ZUBA</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-main">Escríbenos ahora →</div>
+        <div class="cta-sub">Auditoría gratis · 20 min · Sin compromiso</div>
+      </div>
+      <div class="cta-right">
+        <div class="wa-circle">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="#25D366"/>
+            <path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/>
+          </svg>
+        </div>
+        <div class="phone-wrap">
+          <span class="phone-lbl">WhatsApp</span>
+          <span class="phone-num">564 292 6243</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
