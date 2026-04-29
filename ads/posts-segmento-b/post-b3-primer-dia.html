@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZUBA Post B3 — Lo que pasa el día 1</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1080px;
+    background: #FFF5EE;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 52px; height: 52px; background: #FF6B35;
+    border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon span { font-size: 28px; font-weight: 900; color: #fff; }
+  .logo-wordmark { font-size: 26px; font-weight: 900; color: #080808; letter-spacing: 4px; }
+
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 40px; }
+
+  .eyebrow {
+    font-size: 16px; font-weight: 700; color: #FF6B35;
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  .headline {
+    font-size: 68px; font-weight: 900; color: #080808;
+    line-height: 1.0; letter-spacing: -2px;
+  }
+  .headline em { color: #FF6B35; font-style: normal; }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex; align-items: center; gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid #e8e0d8;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-size: 13px; font-weight: 900; color: #FF6B35;
+    letter-spacing: 1px; width: 32px; flex-shrink: 0;
+  }
+  .step-text { font-size: 22px; font-weight: 700; color: #080808; }
+  .step-sub { font-size: 16px; font-weight: 400; color: #888; margin-top: 2px; }
+
+  .footer { display: flex; align-items: center; justify-content: space-between; }
+  .cta {
+    background: #080808; color: #fff;
+    border-radius: 50px; padding: 16px 36px;
+    font-size: 18px; font-weight: 800;
+  }
+  .url { font-size: 17px; font-weight: 600; color: #aaa; }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-wordmark">ZUBA</span>
+  </div>
+
+  <div class="body">
+    <p class="eyebrow">Cómo se hace bien</p>
+    <h1 class="headline">
+      Lo que pasa<br>cuando entras<br><em>bien</em> desde el día 1.
+    </h1>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <div>
+          <div class="step-text">Perfil 100% configurado</div>
+          <div class="step-sub">Horarios, zonas, categorías — todo correcto</div>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <div>
+          <div class="step-text">Fotos profesionales desde el arranque</div>
+          <div class="step-sub">El cliente compra con los ojos primero</div>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <div>
+          <div class="step-text">Menú que vende, no que lista</div>
+          <div class="step-sub">Nombres, descripciones y orden estratégico</div>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <div>
+          <div class="step-text">Rating protegido desde el primer pedido</div>
+          <div class="step-sub">Arriba de 4.3 — el algoritmo te favorece</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="cta">Así trabaja ZUBA</span>
+    <span class="url">zubamx.vercel.app</span>
+  </div>
+</body>
+</html>

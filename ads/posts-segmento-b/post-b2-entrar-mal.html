@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZUBA Post B2 — Entrar mal cuesta más</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1080px;
+    background: #FF6B35;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 52px; height: 52px; background: rgba(255,255,255,0.2);
+    border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon span { font-size: 28px; font-weight: 900; color: #fff; }
+  .logo-wordmark { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 4px; }
+
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+  .headline {
+    font-size: 86px; font-weight: 900; color: #fff;
+    line-height: 0.95; letter-spacing: -3px; margin-bottom: 48px;
+  }
+  .headline em { color: #080808; font-style: normal; }
+
+  .list { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  .list li {
+    font-size: 26px; font-weight: 600; color: rgba(255,255,255,0.9);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .list li::before {
+    content: "✗";
+    font-size: 22px; font-weight: 900; color: #080808;
+    background: rgba(0,0,0,0.15); border-radius: 8px;
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .list li strong { color: #fff; font-weight: 800; }
+
+  .footer { display: flex; align-items: flex-end; justify-content: space-between; }
+  .note {
+    font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.8);
+    max-width: 540px; line-height: 1.4;
+  }
+  .note strong { color: #fff; }
+  .url { font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-wordmark">ZUBA</span>
+  </div>
+
+  <div class="body">
+    <h1 class="headline">
+      Entrar <em>mal</em><br>cuesta más<br>que no entrar.
+    </h1>
+    <ul class="list">
+      <li>Rating bajo desde el día 1 — <strong>difícil de recuperar</strong></li>
+      <li>Fotos de celular — <strong>el cliente no le entra</strong></li>
+      <li>Menú sin estructura — <strong>el algoritmo te ignora</strong></li>
+      <li>Sin configuración de promociones — <strong>pierdes margen</strong></li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p class="note">
+      En ZUBA te configuramos<br>
+      <strong>bien desde el primer día.</strong>
+    </p>
+    <span class="url">zubamx.vercel.app</span>
+  </div>
+</body>
+</html>

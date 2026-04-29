@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZUBA Post B4 — Pregunta interactiva</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1080px;
+    background: #080808;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 52px; height: 52px; background: #FF6B35;
+    border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon span { font-size: 28px; font-weight: 900; color: #fff; }
+  .logo-wordmark { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 4px; }
+
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 44px; }
+
+  .question {
+    font-size: 62px; font-weight: 900; color: #fff;
+    line-height: 1.05; letter-spacing: -2px;
+  }
+  .question em { color: #FF6B35; font-style: normal; }
+
+  .options { display: flex; flex-direction: column; gap: 16px; }
+  .option {
+    display: flex; align-items: center; gap: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 28px;
+    transition: all 0.2s;
+  }
+  .opt-letter {
+    font-size: 22px; font-weight: 900; color: #FF6B35;
+    width: 40px; flex-shrink: 0;
+  }
+  .opt-text { font-size: 22px; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+  .footer { display: flex; align-items: center; justify-content: space-between; }
+  .prompt { font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.5); }
+  .url { font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-wordmark">ZUBA</span>
+  </div>
+
+  <div class="body">
+    <h1 class="question">
+      ¿Por qué no estás<br>en <em>Uber Eats</em><br>todavía?
+    </h1>
+    <div class="options">
+      <div class="option">
+        <span class="opt-letter">A</span>
+        <span class="opt-text">No sé por dónde empezar</span>
+      </div>
+      <div class="option">
+        <span class="opt-letter">B</span>
+        <span class="opt-text">Me da miedo entrar y que no funcione</span>
+      </div>
+      <div class="option">
+        <span class="opt-letter">C</span>
+        <span class="opt-text">No tengo tiempo de manejarlo solo</span>
+      </div>
+      <div class="option">
+        <span class="opt-letter">D</span>
+        <span class="opt-text">Ya voy a entrar — solo necesito ayuda</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="prompt">Comenta tu letra 👇</span>
+    <span class="url">zubamx.vercel.app</span>
+  </div>
+</body>
+</html>

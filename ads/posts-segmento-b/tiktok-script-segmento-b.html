@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ZUBA — TikTok Script Segmento B</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    background: #FFF5EE; color: #080808;
+    padding: 60px; max-width: 900px; margin: 0 auto;
+  }
+  .header { display: flex; align-items: center; gap: 14px; margin-bottom: 48px; }
+  .logo-icon {
+    width: 46px; height: 46px; background: #FF6B35;
+    border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon span { font-size: 24px; font-weight: 900; color: #fff; }
+  .wordmark { font-size: 22px; font-weight: 900; letter-spacing: 4px; }
+  .badge {
+    margin-left: auto; background: #FF6B35; color: #fff;
+    border-radius: 50px; padding: 8px 20px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; letter-spacing: -1px; }
+  .meta { font-size: 15px; color: #888; margin-bottom: 36px; }
+
+  .specs { display: flex; gap: 14px; margin-bottom: 48px; flex-wrap: wrap; }
+  .spec {
+    background: #fff; border: 2px solid #e8e0d8;
+    border-radius: 12px; padding: 14px 22px;
+    font-size: 13px; font-weight: 600; color: #666;
+  }
+  .spec strong { display: block; font-size: 17px; font-weight: 900; color: #080808; }
+
+  /* Beat breakdown */
+  .beat {
+    background: #fff; border-radius: 20px; padding: 32px 36px;
+    margin-bottom: 18px; border-left: 6px solid #FF6B35;
+  }
+  .beat.dark { background: #080808; border-left-color: #FF6B35; }
+  .beat-header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .beat-num {
+    background: #FF6B35; color: #fff;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900; flex-shrink: 0;
+  }
+  .beat.dark .beat-num { background: rgba(255,107,53,0.3); }
+  .beat-tag { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #FF6B35; }
+  .beat-title { font-size: 17px; font-weight: 800; }
+  .beat.dark .beat-title { color: #fff; }
+  .beat-time {
+    margin-left: auto; font-size: 12px; font-weight: 700; color: #bbb;
+    background: #f5f0eb; border-radius: 8px; padding: 4px 10px;
+  }
+  .beat.dark .beat-time { background: rgba(255,255,255,0.08); }
+
+  .screen-text {
+    font-size: 26px; font-weight: 900; line-height: 1.2;
+    letter-spacing: -0.5px; margin-bottom: 14px;
+  }
+  .screen-text em { color: #FF6B35; font-style: normal; }
+  .beat.dark .screen-text { color: #fff; }
+
+  .vo {
+    font-size: 16px; line-height: 1.6; color: #444;
+    border-top: 1px solid #f0ebe4; padding-top: 14px;
+  }
+  .beat.dark .vo { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.1); }
+  .vo strong { font-weight: 700; color: #080808; }
+  .beat.dark .vo strong { color: #fff; }
+
+  .direction { font-size: 12px; color: #bbb; font-style: italic; margin-top: 10px; }
+
+  /* Hook variants */
+  .hooks { background: #fff; border-radius: 20px; padding: 32px 36px; margin-bottom: 18px; }
+  .hooks h3 { font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #FF6B35; margin-bottom: 18px; }
+  .hook-item { padding: 14px 0; border-bottom: 1px solid #f0ebe4; }
+  .hook-item:last-child { border-bottom: none; }
+  .hook-label { font-size: 12px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .hook-copy { font-size: 18px; font-weight: 700; color: #080808; line-height: 1.3; }
+
+  .note {
+    background: #080808; color: #fff;
+    border-radius: 16px; padding: 24px 32px; margin-top: 32px;
+  }
+  .note h3 { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #FF6B35; margin-bottom: 12px; }
+  .note p { font-size: 15px; line-height: 1.6; color: #ccc; }
+  .note p strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-icon"><span>Z</span></div>
+  <span class="wordmark">ZUBA</span>
+  <span class="badge">TikTok · Segmento B</span>
+</div>
+
+<h1>TikTok Orgánico — Segmento B</h1>
+<p class="meta">"Entra bien desde el día 1" · Negocios que aún no están en delivery · Duración 25-30 seg</p>
+
+<div class="specs">
+  <div class="spec"><strong>25–30 seg</strong>Duración</div>
+  <div class="spec"><strong>9:16</strong>Vertical</div>
+  <div class="spec"><strong>TikTok orgánico</strong>Canal</div>
+  <div class="spec"><strong>@ZubaMX</strong>Cuenta</div>
+  <div class="spec"><strong>Español MX</strong>Voz</div>
+  <div class="spec"><strong>CapCut AI</strong>Herramienta</div>
+</div>
+
+<!-- HOOK -->
+<div class="beat dark">
+  <div class="beat-header">
+    <div class="beat-num">1</div>
+    <div>
+      <div class="beat-tag">Hook · 0–3 seg</div>
+      <div class="beat-title">Para en el scroll</div>
+    </div>
+    <span class="beat-time">0:00 – 0:03</span>
+  </div>
+  <div class="screen-text">
+    ¿Tienes cafetería o restaurante<br>y <em>no estás en delivery todavía?</em>
+  </div>
+  <div class="vo">
+    <strong>VOZ:</strong> "Para. Si tienes un negocio de comida y no estás en Uber Eats todavía, esto es para ti."
+  </div>
+  <div class="direction">Cámara directa al creador o texto animado. Fondo negro. Sin introducción. Directo al dolor.</div>
+</div>
+
+<!-- PROBLEMA -->
+<div class="beat">
+  <div class="beat-header">
+    <div class="beat-num">2</div>
+    <div>
+      <div class="beat-tag">Problema · 3–10 seg</div>
+      <div class="beat-title">El costo invisible de no estar</div>
+    </div>
+    <span class="beat-time">0:03 – 0:10</span>
+  </div>
+  <div class="screen-text">
+    Cada día que no estás,<br>alguien más <em>cobra lo tuyo.</em>
+  </div>
+  <div class="vo">
+    <strong>VOZ:</strong> "En este momento hay personas en tu colonia buscando exactamente lo que tú vendes. Y lo están comprando en otro lugar porque tú no apareces."
+  </div>
+  <div class="direction">Texto en pantalla acompaña la voz. Cada oración = un cut. Ritmo de 1.5 segundos por idea.</div>
+</div>
+
+<!-- AGITAR -->
+<div class="beat">
+  <div class="beat-header">
+    <div class="beat-num">3</div>
+    <div>
+      <div class="beat-tag">Agitar · 10–17 seg</div>
+      <div class="beat-title">El error que se paga caro</div>
+    </div>
+    <span class="beat-time">0:10 – 0:17</span>
+  </div>
+  <div class="screen-text">
+    Entrar mal<br>cuesta más que<br><em>no entrar.</em>
+  </div>
+  <div class="vo">
+    <strong>VOZ:</strong> "Y el error más caro no es no estar. Es entrar sin saber cómo funciona. Rating bajo desde el día 1, fotos malas, menú sin estructura — y el algoritmo te ignora para siempre."
+  </div>
+  <div class="direction">Texto rojo o naranja en "entrar mal". Efecto de énfasis en palabras clave.</div>
+</div>
+
+<!-- SOLUCIÓN -->
+<div class="beat">
+  <div class="beat-header">
+    <div class="beat-num">4</div>
+    <div>
+      <div class="beat-tag">Solución · 17–24 seg</div>
+      <div class="beat-title">ZUBA — entra bien</div>
+    </div>
+    <span class="beat-time">0:17 – 0:24</span>
+  </div>
+  <div class="screen-text">
+    En ZUBA te configuramos<br><em>desde cero.</em> Bien.
+  </div>
+  <div class="vo">
+    <strong>VOZ:</strong> "Nosotros en ZUBA te configuramos todo desde cero. Perfil, menú, fotos, visibilidad. Para que desde el primer pedido el algoritmo trabaje a tu favor."
+  </div>
+  <div class="direction">Logo ZUBA aparece. Fondo crema #FFF5EE. Voz más tranquila — ya resolvimos el miedo.</div>
+</div>
+
+<!-- CTA -->
+<div class="beat dark">
+  <div class="beat-header">
+    <div class="beat-num">5</div>
+    <div>
+      <div class="beat-tag">CTA · 24–28 seg</div>
+      <div class="beat-title">Acción directa</div>
+    </div>
+    <span class="beat-time">0:24 – 0:28</span>
+  </div>
+  <div class="screen-text">
+    Escríbenos.<br><em>Auditoría gratis.</em><br>Sin compromiso.
+  </div>
+  <div class="vo">
+    <strong>VOZ:</strong> "Escríbenos hoy por WhatsApp. La primera consulta es gratis y sin compromiso."
+  </div>
+  <div class="direction">Ícono WhatsApp grande. Link en bio apuntando al WhatsApp. Fondo naranja. Texto blanco bold.</div>
+</div>
+
+<!-- Hook alternativas -->
+<div class="hooks">
+  <h3>3 Variaciones de hook para probar</h3>
+  <div class="hook-item">
+    <div class="hook-label">Variante 1 — Curiosidad</div>
+    <div class="hook-copy">"Lo que nadie te dice sobre entrar a Uber Eats por primera vez…"</div>
+  </div>
+  <div class="hook-item">
+    <div class="hook-label">Variante 2 — Dato</div>
+    <div class="hook-copy">"El 80% de los negocios que entran solos a Uber Eats no despegan. Esto es por qué."</div>
+  </div>
+  <div class="hook-item">
+    <div class="hook-label">Variante 3 — Directo al dolor</div>
+    <div class="hook-copy">"¿Cuántos pedidos pierdes cada semana por no estar en delivery? Te digo cómo calcularlo."</div>
+  </div>
+</div>
+
+<div class="note">
+  <h3>Notas de producción CapCut</h3>
+  <p>
+    <strong>Plantilla:</strong> "Bold text vertical" 9:16 en CapCut AI.<br>
+    <strong>Voz:</strong> Text-to-Speech masculino mexicano, velocidad 0.9× (ligeramente más lento = más autoridad).<br>
+    <strong>Subtítulos:</strong> Auto-captions activados. Fuente bold, blanca, contorno negro. Tamaño máximo.<br>
+    <strong>Secuencia de color:</strong> Negro (hook/urgencia) → Blanco/claro (problema) → Negro (agitar) → Crema (solución) → Naranja (CTA).<br>
+    <strong>Caption TikTok:</strong> "¿Ya estás en Uber Eats? ¿Por qué no? 👇 #delivery #restaurante #ubereats #emprendimiento #mexico"<br>
+    <strong>Primer comentario propio:</strong> "Si quieres saber cómo entramos con tu negocio → link en bio 🔗"
+  </p>
+</div>
+
+</body>
+</html>

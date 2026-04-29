@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>ZUBA Post B1 — La competencia ya está</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1080px;
+    background: #080808;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 52px; height: 52px; background: #FF6B35;
+    border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon span { font-size: 28px; font-weight: 900; color: #fff; }
+  .logo-wordmark { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 4px; }
+
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 0; }
+
+  .eyebrow {
+    font-size: 16px; font-weight: 700; color: #FF6B35;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 36px;
+  }
+
+  .headline {
+    font-size: 80px; font-weight: 900; color: #fff;
+    line-height: 0.95; letter-spacing: -3px; margin-bottom: 44px;
+  }
+  .headline em { color: #FF6B35; font-style: normal; }
+
+  .copy {
+    font-size: 24px; font-weight: 400; color: rgba(255,255,255,0.7);
+    line-height: 1.55; max-width: 820px;
+  }
+  .copy strong { color: #fff; font-weight: 700; }
+
+  .footer { display: flex; align-items: center; justify-content: space-between; }
+  .tag {
+    background: #FF6B35; color: #fff;
+    border-radius: 50px; padding: 14px 32px;
+    font-size: 17px; font-weight: 800;
+  }
+  .url { font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <div class="logo-icon"><span>Z</span></div>
+    <span class="logo-wordmark">ZUBA</span>
+  </div>
+
+  <div class="body">
+    <p class="eyebrow">Para cafeterías · panaderías · fondas</p>
+    <h1 class="headline">
+      Tu competencia<br>ya está en<br><em>Uber Eats.</em><br>¿Tú no?
+    </h1>
+    <p class="copy">
+      Mientras lees esto, el restaurante de al lado<br>
+      recibe pedidos que <strong>podrían ser tuyos</strong>.<br>
+      No necesitas ser grande para entrar.<br>
+      Necesitas entrar <strong>bien desde el primer día</strong>.
+    </p>
+  </div>
+
+  <div class="footer">
+    <span class="tag">Delivery que vende solo.</span>
+    <span class="url">zubamx.vercel.app</span>
+  </div>
+</body>
+</html>
