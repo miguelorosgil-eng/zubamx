@@ -2,467 +2,309 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,900&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --neon:       #FF5F00;
-  --neon-glow:  rgba(255,95,0,0.55);
-  --neon-dim:   rgba(255,95,0,0.15);
-  --green:      #00E5A0;
-  --green-glow: rgba(0,229,160,0.45);
-  --red:        #FF2D55;
-  --bg:         #060608;
-  --card:       rgba(30,30,30,0.60);
-  --card-border: rgba(255,255,255,0.12);
-  --card-top:   rgba(255,255,255,0.22);
-  --muted:      rgba(255,255,255,0.38);
-  --subtle:     rgba(255,255,255,0.06);
+  --orange:      #FF6B35;
+  --orange-mid:  rgba(255,107,53,0.18);
+  --orange-soft: rgba(255,107,53,0.08);
+  --green:       #10B981;
+  --green-soft:  rgba(16,185,129,0.12);
+  --bg-center:   #FFF8F5;
+  --bg-edge:     #FFE5D9;
+  --card:        rgba(255,255,255,0.72);
+  --card-stroke: rgba(255,255,255,0.95);
+  --text-1:      #1A1A1A;
+  --text-2:      #2D3748;
+  --text-3:      #6B7280;
+  --text-4:      #D1D5DB;
 }
 
 body {
   width:1080px; height:1350px;
-  background:var(--bg);
+  background: radial-gradient(ellipse at 55% 38%, var(--bg-center) 0%, var(--bg-edge) 75%);
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
 }
 
-/* ═══════════════════════════════════════
-   LAYER 0 — DEEP BACKGROUND
-═══════════════════════════════════════ */
-.L0-bg {
-  position:absolute; inset:0; z-index:0;
-  background:
-    radial-gradient(ellipse 1100px 900px at 50% 40%,
-      rgba(255,95,0,0.055) 0%,
-      rgba(255,95,0,0.01)  35%,
-      transparent          65%),
-    radial-gradient(ellipse 600px 500px at 8%  90%,
-      rgba(0,80,200,0.04)  0%, transparent 60%),
-    radial-gradient(ellipse 500px 400px at 95% 5%,
-      rgba(255,95,0,0.03)  0%, transparent 55%);
+/* Ambient blobs */
+.blob { position:absolute; border-radius:50%; pointer-events:none; }
+.blob-tl {
+  width:560px; height:560px; top:-180px; left:-140px;
+  background: radial-gradient(circle, rgba(255,107,53,0.10) 0%, transparent 68%);
+}
+.blob-br {
+  width:480px; height:480px; bottom:-100px; right:-80px;
+  background: radial-gradient(circle, rgba(255,107,53,0.08) 0%, transparent 68%);
+}
+.blob-tr {
+  width:380px; height:380px; top:60px; right:40px;
+  background: radial-gradient(circle, rgba(255,220,200,0.50) 0%, transparent 70%);
 }
 
-/* ═══════════════════════════════════════
-   LAYER 1 — GHOST HEADLINE (depth anchor)
-═══════════════════════════════════════ */
-.L1-ghost {
-  position:absolute; z-index:1;
-  font-family:'Inter',sans-serif;
-  font-weight:900; font-style:italic;
-  line-height:0.8; pointer-events:none; user-select:none;
-  /* Positioned so it bleeds off the right edge */
-  font-size:520px;
-  color:transparent;
-  -webkit-text-stroke:1px rgba(255,95,0,0.07);
-  right:-60px; top:100px;
-  letter-spacing:-30px;
-}
-
-/* ═══════════════════════════════════════
-   LAYER 2 — SCANLINES
-═══════════════════════════════════════ */
-.L2-scan {
-  position:absolute; inset:0; z-index:2; pointer-events:none;
-  background:repeating-linear-gradient(
-    180deg,
-    transparent              0px,
-    transparent              3px,
-    rgba(255,255,255,0.008)  3px,
-    rgba(255,255,255,0.008)  4px
-  );
-}
-
-/* ═══════════════════════════════════════
-   LAYER 3 — LOGO + NAV
-═══════════════════════════════════════ */
-.L3-logo {
-  position:absolute; top:52px; left:60px; z-index:30;
-  display:flex; align-items:center; gap:16px;
-}
-.logo-icon {
-  width:52px; height:52px; background:var(--neon);
-  border-radius:14px;
+/* Food hero circle */
+.food-circle {
+  position:absolute;
+  top:96px; right:72px;
+  width:300px; height:300px;
+  background: radial-gradient(circle at 45% 50%, rgba(255,107,53,0.14) 0%, rgba(255,220,200,0.30) 50%, transparent 72%);
+  border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  /* Rim light: right + top edge */
-  box-shadow:
-    inset -1px  0   0   rgba(255,255,255,0.25),
-    inset  0   -1px 0   rgba(0,0,0,0.3),
-    0 0 0  1px  rgba(255,95,0,0.5),
-    0 0 28px    var(--neon-glow),
-    0 0 70px    rgba(255,95,0,0.2),
-    0 12px 30px rgba(0,0,0,0.6);
+  z-index:5;
 }
-.logo-icon span { font-size:26px; font-weight:900; color:#fff; letter-spacing:-1px; }
-.logo-text-block { display:flex; flex-direction:column; gap:2px; }
-.logo-name {
-  font-size:24px; font-weight:900; color:#fff;
-  letter-spacing:6px;
-  text-shadow:0 0 30px rgba(255,255,255,0.25);
-}
-.logo-sub { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:3px; text-transform:uppercase; }
-
-.top-pill {
-  position:absolute; top:58px; right:60px; z-index:30;
-  background:var(--card); backdrop-filter:blur(20px);
-  border:1px solid var(--card-border);
-  border-top-color:var(--card-top);
-  border-radius:50px; padding:10px 22px;
-  font-size:12px; font-weight:700; color:var(--neon);
-  letter-spacing:2px; text-transform:uppercase;
-  box-shadow:0 0 20px rgba(255,95,0,0.1), 0 8px 20px rgba(0,0,0,0.4);
+.food-emoji {
+  font-size:160px;
+  filter: drop-shadow(0 12px 28px rgba(255,107,53,0.28)) drop-shadow(0 4px 8px rgba(0,0,0,0.12));
+  line-height:1;
 }
 
-/* ═══════════════════════════════════════
-   LAYER 4 — HERO NUMBER
-═══════════════════════════════════════ */
-.L4-hero {
-  position:absolute; top:140px; left:60px; z-index:20;
+/* Main layout */
+.wrap {
+  position:relative; z-index:10;
+  padding:60px 68px;
+  height:100%;
+  display:flex; flex-direction:column;
 }
+
+/* Logo bar */
+.logo-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:52px;
+}
+.logo {
+  font-size:30px; font-weight:900;
+  color:var(--orange); letter-spacing:-1.2px;
+}
+.pill {
+  background:var(--orange-mid); color:var(--orange);
+  font-size:12px; font-weight:700;
+  padding:7px 18px; border-radius:100px;
+  letter-spacing:0.8px; text-transform:uppercase;
+}
+
+/* Eyebrow */
 .eyebrow {
-  display:flex; align-items:center; gap:12px;
-  font-size:12px; font-weight:700; color:var(--neon);
-  letter-spacing:3px; text-transform:uppercase; margin-bottom:10px;
+  font-size:14px; font-weight:700;
+  color:var(--orange); letter-spacing:2.5px;
+  text-transform:uppercase; margin-bottom:18px;
 }
-.eyebrow::before { content:''; width:22px; height:2px; background:var(--neon); border-radius:1px; display:block; box-shadow:0 0 6px var(--neon-glow); }
 
-/* The monster stat */
-.stat-giant {
-  font-size:200px; font-weight:900; font-style:italic;
-  color:var(--neon); line-height:0.85;
-  letter-spacing:-12px;
-  /* MULTI-LAYER OUTER GLOW — physical light emission */
-  text-shadow:
-    0   0   10px rgba(255,95,0,1.0),
-    0   0   30px rgba(255,95,0,0.85),
-    0   0   70px rgba(255,95,0,0.55),
-    0   0  140px rgba(255,95,0,0.25),
-    0   0  220px rgba(255,95,0,0.10);
+/* Headline */
+.headline {
+  font-size:100px; font-weight:900; font-style:italic;
+  line-height:0.90; letter-spacing:-4px;
+  color:var(--text-1);
+  margin-bottom:20px;
 }
-.stat-label {
-  font-size:26px; font-weight:700; color:rgba(255,255,255,0.6);
-  letter-spacing:-0.5px; margin-top:4px; line-height:1.35;
-}
-.stat-label strong { color:#fff; font-weight:900; }
+.headline .accent { color:var(--orange); }
+.headline .light  { color:var(--text-2); }
 
-/* ═══════════════════════════════════════
-   LAYER 5 — GLASS FEED CARD (floating)
-═══════════════════════════════════════ */
-.L5-feed {
-  position:absolute; top:430px; left:60px; right:60px; z-index:25;
-  /* Heavy float shadow */
-  border-radius:22px; overflow:hidden;
+/* Subline */
+.subline {
+  font-size:20px; font-weight:500;
+  color:var(--text-2); line-height:1.45;
+  max-width:520px; margin-bottom:44px;
+}
+.dot-live {
+  display:inline-block;
+  width:9px; height:9px; border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  margin-right:8px; vertical-align:middle;
+}
+
+/* Glass card base */
+.glass {
+  background:var(--card);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border:1px solid var(--card-stroke);
   box-shadow:
-    0 25px 60px rgba(0,0,0,0.55),
-    0 50px 100px rgba(0,0,0,0.35),
-    0  0   0 1px rgba(255,255,255,0.06),
-    /* rim light — top edge */
-    inset 0 1px 0 var(--card-top),
-    /* rim light — right edge */
-    inset -1px 0 0 rgba(255,95,0,0.18);
-  backdrop-filter:blur(20px) saturate(160%);
-  border:1px solid var(--card-border);
-  border-top-color:var(--card-top);
-}
-
-/* Feed top bar */
-.feed-chrome {
-  background:rgba(20,20,24,0.92);
-  padding:14px 22px;
-  display:flex; align-items:center; gap:12px;
-  border-bottom:1px solid rgba(255,255,255,0.07);
-}
-.ue-dot {
-  width:30px; height:30px; background:#06C167; border-radius:8px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:900; color:#fff;
-  box-shadow:0 0 14px rgba(6,193,103,0.5), 0 0 30px rgba(6,193,103,0.2);
-}
-.feed-chrome-label { font-size:13px; font-weight:700; color:rgba(255,255,255,0.75); }
-.feed-chrome-loc { margin-left:auto; font-size:11px; color:var(--muted); }
-
-/* Feed rows */
-.feed-row {
-  display:flex; align-items:center; gap:16px;
-  padding:16px 22px;
-  background:rgba(18,18,22,0.85);
-  border-bottom:1px solid rgba(255,255,255,0.04);
-  position:relative;
-}
-.feed-row.row-winner {
-  background:linear-gradient(90deg, rgba(255,95,0,0.09) 0%, rgba(18,18,22,0.85) 70%);
-  border-left:3px solid var(--neon);
-  border-bottom-color:rgba(255,95,0,0.08);
-}
-.feed-row.row-loser {
-  opacity:0.22;
-  filter:saturate(0.3);
-}
-
-.rank-num {
-  width:32px; height:32px; border-radius:9px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:900; flex-shrink:0;
-}
-.rank-num.gold {
-  background:linear-gradient(135deg, #c8900a 0%, #f0c030 50%, #b87a08 100%);
-  color:#000;
-  box-shadow:0 0 14px rgba(200,144,10,0.6), 0 0 30px rgba(200,144,10,0.2);
-}
-.rank-num.silver { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); }
-.rank-num.gray   { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.2); }
-
-.rest-thumb {
-  width:62px; height:62px; border-radius:13px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:28px; flex-shrink:0; position:relative;
-}
-.rest-thumb.food { background:radial-gradient(ellipse at 40% 35%, #c44a00 0%, #1c0800 100%); box-shadow:0 6px 20px rgba(0,0,0,0.5); }
-.rest-thumb.food2 { background:radial-gradient(ellipse at 40% 35%, #8a3600 0%, #140800 100%); box-shadow:0 6px 20px rgba(0,0,0,0.4); }
-.rest-thumb.empty {
-  background:rgba(255,255,255,0.03);
-  border:1px dashed rgba(255,255,255,0.08);
-  font-size:22px; opacity:0.4;
-}
-
-.rest-info { flex:1; }
-.rest-name { font-size:14px; font-weight:800; color:#fff; margin-bottom:7px; }
-.rest-chips { display:flex; gap:6px; }
-.chip { font-size:11px; font-weight:700; border-radius:7px; padding:3px 9px; letter-spacing:0.3px; }
-.chip-g { background:rgba(0,229,160,0.10); color:var(--green); }
-.chip-o { background:rgba(255,95,0,0.12); color:var(--neon); }
-.chip-r { background:rgba(255,45,85,0.10); color:var(--red); }
-.chip-d { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.3); }
-.chip-b { background:rgba(80,150,255,0.10); color:#7aadff; }
-
-.orders-block { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0; }
-.orders-val { font-size:22px; font-weight:900; letter-spacing:-1px; }
-.orders-val.hi {
-  color:var(--green);
-  text-shadow:0 0 10px var(--green-glow), 0 0 24px rgba(0,229,160,0.25);
-}
-.orders-val.lo { color:rgba(255,255,255,0.18); }
-.orders-lbl { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; }
-
-.you-tag {
-  position:absolute; top:8px; right:14px;
-  font-size:10px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--neon); background:var(--neon-dim); border-radius:5px; padding:2px 8px;
-}
-
-.feed-footer {
-  background:rgba(14,14,18,0.95); padding:14px 22px;
-  display:flex; align-items:center; gap:12px;
-  border-top:1px solid rgba(255,95,0,0.12);
-}
-.ff-dot { width:7px; height:7px; background:var(--neon); border-radius:50%; flex-shrink:0; box-shadow:0 0 8px var(--neon-glow); }
-.ff-text { font-size:13px; font-weight:600; color:var(--muted); line-height:1.4; }
-.ff-text strong { color:#fff; }
-
-/* ═══════════════════════════════════════
-   LAYER 6 — METRIC CARDS
-═══════════════════════════════════════ */
-.L6-metrics {
-  position:absolute; top:1000px; left:60px; right:60px; z-index:25;
-  display:flex; gap:14px;
-}
-.mc {
-  flex:1;
-  background:var(--card); backdrop-filter:blur(20px) saturate(160%);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:18px; padding:22px 18px; text-align:center;
-  /* float */
-  box-shadow:
-    0 20px 50px rgba(0,0,0,0.5),
-    0 40px 80px rgba(0,0,0,0.25),
-    inset -1px 0 0 rgba(255,95,0,0.12);
+    0 2px 0 rgba(255,107,53,0.06),
+    0 20px 50px rgba(0,0,0,0.10),
+    0 8px 24px rgba(255,107,53,0.06);
+  border-radius:22px;
   position:relative; overflow:hidden;
 }
-/* bottom rim line */
-.mc::after {
-  content:''; position:absolute; bottom:0; left:10%; right:10%; height:1px;
-  border-radius:50%;
+.glass::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,107,53,0.35) 50%, transparent 100%);
 }
-.mc.co::after { background:radial-gradient(ellipse at 50% 0, var(--neon) 0%, transparent 70%); box-shadow:0 0 8px var(--neon-glow); }
-.mc.cg::after { background:radial-gradient(ellipse at 50% 0, var(--green) 0%, transparent 70%); box-shadow:0 0 8px var(--green-glow); }
-.mc.cw::after { background:radial-gradient(ellipse at 50% 0, rgba(255,255,255,0.4) 0%, transparent 70%); }
 
-.mc-val { font-size:48px; font-weight:900; display:block; line-height:1; letter-spacing:-2px; }
-.mc-val.o {
-  color:var(--neon);
-  text-shadow:0 0 12px rgba(255,95,0,0.9),0 0 35px rgba(255,95,0,0.55),0 0 70px rgba(255,95,0,0.2);
+/* Algo feed card */
+.algo-card { padding:28px 32px; margin-bottom:28px; }
+.card-eyebrow {
+  font-size:11px; font-weight:700;
+  color:var(--text-3); letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:20px;
 }
-.mc-val.g {
-  color:var(--green);
-  text-shadow:0 0 12px rgba(0,229,160,0.9),0 0 30px rgba(0,229,160,0.45),0 0 60px rgba(0,229,160,0.15);
-}
-.mc-val.w { color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.2); }
-.mc-sub { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-top:8px; display:block; }
 
-/* ═══════════════════════════════════════
-   LAYER 7 — CTA (topmost)
-═══════════════════════════════════════ */
-.L7-cta {
-  position:absolute; bottom:0; left:0; right:0; z-index:50;
-  padding:0 60px 54px;
+.feed-row {
+  display:flex; align-items:center; gap:16px;
+  padding:14px 0;
+  border-bottom:1px solid rgba(0,0,0,0.05);
 }
+.feed-row:last-child { border-bottom:none; }
+
+.rank {
+  font-size:18px; font-weight:900;
+  width:34px; text-align:center;
+  color:var(--text-3);
+}
+.rank.w { color:var(--orange); font-size:22px; }
+
+.thumb {
+  width:50px; height:50px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex-shrink:0;
+}
+.thumb.w {
+  background:linear-gradient(135deg,#FF6B35,#FF9068);
+  box-shadow:0 6px 18px rgba(255,107,53,0.32);
+}
+.thumb.l { background:#F3F4F6; opacity:0.65; }
+
+.rest-info { flex:1; min-width:0; }
+.rest-name {
+  font-size:15px; font-weight:700;
+  color:var(--text-1); white-space:nowrap;
+}
+.rest-name.dim { color:var(--text-4); }
+.rest-meta { font-size:12px; color:var(--text-3); margin-top:3px; }
+
+.orders { text-align:right; flex-shrink:0; }
+.orders-num { font-size:22px; font-weight:900; color:var(--green); }
+.orders-num.dim { color:var(--text-4); font-size:18px; }
+.orders-lbl { font-size:11px; color:var(--text-3); }
+
+/* Stats row */
+.stats-row { display:flex; gap:18px; margin-bottom:28px; }
+.stat-card {
+  flex:1; padding:24px 18px; text-align:center;
+}
+.stat-val {
+  font-size:54px; font-weight:900; font-style:italic;
+  color:var(--orange); line-height:1;
+  letter-spacing:-2px;
+}
+.stat-lbl {
+  font-size:12px; font-weight:600;
+  color:var(--text-2); margin-top:6px; line-height:1.35;
+}
+
+/* CTA bar */
 .cta-bar {
-  background:var(--neon); border-radius:20px;
-  padding:28px 38px;
+  margin-top:auto;
+  background:var(--orange);
+  border-radius:20px;
+  padding:26px 34px;
   display:flex; align-items:center; justify-content:space-between;
-  box-shadow:
-    0  0   0  1px rgba(255,95,0,0.6),
-    0  0  35px rgba(255,95,0,0.5),
-    0  0  80px rgba(255,95,0,0.25),
-    0  0 140px rgba(255,95,0,0.10),
-    0 20px 50px rgba(0,0,0,0.55);
-  /* rim light top */
-  border-top:1px solid rgba(255,255,255,0.3);
+  box-shadow:0 16px 42px rgba(255,107,53,0.38), 0 4px 12px rgba(255,107,53,0.22);
 }
-.cta-headline { font-size:30px; font-weight:900; color:#000; letter-spacing:-0.5px; }
-.cta-detail   { font-size:14px; font-weight:700; color:rgba(0,0,0,0.5); margin-top:4px; }
-.wa-pill {
-  background:#000; border-radius:14px; padding:14px 22px;
-  display:flex; align-items:center; gap:12px;
-  box-shadow:inset -1px 0 0 rgba(255,95,0,0.2);
+.cta-headline {
+  font-size:26px; font-weight:900;
+  color:#fff; line-height:1.08; letter-spacing:-0.5px;
 }
-.wa-pill svg { width:30px; height:30px; }
-.wa-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; }
-.wa-num { font-size:18px; font-weight:900; color:#fff; letter-spacing:0.5px; }
+.cta-sub {
+  font-size:13px; color:rgba(255,255,255,0.78);
+  font-weight:500; margin-top:5px;
+}
+.cta-btn {
+  background:#fff; color:var(--orange);
+  font-size:14px; font-weight:900;
+  padding:14px 26px; border-radius:12px;
+  white-space:nowrap; letter-spacing:0.2px;
+  flex-shrink:0;
+}
 </style>
 </head>
 <body>
 
-<!-- ── LAYER 0: deep bg ── -->
-<div class="L0-bg"></div>
+<div class="blob blob-tl"></div>
+<div class="blob blob-br"></div>
+<div class="blob blob-tr"></div>
 
-<!-- ── LAYER 1: ghost stat ── -->
-<div class="L1-ghost">60</div>
-
-<!-- ── LAYER 2: scanlines ── -->
-<div class="L2-scan"></div>
-
-<!-- ── LAYER 3: logo ── -->
-<div class="L3-logo">
-  <div class="logo-icon"><span>Z</span></div>
-  <div class="logo-text-block">
-    <div class="logo-name">ZUBA</div>
-    <div class="logo-sub">Delivery Performance</div>
-  </div>
-</div>
-<div class="top-pill">El Algoritmo Decide</div>
-
-<!-- ── LAYER 4: hero number ── -->
-<div class="L4-hero">
-  <div class="eyebrow">Tráfico en plataformas</div>
-  <div class="stat-giant">60%</div>
-  <div class="stat-label">
-    del tráfico va a los<br>
-    <strong>primeros 3 resultados.</strong><br>
-    <span style="color:var(--muted);font-size:20px;font-weight:600;">El resto compite por sobras.</span>
-  </div>
+<div class="food-circle">
+  <span class="food-emoji">🌮</span>
 </div>
 
-<!-- ── LAYER 5: glass feed ── -->
-<div class="L5-feed">
-  <div class="feed-chrome">
-    <div class="ue-dot">U</div>
-    <span class="feed-chrome-label">Uber Eats — "Tacos" · cerca de ti</span>
-    <span class="feed-chrome-loc">📍 Col. Nápoles, CDMX</span>
+<div class="wrap">
+
+  <div class="logo-bar">
+    <div class="logo">ZUBA</div>
+    <div class="pill">Optimización de Delivery</div>
   </div>
 
-  <div class="feed-row row-winner">
-    <div class="rank-num gold">1</div>
-    <div class="rest-thumb food">🌮</div>
-    <div class="rest-info">
-      <div class="rest-name">Taquería El Güero — Con ZUBA ✓</div>
-      <div class="rest-chips">
-        <span class="chip chip-g">⭐ 4.7</span>
-        <span class="chip chip-b">⏱ 26 min</span>
-        <span class="chip chip-o">🏆 Top 3</span>
-        <span class="chip chip-g">📷 HD</span>
+  <div class="eyebrow">El algoritmo decide todo</div>
+
+  <div class="headline">
+    Tu restaurante<br>
+    en el <span class="accent">Top 3</span><br>
+    <span class="light">sin gastar en</span><br>
+    publicidad
+  </div>
+
+  <div class="subline">
+    <span class="dot-live"></span>
+    El <strong>60% de los restaurantes</strong> pierden pedidos por una configuración incorrecta en plataforma.
+  </div>
+
+  <div class="glass algo-card">
+    <div class="card-eyebrow">📍 Resultados de búsqueda — Uber Eats CDMX</div>
+
+    <div class="feed-row">
+      <div class="rank w">#1</div>
+      <div class="thumb w">🌮</div>
+      <div class="rest-info">
+        <div class="rest-name">Tacos Don Memo ★★★★★</div>
+        <div class="rest-meta">4.8 · Entrega en 18 min · Perfil optimizado</div>
+      </div>
+      <div class="orders">
+        <div class="orders-num">52</div>
+        <div class="orders-lbl">pedidos/día</div>
       </div>
     </div>
-    <div class="orders-block">
-      <span class="orders-val hi">52</span>
-      <span class="orders-lbl">pedidos hoy</span>
-    </div>
-  </div>
 
-  <div class="feed-row">
-    <div class="rank-num silver">2</div>
-    <div class="rest-thumb food2">🌮</div>
-    <div class="rest-info">
-      <div class="rest-name">Tacos Los Compadres</div>
-      <div class="rest-chips">
-        <span class="chip chip-g">⭐ 4.5</span>
-        <span class="chip chip-b">⏱ 33 min</span>
-        <span class="chip chip-d">8 fotos</span>
+    <div class="feed-row">
+      <div class="rank">#7</div>
+      <div class="thumb l">🍽️</div>
+      <div class="rest-info">
+        <div class="rest-name dim">Taquería Sin Nombre</div>
+        <div class="rest-meta">3.8 · Sin fotos · Sin optimizar</div>
+      </div>
+      <div class="orders">
+        <div class="orders-num dim">4</div>
+        <div class="orders-lbl" style="color:var(--text-4)">pedidos/día</div>
       </div>
     </div>
-    <div class="orders-block">
-      <span class="orders-val hi">24</span>
-      <span class="orders-lbl">pedidos hoy</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="glass stat-card">
+      <div class="stat-val">+60%</div>
+      <div class="stat-lbl">más pedidos con optimización correcta</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="stat-val">14d</div>
+      <div class="stat-lbl">para ver resultados medibles</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="stat-val">$0</div>
+      <div class="stat-lbl">en publicidad extra requerida</div>
     </div>
   </div>
 
-  <div class="feed-row row-loser">
-    <div class="rank-num gray">#18</div>
-    <div class="rest-thumb empty">📷</div>
-    <div class="rest-info">
-      <div class="rest-name">Tu Restaurante</div>
-      <div class="rest-chips">
-        <span class="chip chip-r">⭐ 3.8</span>
-        <span class="chip chip-d">⏱ 54 min</span>
-        <span class="chip chip-d">0 fotos</span>
-      </div>
-    </div>
-    <div class="orders-block">
-      <span class="orders-val lo">3</span>
-      <span class="orders-lbl">pedidos hoy</span>
-    </div>
-    <div class="you-tag">← TÚ</div>
-  </div>
-
-  <div class="feed-footer">
-    <div class="ff-dot"></div>
-    <div class="ff-text">El cliente <strong>nunca llega al #18</strong>. Rating bajo + 0 fotos = el algoritmo te entierra.</div>
-  </div>
-</div>
-
-<!-- ── LAYER 6: metric cards ── -->
-<div class="L6-metrics">
-  <div class="mc co">
-    <span class="mc-val o">3.8→4.7</span>
-    <span class="mc-sub">Rating real · CDMX</span>
-  </div>
-  <div class="mc cg">
-    <span class="mc-val g">×3</span>
-    <span class="mc-sub">Pedidos con foto HD</span>
-  </div>
-  <div class="mc cw">
-    <span class="mc-val w">$0</span>
-    <span class="mc-sub">Pauta invertida</span>
-  </div>
-</div>
-
-<!-- ── LAYER 7: CTA ── -->
-<div class="L7-cta">
   <div class="cta-bar">
     <div>
-      <div class="cta-headline">Escríbenos ahora →</div>
-      <div class="cta-detail">Auditoría gratis · 20 minutos · Sin compromiso</div>
+      <div class="cta-headline">Diagnóstico gratuito<br>de tu restaurante</div>
+      <div class="cta-sub">Descubre en 24h por qué no apareces en el Top 3</div>
     </div>
-    <div class="wa-pill">
-      <svg viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="#25D366"/><path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/></svg>
-      <div>
-        <div class="wa-lbl">WhatsApp</div>
-        <div class="wa-num">564 292 6243</div>
-      </div>
-    </div>
+    <div class="cta-btn">Empezar ahora →</div>
   </div>
-</div>
 
+</div>
 </body>
 </html>

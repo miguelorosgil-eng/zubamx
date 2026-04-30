@@ -2,365 +2,378 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,900&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --neon:       #FF5F00;
-  --neon-glow:  rgba(255,95,0,0.55);
-  --neon-dim:   rgba(255,95,0,0.12);
-  --green:      #00E5A0;
-  --green-glow: rgba(0,229,160,0.50);
-  --red:        #FF2D55;
-  --bg:         #060608;
-  --card:       rgba(30,30,30,0.60);
-  --card-border: rgba(255,255,255,0.11);
-  --card-top:   rgba(255,255,255,0.22);
-  --muted:      rgba(255,255,255,0.38);
+  --orange:      #FF6B35;
+  --orange-mid:  rgba(255,107,53,0.18);
+  --green:       #10B981;
+  --green-soft:  rgba(16,185,129,0.12);
+  --green-glow:  rgba(16,185,129,0.22);
+  --bg-center:   #FFF8F5;
+  --bg-edge:     #FFE5D9;
+  --card:        rgba(255,255,255,0.72);
+  --card-stroke: rgba(255,255,255,0.95);
+  --text-1:      #1A1A1A;
+  --text-2:      #2D3748;
+  --text-3:      #6B7280;
+  --text-4:      #D1D5DB;
+  --bad:         #EF4444;
 }
 
 body {
   width:1080px; height:1350px;
-  background:var(--bg);
+  background: radial-gradient(ellipse at 50% 42%, var(--bg-center) 0%, var(--bg-edge) 78%);
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
 }
 
-/* ── LAYER 0: bg radials ── */
-.L0 {
-  position:absolute; inset:0; z-index:0;
-  background:
-    radial-gradient(ellipse 700px 600px at 25% 60%, rgba(255,45,85,0.045) 0%, transparent 60%),
-    radial-gradient(ellipse 700px 600px at 75% 60%, rgba(0,229,160,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 800px 300px at 50% 5%,  rgba(255,95,0,0.04) 0%, transparent 55%);
+.blob { position:absolute; border-radius:50%; pointer-events:none; }
+.blob-1 {
+  width:520px; height:520px; top:-160px; right:-120px;
+  background:radial-gradient(circle,rgba(255,107,53,0.09) 0%,transparent 68%);
 }
-/* ── LAYER 1: ghost "VS" ── */
-.L1-ghost {
-  position:absolute; z-index:1; pointer-events:none; user-select:none;
-  font-family:'Inter',sans-serif; font-weight:900; font-style:italic;
-  font-size:560px; line-height:1;
-  color:transparent; -webkit-text-stroke:1px rgba(255,255,255,0.025);
-  left:50%; top:120px; transform:translateX(-50%);
-  letter-spacing:-30px;
-}
-/* ── LAYER 2: scanlines ── */
-.L2 {
-  position:absolute; inset:0; z-index:2; pointer-events:none;
-  background:repeating-linear-gradient(180deg,transparent 0,transparent 3px,rgba(255,255,255,0.007) 3px,rgba(255,255,255,0.007) 4px);
+.blob-2 {
+  width:440px; height:440px; bottom:-60px; left:-80px;
+  background:radial-gradient(circle,rgba(255,107,53,0.07) 0%,transparent 68%);
 }
 
-/* ── LAYER 3: logo + pill ── */
-.logo {
-  position:absolute; top:52px; left:60px; z-index:30;
-  display:flex; align-items:center; gap:16px;
-}
-.logo-icon {
-  width:52px; height:52px; background:var(--neon); border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:inset -1px 0 0 rgba(255,255,255,0.22),0 0 0 1px rgba(255,95,0,0.45),0 0 28px var(--neon-glow),0 0 70px rgba(255,95,0,0.18),0 12px 30px rgba(0,0,0,0.6);
-}
-.logo-icon span { font-size:26px; font-weight:900; color:#fff; }
-.logo-name { font-size:24px; font-weight:900; color:#fff; letter-spacing:6px; text-shadow:0 0 30px rgba(255,255,255,0.2); }
-.logo-sub { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:3px; text-transform:uppercase; }
-
-.top-pill {
-  position:absolute; top:58px; right:60px; z-index:30;
-  background:var(--card); backdrop-filter:blur(20px);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:50px; padding:10px 22px;
-  font-size:12px; font-weight:700; color:var(--neon);
-  letter-spacing:2px; text-transform:uppercase;
-  box-shadow:0 0 20px rgba(255,95,0,0.1),0 8px 20px rgba(0,0,0,0.4);
+/* Winner glow — behind right panel */
+.winner-glow {
+  position:absolute;
+  width:430px; height:600px;
+  right:52px; top:180px;
+  background:radial-gradient(ellipse at 50% 40%,
+    rgba(16,185,129,0.22) 0%,
+    rgba(16,185,129,0.08) 38%,
+    transparent 68%);
+  filter:blur(28px);
+  z-index:2; pointer-events:none;
 }
 
-/* ── LAYER 4: headline ── */
-.headline-block {
-  position:absolute; top:138px; left:60px; right:60px; z-index:20;
-  text-align:center;
+.wrap {
+  position:relative; z-index:10;
+  padding:60px 68px;
+  height:100%;
+  display:flex; flex-direction:column;
 }
+
+/* Logo */
+.logo-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:44px;
+}
+.logo { font-size:30px; font-weight:900; color:var(--orange); letter-spacing:-1.2px; }
+.pill {
+  background:var(--orange-mid); color:var(--orange);
+  font-size:12px; font-weight:700;
+  padding:7px 18px; border-radius:100px;
+  letter-spacing:0.8px; text-transform:uppercase;
+}
+
+/* Headline */
 .eyebrow {
-  font-size:12px; font-weight:700; color:var(--neon);
-  letter-spacing:3px; text-transform:uppercase; margin-bottom:12px;
+  font-size:14px; font-weight:700;
+  color:var(--orange); letter-spacing:2.5px;
+  text-transform:uppercase; margin-bottom:16px;
 }
 .headline {
-  font-size:80px; font-weight:900; color:#fff;
-  line-height:0.92; letter-spacing:-4px;
+  font-size:88px; font-weight:900; font-style:italic;
+  line-height:0.90; letter-spacing:-3.5px;
+  color:var(--text-1); margin-bottom:16px;
 }
-.headline em { color:var(--neon); font-style:normal; text-shadow:0 0 30px var(--neon-glow); }
+.headline .accent { color:var(--orange); }
+.subline {
+  font-size:18px; font-weight:500;
+  color:var(--text-2); line-height:1.45;
+  margin-bottom:36px;
+}
 
-/* ── LAYER 5: VS badge ── */
-.vs-badge {
-  position:absolute; top:368px; left:50%; transform:translateX(-50%);
-  z-index:60;
-  background:var(--neon); color:#000;
-  width:58px; height:58px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px; font-weight:900; letter-spacing:1px;
+/* Comparison panels row */
+.compare-row {
+  display:flex; gap:20px;
+  flex:1; margin-bottom:28px;
+}
+
+/* Glass card base */
+.glass {
+  background:var(--card);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border:1px solid var(--card-stroke);
   box-shadow:
-    0 0 0 4px var(--bg),
-    0 0 0 5px rgba(255,95,0,0.3),
-    0 0 28px var(--neon-glow),
-    0 0 60px rgba(255,95,0,0.2),
-    0 10px 30px rgba(0,0,0,0.6);
-  border-top:1px solid rgba(255,255,255,0.3);
-}
-
-/* ── LAYER 5: comparison panels ── */
-.panels {
-  position:absolute; top:248px; left:60px; right:60px; z-index:20;
-  display:flex; gap:18px;
-}
-
-/* WINNER GLOW — behind the right panel */
-.winner-glow {
-  position:absolute; z-index:18;
-  right:60px; top:200px;
-  width:488px; height:680px;
-  background:radial-gradient(ellipse at 50% 40%, rgba(0,229,160,0.20) 0%, rgba(0,229,160,0.06) 40%, transparent 70%);
-  filter:blur(30px); pointer-events:none; border-radius:50%;
-}
-
-.panel {
-  flex:1; border-radius:20px; overflow:hidden;
-  /* deep float */
-  box-shadow:0 25px 60px rgba(0,0,0,0.55),0 50px 100px rgba(0,0,0,0.3);
-}
-.panel.bad {
-  border:1px solid rgba(255,45,85,0.20);
-  border-top-color:rgba(255,45,85,0.35);
-  box-shadow:0 25px 60px rgba(0,0,0,0.55),0 50px 100px rgba(0,0,0,0.3),inset -1px 0 0 rgba(255,45,85,0.12);
-}
-.panel.good {
-  border:1px solid rgba(0,229,160,0.22);
-  border-top-color:rgba(0,229,160,0.40);
-  box-shadow:0 25px 60px rgba(0,0,0,0.55),0 50px 100px rgba(0,0,0,0.3),inset -1px 0 0 rgba(0,229,160,0.18),0 0 0 1px rgba(0,229,160,0.06);
-}
-
-/* Panel header */
-.ph {
-  padding:13px 16px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.panel.bad .ph { background:rgba(255,45,85,0.06); border-bottom:1px solid rgba(255,45,85,0.12); }
-.panel.good .ph { background:rgba(0,229,160,0.05); border-bottom:1px solid rgba(0,229,160,0.12); }
-.ph-dots { display:flex; gap:5px; }
-.ph-dot { width:8px; height:8px; border-radius:50%; }
-.ph-label { font-size:11px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; }
-.panel.bad .ph-label  { color:var(--red); }
-.panel.good .ph-label { color:var(--green); }
-
-/* Photo zone */
-.photo-zone {
-  height:168px; display:flex; align-items:center; justify-content:center;
+    0 2px 0 rgba(255,107,53,0.05),
+    0 20px 50px rgba(0,0,0,0.10),
+    0 8px 24px rgba(255,107,53,0.05);
+  border-radius:22px;
   position:relative; overflow:hidden;
 }
-.pz-empty { background:rgba(255,255,255,0.02); flex-direction:column; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:100%; }
-.pz-icon  { font-size:34px; opacity:0.15; }
-.pz-lbl   { font-size:11px; font-weight:700; color:rgba(255,255,255,0.18); text-transform:uppercase; letter-spacing:2px; }
-.pz-food  { width:100%; height:100%; background:radial-gradient(ellipse at 40% 35%, #c44a00 0%, #1a0800 100%); display:flex; align-items:center; justify-content:center; }
-.food-big { font-size:80px; filter:drop-shadow(0 8px 24px rgba(0,0,0,0.65)); }
-.hd-stamp {
-  position:absolute; bottom:8px; right:8px;
-  background:rgba(0,229,160,0.92); color:#000;
-  font-size:10px; font-weight:900; border-radius:6px; padding:3px 9px; letter-spacing:1px;
+.glass::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.30), transparent);
 }
 
-/* Metrics grid */
-.mg {
-  padding:14px 16px; display:flex; flex-direction:column; gap:0;
-  background:rgba(12,12,16,0.88);
+/* Bad panel */
+.panel-bad {
+  flex:1; padding:28px 26px;
+  opacity:0.78;
 }
-.mg-row {
+.panel-bad .thumb-area {
+  width:100%; height:140px;
+  background:linear-gradient(135deg,#F3F4F6,#E5E7EB);
+  border-radius:14px; margin-bottom:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:52px; color:#9CA3AF;
+}
+.panel-label-bad {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(239,68,68,0.10); color:var(--bad);
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase;
+  padding:5px 12px; border-radius:8px; margin-bottom:14px;
+}
+
+/* Good panel */
+.panel-good {
+  flex:1; padding:28px 26px;
+  border-color:rgba(16,185,129,0.30);
+  box-shadow:
+    0 0 0 1.5px rgba(16,185,129,0.18),
+    0 24px 60px rgba(0,0,0,0.12),
+    0 8px 28px rgba(16,185,129,0.10);
+}
+.panel-good::before {
+  background:linear-gradient(90deg, transparent, rgba(16,185,129,0.40), transparent);
+}
+.panel-good .thumb-area {
+  width:100%; height:140px;
+  background:linear-gradient(135deg,#FF6B35,#FF9068,#FFB896);
+  border-radius:14px; margin-bottom:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:52px;
+  box-shadow:0 8px 24px rgba(255,107,53,0.28);
+}
+.panel-label-good {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--green-soft); color:var(--green);
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase;
+  padding:5px 12px; border-radius:8px; margin-bottom:14px;
+}
+.dot-green {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--green); display:inline-block;
+  box-shadow:0 0 0 2.5px var(--green-glow);
+}
+
+/* Panel content */
+.rest-name-big {
+  font-size:17px; font-weight:900;
+  color:var(--text-1); margin-bottom:8px;
+}
+.rest-name-dim {
+  font-size:17px; font-weight:700;
+  color:var(--text-4); margin-bottom:8px;
+}
+.metric-row {
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+  padding:8px 0;
+  border-bottom:1px solid rgba(0,0,0,0.05);
 }
-.mg-row:last-child { border-bottom:none; }
-.mg-lbl { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-.val-bad  { font-size:17px; font-weight:900; color:var(--red); }
-.val-good { font-size:17px; font-weight:900; color:var(--green); text-shadow:0 0 10px var(--green-glow); }
-.val-dim  { font-size:17px; font-weight:900; color:rgba(255,255,255,0.18); }
-.badge-r { background:rgba(255,45,85,0.10); color:var(--red); font-size:11px; font-weight:800; border-radius:7px; padding:3px 9px; }
-.badge-o { background:rgba(255,95,0,0.12); color:var(--neon); font-size:11px; font-weight:800; border-radius:7px; padding:3px 9px; }
+.metric-row:last-child { border-bottom:none; }
+.metric-lbl { font-size:12px; color:var(--text-3); font-weight:500; }
+.metric-val-bad { font-size:15px; font-weight:700; color:var(--bad); }
+.metric-val-good { font-size:15px; font-weight:700; color:var(--green); }
+.metric-val-neutral { font-size:15px; font-weight:700; color:var(--text-1); }
 
-/* Menu strip */
-.menu-strip {
-  display:flex; gap:5px; padding:10px 16px;
-  background:rgba(8,8,12,0.92);
-  border-top:1px solid rgba(255,255,255,0.04);
+.badge-rank-bad {
+  display:inline-block;
+  font-size:26px; font-weight:900; font-style:italic;
+  color:var(--text-4);
 }
-.ms { flex:1; border-radius:9px; padding:8px 4px; text-align:center; }
-.ms-empty { background:rgba(255,255,255,0.03); }
-.ms-full  { background:rgba(0,229,160,0.05); border:1px solid rgba(0,229,160,0.10); }
-.ms-emoji { font-size:18px; display:block; margin-bottom:3px; }
-.ms-emoji.dim { opacity:0.18; }
-.ms-price { font-size:10px; font-weight:700; }
-.ms-price.none { color:rgba(255,255,255,0.15); }
-.ms-price.has  { color:var(--green); }
+.badge-rank-good {
+  display:inline-block;
+  font-size:26px; font-weight:900; font-style:italic;
+  color:var(--green);
+}
 
-/* ── LAYER 6: insight cards ── */
-.L6-insights {
-  position:absolute; top:880px; left:60px; right:60px; z-index:25;
-  display:flex; flex-direction:column; gap:11px;
+/* VS badge */
+.vs-badge {
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:48px; height:48px;
+  background:#fff;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:900; color:var(--text-2);
+  z-index:20; pointer-events:none;
 }
-.ins {
-  background:var(--card); backdrop-filter:blur(20px) saturate(160%);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:16px; padding:18px 22px;
-  display:flex; align-items:center; gap:18px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.5),0 40px 80px rgba(0,0,0,0.25),inset -1px 0 0 rgba(255,95,0,0.10);
-}
-.ins-num {
-  font-size:52px; font-weight:900; font-style:italic;
-  letter-spacing:-2px; line-height:1; flex-shrink:0;
-}
-.ins-num.o { color:var(--neon); text-shadow:0 0 14px rgba(255,95,0,0.9),0 0 40px rgba(255,95,0,0.5),0 0 80px rgba(255,95,0,0.2); }
-.ins-num.g { color:var(--green); text-shadow:0 0 12px rgba(0,229,160,0.9),0 0 35px rgba(0,229,160,0.45),0 0 70px rgba(0,229,160,0.15); }
-.ins-copy { font-size:17px; font-weight:600; color:rgba(255,255,255,0.65); line-height:1.4; }
-.ins-copy strong { color:#fff; font-weight:900; }
-.ins-badge {
-  margin-left:auto; flex-shrink:0;
-  font-size:12px; font-weight:800; border-radius:9px; padding:6px 14px;
-}
-.ins-badge.o { background:rgba(255,95,0,0.1); color:var(--neon); border:1px solid rgba(255,95,0,0.2); }
-.ins-badge.g { background:rgba(0,229,160,0.08); color:var(--green); border:1px solid rgba(0,229,160,0.15); }
 
-/* ── LAYER 7: CTA ── */
-.L7-cta {
-  position:absolute; bottom:0; left:0; right:0; z-index:50;
-  padding:0 60px 54px;
+/* Bottom result strip */
+.result-strip {
+  display:flex; gap:18px; margin-bottom:28px;
 }
+.result-card {
+  flex:1; padding:20px 22px;
+  display:flex; align-items:center; gap:16px;
+}
+.result-icon {
+  font-size:32px; flex-shrink:0;
+}
+.result-val {
+  font-size:36px; font-weight:900; font-style:italic;
+  color:var(--orange); line-height:1; letter-spacing:-1.5px;
+}
+.result-lbl {
+  font-size:12px; font-weight:600;
+  color:var(--text-2); margin-top:3px; line-height:1.3;
+}
+
+/* CTA bar */
 .cta-bar {
-  background:var(--neon); border-radius:20px; padding:28px 38px;
+  background:var(--orange);
+  border-radius:20px;
+  padding:26px 34px;
   display:flex; align-items:center; justify-content:space-between;
-  border-top:1px solid rgba(255,255,255,0.28);
-  box-shadow:0 0 0 1px rgba(255,95,0,0.55),0 0 35px rgba(255,95,0,0.45),0 0 80px rgba(255,95,0,0.2),0 0 140px rgba(255,95,0,0.08),0 20px 50px rgba(0,0,0,0.55);
+  box-shadow:0 16px 42px rgba(255,107,53,0.38), 0 4px 12px rgba(255,107,53,0.22);
 }
-.cta-h { font-size:30px; font-weight:900; color:#000; letter-spacing:-0.5px; }
-.cta-s { font-size:14px; font-weight:700; color:rgba(0,0,0,0.5); margin-top:4px; }
-.wa-pill { background:#000; border-radius:14px; padding:14px 22px; display:flex; align-items:center; gap:12px; }
-.wa-pill svg { width:30px; height:30px; }
-.wa-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; }
-.wa-num { font-size:18px; font-weight:900; color:#fff; letter-spacing:0.5px; }
+.cta-headline {
+  font-size:26px; font-weight:900;
+  color:#fff; line-height:1.08; letter-spacing:-0.5px;
+}
+.cta-sub {
+  font-size:13px; color:rgba(255,255,255,0.78);
+  font-weight:500; margin-top:5px;
+}
+.cta-btn {
+  background:#fff; color:var(--orange);
+  font-size:14px; font-weight:900;
+  padding:14px 26px; border-radius:12px;
+  white-space:nowrap; flex-shrink:0;
+}
 </style>
 </head>
 <body>
 
-<div class="L0"></div>
-<div class="L1-ghost">VS</div>
-<div class="L2"></div>
-
-<!-- logo -->
-<div class="logo">
-  <div class="logo-icon"><span>Z</span></div>
-  <div>
-    <div class="logo-name">ZUBA</div>
-    <div class="logo-sub">Delivery Performance</div>
-  </div>
-</div>
-<div class="top-pill">Mismo Restaurante · Dos Realidades</div>
-
-<!-- headline -->
-<div class="headline-block">
-  <div class="eyebrow">Así te ve el cliente antes de ordenar</div>
-  <h1 class="headline">¿Cuál de los dos<br>restaurantes <em>eliges?</em></h1>
-</div>
-
-<!-- winner glow — BEHIND right panel -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
 <div class="winner-glow"></div>
 
-<div class="vs-badge">VS</div>
+<div class="wrap">
 
-<div class="panels">
-  <!-- BAD -->
-  <div class="panel bad">
-    <div class="ph">
-      <div class="ph-dots">
-        <div class="ph-dot" style="background:var(--red)"></div>
-        <div class="ph-dot" style="background:#333"></div>
-        <div class="ph-dot" style="background:#333"></div>
+  <div class="logo-bar">
+    <div class="logo">ZUBA</div>
+    <div class="pill">Comparativa de Perfil</div>
+  </div>
+
+  <div class="eyebrow">El cliente elige en 3 segundos</div>
+
+  <div class="headline">
+    ¿Cuál de los<br>
+    dos <span class="accent">restaurantes</span><br>
+    eliges tú?
+  </div>
+
+  <div class="subline">
+    Mismo producto. Distinta estrategia en plataforma. El resultado habla solo.
+  </div>
+
+  <div style="position:relative;">
+    <div class="compare-row">
+
+      <!-- BAD panel -->
+      <div class="glass panel-bad">
+        <div class="thumb-area">🍽️</div>
+        <div class="panel-label-bad">✕ Sin optimizar</div>
+        <div class="rest-name-dim">Taquería Sin Nombre</div>
+
+        <div class="metric-row">
+          <div class="metric-lbl">Posición en búsqueda</div>
+          <div class="badge-rank-bad">#18</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Calificación</div>
+          <div class="metric-val-bad">3.8 ★</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Foto de portada</div>
+          <div class="metric-val-bad">Sin foto</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Tiempo entrega</div>
+          <div class="metric-val-bad">52 min</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Pedidos por día</div>
+          <div class="metric-val-bad">3 pedidos</div>
+        </div>
       </div>
-      <span class="ph-label">Sin optimizar</span>
+
+      <!-- GOOD panel -->
+      <div class="glass panel-good">
+        <div class="thumb-area">🌮</div>
+        <div class="panel-label-good">
+          <span class="dot-green"></span>
+          Con ZUBA
+        </div>
+        <div class="rest-name-big">Tacos Don Memo</div>
+
+        <div class="metric-row">
+          <div class="metric-lbl">Posición en búsqueda</div>
+          <div class="badge-rank-good">Top 3</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Calificación</div>
+          <div class="metric-val-good">4.7 ★</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Foto de portada</div>
+          <div class="metric-val-good">Editorial HD</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Tiempo entrega</div>
+          <div class="metric-val-good">22 min</div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Pedidos por día</div>
+          <div class="metric-val-good">52 pedidos</div>
+        </div>
+      </div>
+
     </div>
-    <div class="photo-zone">
-      <div class="pz-empty">
-        <span class="pz-icon">📷</span>
-        <span class="pz-lbl">Sin fotos</span>
+    <div class="vs-badge">VS</div>
+  </div>
+
+  <div class="result-strip">
+    <div class="glass result-card">
+      <div class="result-icon">📈</div>
+      <div>
+        <div class="result-val">+17×</div>
+        <div class="result-lbl">más pedidos con perfil optimizado</div>
       </div>
     </div>
-    <div class="mg">
-      <div class="mg-row"><span class="mg-lbl">Rating</span><span class="val-bad">⭐ 3.8 ↓</span></div>
-      <div class="mg-row"><span class="mg-lbl">Posición</span><div class="badge-r">#18 de 24</div></div>
-      <div class="mg-row"><span class="mg-lbl">Tiempo</span><span class="val-bad">54 min</span></div>
-      <div class="mg-row"><span class="mg-lbl">Hoy</span><span class="val-dim">3 pedidos</span></div>
-    </div>
-    <div class="menu-strip">
-      <div class="ms ms-empty"><span class="ms-emoji dim">🌮</span><span class="ms-price none">sin foto</span></div>
-      <div class="ms ms-empty"><span class="ms-emoji dim">🍖</span><span class="ms-price none">sin foto</span></div>
-      <div class="ms ms-empty"><span class="ms-emoji dim">🥤</span><span class="ms-price none">sin foto</span></div>
+    <div class="glass result-card">
+      <div class="result-icon">💰</div>
+      <div>
+        <div class="result-val">$184K</div>
+        <div class="result-lbl">ventas mensuales promedio</div>
+      </div>
     </div>
   </div>
 
-  <!-- GOOD -->
-  <div class="panel good">
-    <div class="ph">
-      <div class="ph-dots">
-        <div class="ph-dot" style="background:var(--green);box-shadow:0 0 6px var(--green-glow)"></div>
-        <div class="ph-dot" style="background:var(--green);opacity:.5"></div>
-        <div class="ph-dot" style="background:var(--green);opacity:.25"></div>
-      </div>
-      <span class="ph-label">Con ZUBA ✓</span>
-    </div>
-    <div class="photo-zone">
-      <div class="pz-food">
-        <div class="food-big">🌮</div>
-        <div class="hd-stamp">HD ✓</div>
-      </div>
-    </div>
-    <div class="mg">
-      <div class="mg-row"><span class="mg-lbl">Rating</span><span class="val-good">⭐ 4.7 ↑</span></div>
-      <div class="mg-row"><span class="mg-lbl">Posición</span><div class="badge-o">🏆 Top 3</div></div>
-      <div class="mg-row"><span class="mg-lbl">Tiempo</span><span class="val-good">27 min</span></div>
-      <div class="mg-row"><span class="mg-lbl">Hoy</span><span class="val-good">52 pedidos</span></div>
-    </div>
-    <div class="menu-strip">
-      <div class="ms ms-full"><span class="ms-emoji">🌮</span><span class="ms-price has">$89</span></div>
-      <div class="ms ms-full"><span class="ms-emoji">🍖</span><span class="ms-price has">$145</span></div>
-      <div class="ms ms-full"><span class="ms-emoji">🥤</span><span class="ms-price has">$35</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- insights -->
-<div class="L6-insights">
-  <div class="ins">
-    <span class="ins-num o">3s</span>
-    <span class="ins-copy">El cliente decide en <strong>3 segundos</strong>. Sin foto → sin clic. Fin.</span>
-    <span class="ins-badge o">El problema</span>
-  </div>
-  <div class="ins">
-    <span class="ins-num g">×17</span>
-    <span class="ins-copy">De 3 pedidos a 52 en el mismo día. <strong>Mismo restaurante. Con ZUBA.</strong></span>
-    <span class="ins-badge g">El resultado</span>
-  </div>
-</div>
-
-<!-- CTA -->
-<div class="L7-cta">
   <div class="cta-bar">
     <div>
-      <div class="cta-h">Escríbenos ahora →</div>
-      <div class="cta-s">Auditoría gratis · 20 minutos · Sin compromiso</div>
+      <div class="cta-headline">¿En cuál lado estás<br>tú hoy?</div>
+      <div class="cta-sub">Diagnóstico gratuito — resultados en 24 horas</div>
     </div>
-    <div class="wa-pill">
-      <svg viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="#25D366"/><path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/></svg>
-      <div>
-        <div class="wa-lbl">WhatsApp</div>
-        <div class="wa-num">564 292 6243</div>
-      </div>
-    </div>
+    <div class="cta-btn">Descúbrelo →</div>
   </div>
-</div>
 
+</div>
 </body>
 </html>

@@ -2,398 +2,358 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,900&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --neon:       #FF5F00;
-  --neon-glow:  rgba(255,95,0,0.55);
-  --neon-dim:   rgba(255,95,0,0.12);
-  --green:      #00E5A0;
-  --green-glow: rgba(0,229,160,0.50);
-  --bg:         #060608;
-  --card:       rgba(30,30,30,0.60);
-  --card-border: rgba(255,255,255,0.11);
-  --card-top:   rgba(255,255,255,0.22);
-  --muted:      rgba(255,255,255,0.38);
+  --orange:      #FF6B35;
+  --orange-mid:  rgba(255,107,53,0.18);
+  --green:       #10B981;
+  --green-soft:  rgba(16,185,129,0.12);
+  --green-glow:  rgba(16,185,129,0.25);
+  --bg-center:   #FFF8F5;
+  --bg-edge:     #FFE5D9;
+  --card:        rgba(255,255,255,0.72);
+  --card-stroke: rgba(255,255,255,0.95);
+  --text-1:      #1A1A1A;
+  --text-2:      #2D3748;
+  --text-3:      #6B7280;
 }
 
 body {
   width:1080px; height:1350px;
-  background:var(--bg);
+  background: radial-gradient(ellipse at 48% 40%, var(--bg-center) 0%, var(--bg-edge) 78%);
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
 }
 
-/* ── LAYER 0 ── */
-.L0 {
-  position:absolute; inset:0; z-index:0;
-  background:
-    radial-gradient(ellipse 900px 700px at 65% 55%, rgba(0,229,160,0.055) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 500px at 10% 30%, rgba(255,95,0,0.06)   0%, transparent 55%),
-    radial-gradient(ellipse 500px 400px at 85% 10%, rgba(80,120,255,0.03) 0%, transparent 55%);
+.blob { position:absolute; border-radius:50%; pointer-events:none; }
+.blob-1 {
+  width:500px; height:500px; top:-140px; left:-100px;
+  background:radial-gradient(circle,rgba(255,107,53,0.09) 0%,transparent 68%);
 }
-/* ── LAYER 1: ghost text ── */
-.L1-ghost {
-  position:absolute; z-index:1; pointer-events:none; user-select:none;
-  font-family:'Inter',sans-serif; font-weight:900; font-style:italic;
-  font-size:420px; line-height:1;
-  color:transparent; -webkit-text-stroke:1px rgba(0,229,160,0.05);
-  right:-40px; top:180px; letter-spacing:-20px;
-}
-/* ── LAYER 2: scanlines ── */
-.L2 {
-  position:absolute; inset:0; z-index:2; pointer-events:none;
-  background:repeating-linear-gradient(180deg,transparent 0,transparent 3px,rgba(255,255,255,0.007) 3px,rgba(255,255,255,0.007) 4px);
+.blob-2 {
+  width:420px; height:420px; bottom:-80px; right:-60px;
+  background:radial-gradient(circle,rgba(255,107,53,0.08) 0%,transparent 68%);
 }
 
-/* ── LAYER 3: logo ── */
-.logo {
-  position:absolute; top:52px; left:60px; z-index:30;
-  display:flex; align-items:center; gap:16px;
-}
-.logo-icon {
-  width:52px; height:52px; background:var(--neon); border-radius:14px;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:inset -1px 0 0 rgba(255,255,255,0.22),0 0 0 1px rgba(255,95,0,0.45),0 0 28px var(--neon-glow),0 0 70px rgba(255,95,0,0.18),0 12px 30px rgba(0,0,0,0.6);
-}
-.logo-icon span { font-size:26px; font-weight:900; color:#fff; }
-.logo-name { font-size:24px; font-weight:900; color:#fff; letter-spacing:6px; }
-.logo-sub  { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:3px; text-transform:uppercase; }
-.top-pill {
-  position:absolute; top:58px; right:60px; z-index:30;
-  background:var(--card); backdrop-filter:blur(20px);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:50px; padding:10px 22px;
-  font-size:12px; font-weight:700; color:var(--green);
-  letter-spacing:2px; text-transform:uppercase;
-  box-shadow:0 0 20px rgba(0,229,160,0.1),0 8px 20px rgba(0,0,0,0.4);
+/* Notification stack glow */
+.notif-glow {
+  position:absolute;
+  width:600px; height:520px;
+  left:50%; top:280px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 45%,
+    rgba(16,185,129,0.16) 0%,
+    rgba(255,107,53,0.06) 40%,
+    transparent 68%);
+  filter:blur(32px);
+  z-index:2; pointer-events:none;
 }
 
-/* ── LAYER 4: headline ── */
-.L4-headline {
-  position:absolute; top:140px; left:60px; z-index:20; max-width:530px;
+.wrap {
+  position:relative; z-index:10;
+  padding:60px 68px;
+  height:100%;
+  display:flex; flex-direction:column;
 }
+
+/* Logo */
+.logo-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:44px;
+}
+.logo { font-size:30px; font-weight:900; color:var(--orange); letter-spacing:-1.2px; }
+.pill {
+  background:var(--orange-mid); color:var(--orange);
+  font-size:12px; font-weight:700;
+  padding:7px 18px; border-radius:100px;
+  letter-spacing:0.8px; text-transform:uppercase;
+}
+
+/* Eyebrow + headline */
 .eyebrow {
-  display:flex; align-items:center; gap:12px;
-  font-size:12px; font-weight:700; color:var(--neon);
-  letter-spacing:3px; text-transform:uppercase; margin-bottom:12px;
+  font-size:14px; font-weight:700;
+  color:var(--orange); letter-spacing:2.5px;
+  text-transform:uppercase; margin-bottom:16px;
 }
-.eyebrow::before { content:''; width:22px; height:2px; background:var(--neon); border-radius:1px; display:block; box-shadow:0 0 6px var(--neon-glow); }
 .headline {
-  font-size:100px; font-weight:900; color:#fff;
-  line-height:0.88; letter-spacing:-5px; margin-bottom:18px;
+  font-size:90px; font-weight:900; font-style:italic;
+  line-height:0.90; letter-spacing:-3.5px;
+  color:var(--text-1); margin-bottom:16px;
 }
-.headline em { color:var(--neon); font-style:italic; text-shadow:0 0 30px var(--neon-glow),0 0 70px rgba(255,95,0,0.2); }
-.sub {
-  font-size:19px; font-weight:600; color:var(--muted); line-height:1.5;
+.headline .accent { color:var(--orange); }
+.subline {
+  font-size:18px; font-weight:500;
+  color:var(--text-2); line-height:1.45;
+  margin-bottom:36px;
 }
-.sub strong { color:#fff; font-weight:800; }
 
-/* ── LAYER 5: floating notifs (TILTED) ── */
+/* Notification cards */
 .notif-stack {
-  position:absolute; right:52px; top:128px; z-index:25;
-  width:370px; display:flex; flex-direction:column; gap:10px;
-}
-
-/* Glow behind the stack */
-.notif-stack-glow {
-  position:absolute; inset:-60px; z-index:0;
-  background:radial-gradient(ellipse at 50% 50%, rgba(0,229,160,0.10) 0%, transparent 70%);
-  filter:blur(20px); pointer-events:none;
+  display:flex; flex-direction:column;
+  gap:0; margin-bottom:32px;
+  position:relative;
 }
 
 .notif {
-  position:relative; z-index:1;
-  background:var(--card); backdrop-filter:blur(20px) saturate(160%);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:16px; padding:14px 16px;
-  display:flex; align-items:flex-start; gap:12px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.5),0 40px 80px rgba(0,0,0,0.25);
-  /* Rim light right edge */
-  border-right:1px solid rgba(255,95,0,0.18);
+  background:var(--card);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border:1px solid var(--card-stroke);
+  box-shadow:
+    0 2px 0 rgba(255,107,53,0.05),
+    0 16px 40px rgba(0,0,0,0.10),
+    0 6px 18px rgba(255,107,53,0.05);
+  border-radius:18px;
+  padding:18px 22px;
+  display:flex; align-items:center; gap:16px;
+  position:relative; overflow:hidden;
   transform-origin:center center;
 }
-/* DYNAMIC TILT — each notif slightly different angle */
-.notif:nth-child(1) { transform:rotate(-4deg) translateX(-8px); }
-.notif:nth-child(2) { transform:rotate(-2deg) translateX(-3px); }
-.notif:nth-child(3) { transform:rotate( 1deg) translateX( 4px); }
-.notif:nth-child(4) { transform:rotate(-1.5deg) translateX(-2px); }
-.notif:nth-child(5) { transform:rotate( 2.5deg) translateX( 6px); }
-
-.notif.new {
-  background:rgba(30,46,38,0.72);
-  border-color:rgba(0,229,160,0.22);
-  border-top-color:rgba(0,229,160,0.40);
-  border-right-color:rgba(0,229,160,0.25);
-}
-.notif.new::before {
-  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
-  background:linear-gradient(to bottom, var(--green), rgba(0,229,160,0.4));
-  border-radius:3px 0 0 3px;
-  box-shadow:0 0 8px var(--green-glow);
+.notif::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.28), transparent);
 }
 
-.notif-icon {
-  width:36px; height:36px; border-radius:9px;
-  background:radial-gradient(135deg,#c44a00,#180600);
+/* Individual tilts */
+.notif:nth-child(1) { transform:rotate(-3.5deg) translateX(-10px); margin-bottom:14px; }
+.notif:nth-child(2) { transform:rotate(-1.5deg) translateX(-4px); margin-bottom:14px; }
+.notif:nth-child(3) { transform:rotate( 0.5deg) translateX( 2px); margin-bottom:14px; }
+.notif:nth-child(4) { transform:rotate( 2.5deg) translateX( 8px); margin-bottom:14px; }
+.notif:nth-child(5) { transform:rotate(-1deg)   translateX(-2px); margin-bottom:0; }
+
+/* Platform icon */
+.platform-icon {
+  width:44px; height:44px; border-radius:12px;
   display:flex; align-items:center; justify-content:center;
-  font-size:16px; flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  font-size:22px; flex-shrink:0;
 }
+.plat-ue  { background:linear-gradient(135deg,#06C167,#05A356); }
+.plat-dd  { background:linear-gradient(135deg,#E8521C,#FF6B35); }
+.plat-rp  { background:linear-gradient(135deg,#FF6D3B,#FA4616); }
+
+/* Notification content */
 .notif-body { flex:1; min-width:0; }
-.notif-title { font-size:12px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.notif-sub   { font-size:10px; color:var(--muted); margin-top:2px; }
-.notif-amount { font-size:16px; font-weight:900; flex-shrink:0; margin-top:1px; }
-.notif-amount.hi {
-  color:var(--green);
-  text-shadow:0 0 10px var(--green-glow);
+.notif-title {
+  font-size:14px; font-weight:700;
+  color:var(--text-1); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.notif-sub {
+  font-size:12px; color:var(--text-3);
+  margin-top:2px; font-weight:500;
 }
 
-/* Notification counter pill */
-.counter-pill {
-  position:absolute; top:-16px; right:-12px; z-index:30;
-  background:var(--neon); color:#fff;
-  border-radius:50px; padding:5px 12px;
-  font-size:13px; font-weight:900;
-  box-shadow:0 0 0 3px var(--bg),0 0 20px var(--neon-glow),0 0 50px rgba(255,95,0,0.2);
-  border-top:1px solid rgba(255,255,255,0.25);
+/* Revenue badge */
+.rev-badge {
+  flex-shrink:0;
+  text-align:right;
+}
+.rev-amount {
+  font-size:17px; font-weight:900;
+  color:var(--green);
+}
+.rev-time {
+  font-size:11px; color:var(--text-3); margin-top:1px;
+}
+
+/* Dot live */
+.dot-live {
+  display:inline-block;
+  width:9px; height:9px; border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-glow);
+  margin-right:8px; vertical-align:middle;
+  flex-shrink:0;
 }
 
 /* Revenue block */
-.rev-block {
-  position:relative; z-index:1;
-  background:rgba(20,38,30,0.70); backdrop-filter:blur(20px);
-  border:1px solid rgba(0,229,160,0.20); border-top-color:rgba(0,229,160,0.35);
-  border-radius:16px; padding:16px 18px;
-  display:flex; align-items:center; justify-content:space-between;
-  box-shadow:0 20px 50px rgba(0,0,0,0.4),inset -1px 0 0 rgba(0,229,160,0.12);
-  transform:rotate(1.5deg);
+.revenue-block {
+  display:flex; gap:18px; margin-bottom:28px;
 }
-.rev-lbl { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
-.rev-val { font-size:26px; font-weight:900; color:var(--green); letter-spacing:-1px; text-shadow:0 0 14px var(--green-glow),0 0 40px rgba(0,229,160,0.2); }
-.rev-change { font-size:18px; font-weight:900; color:var(--green); }
+.rev-main {
+  flex:2; padding:26px 28px;
+  display:flex; align-items:center; gap:22px;
+}
+.rev-icon { font-size:40px; flex-shrink:0; }
+.rev-main-val {
+  font-size:56px; font-weight:900; font-style:italic;
+  color:var(--orange); line-height:1; letter-spacing:-2.5px;
+}
+.rev-main-lbl {
+  font-size:13px; font-weight:600;
+  color:var(--text-2); margin-top:5px; line-height:1.35;
+}
 
-/* ── LAYER 6: floating metric pills (outside the stack) ── */
-.float-pill {
-  position:absolute; z-index:30;
-  background:var(--card); backdrop-filter:blur(20px);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:14px; padding:12px 16px;
-  display:flex; align-items:center; gap:10px;
-  box-shadow:0 16px 40px rgba(0,0,0,0.45);
-  white-space:nowrap;
+.rev-side {
+  flex:1; padding:24px 20px; text-align:center;
 }
-.fp-icon { font-size:16px; }
-.fp-label { font-size:12px; font-weight:700; color:#fff; }
-.fp-label small { display:block; font-size:10px; font-weight:600; color:var(--muted); margin-top:1px; }
-.fp-val { font-size:14px; font-weight:900; margin-left:2px; }
-.fp-val.o { color:var(--neon); text-shadow:0 0 8px var(--neon-glow); }
-.fp-val.g { color:var(--green); text-shadow:0 0 8px var(--green-glow); }
+.rev-side-val {
+  font-size:38px; font-weight:900; font-style:italic;
+  color:var(--green); line-height:1; letter-spacing:-1.5px;
+}
+.rev-side-lbl {
+  font-size:12px; font-weight:600;
+  color:var(--text-2); margin-top:5px; line-height:1.3;
+}
 
-/* ── LAYER 6b: metric strip ── */
-.metric-strip {
-  position:absolute; top:830px; left:60px; right:60px; z-index:25;
-  display:flex; gap:13px;
-}
-.mc {
-  flex:1; background:var(--card); backdrop-filter:blur(20px) saturate(160%);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:18px; padding:22px 16px; text-align:center;
-  box-shadow:0 20px 50px rgba(0,0,0,0.5),0 40px 80px rgba(0,0,0,0.25);
+/* Glass base */
+.glass {
+  background:var(--card);
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  border:1px solid var(--card-stroke);
+  box-shadow:
+    0 2px 0 rgba(255,107,53,0.05),
+    0 20px 50px rgba(0,0,0,0.10),
+    0 8px 24px rgba(255,107,53,0.05);
+  border-radius:22px;
   position:relative; overflow:hidden;
 }
-.mc::after {
-  content:''; position:absolute; bottom:0; left:10%; right:10%; height:1px;
+.glass::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.30), transparent);
 }
-.mc.co::after { background:radial-gradient(ellipse at 50% 0, var(--neon) 0%, transparent 70%); box-shadow:0 0 10px var(--neon-glow); }
-.mc.cg::after { background:radial-gradient(ellipse at 50% 0, var(--green) 0%, transparent 70%); box-shadow:0 0 10px var(--green-glow); }
-.mc.cw::after { background:radial-gradient(ellipse at 50% 0, rgba(255,255,255,0.3) 0%, transparent 70%); }
-.mc-v { font-size:46px; font-weight:900; display:block; line-height:1; letter-spacing:-2px; }
-.mc-v.o { color:var(--neon); text-shadow:0 0 12px rgba(255,95,0,0.9),0 0 35px rgba(255,95,0,0.5),0 0 70px rgba(255,95,0,0.2); }
-.mc-v.g { color:var(--green); text-shadow:0 0 12px rgba(0,229,160,0.9),0 0 30px rgba(0,229,160,0.45),0 0 60px rgba(0,229,160,0.15); }
-.mc-v.w { color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.2); }
-.mc-s { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-top:8px; display:block; }
 
-/* ── LAYER 6c: key proof rows ── */
-.proof-rows {
-  position:absolute; top:972px; left:60px; right:60px; z-index:25;
-  display:flex; flex-direction:column; gap:10px;
-}
-.pr {
-  background:var(--card); backdrop-filter:blur(20px);
-  border:1px solid var(--card-border); border-top-color:var(--card-top);
-  border-radius:15px; padding:16px 20px;
-  display:flex; align-items:center; gap:14px;
-  box-shadow:0 16px 40px rgba(0,0,0,0.4),inset -1px 0 0 rgba(255,95,0,0.10);
-}
-.pr-icon { font-size:18px; flex-shrink:0; }
-.pr-text { font-size:16px; font-weight:600; color:rgba(255,255,255,0.65); line-height:1.35; }
-.pr-text strong { color:#fff; font-weight:900; }
-.pr-tag {
-  margin-left:auto; flex-shrink:0;
-  font-size:12px; font-weight:800; border-radius:8px; padding:5px 13px;
-}
-.pr-tag.o { background:rgba(255,95,0,0.1); color:var(--neon); border:1px solid rgba(255,95,0,0.2); }
-.pr-tag.g { background:rgba(0,229,160,0.08); color:var(--green); border:1px solid rgba(0,229,160,0.15); }
-
-/* ── LAYER 7: CTA ── */
-.L7-cta {
-  position:absolute; bottom:0; left:0; right:0; z-index:50;
-  padding:0 60px 54px;
-}
+/* CTA bar */
 .cta-bar {
-  background:var(--neon); border-radius:20px; padding:28px 38px;
+  margin-top:auto;
+  background:var(--orange);
+  border-radius:20px;
+  padding:26px 34px;
   display:flex; align-items:center; justify-content:space-between;
-  border-top:1px solid rgba(255,255,255,0.28);
-  box-shadow:0 0 0 1px rgba(255,95,0,0.55),0 0 35px rgba(255,95,0,0.45),0 0 80px rgba(255,95,0,0.2),0 0 140px rgba(255,95,0,0.08),0 20px 50px rgba(0,0,0,0.55);
+  box-shadow:0 16px 42px rgba(255,107,53,0.38), 0 4px 12px rgba(255,107,53,0.22);
 }
-.cta-h { font-size:30px; font-weight:900; color:#000; letter-spacing:-0.5px; }
-.cta-s { font-size:14px; font-weight:700; color:rgba(0,0,0,0.5); margin-top:4px; }
-.wa-pill { background:#000; border-radius:14px; padding:14px 22px; display:flex; align-items:center; gap:12px; }
-.wa-pill svg { width:30px; height:30px; }
-.wa-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; }
-.wa-num { font-size:18px; font-weight:900; color:#fff; letter-spacing:0.5px; }
+.cta-headline {
+  font-size:26px; font-weight:900;
+  color:#fff; line-height:1.08; letter-spacing:-0.5px;
+}
+.cta-sub {
+  font-size:13px; color:rgba(255,255,255,0.78);
+  font-weight:500; margin-top:5px;
+}
+.cta-btn {
+  background:#fff; color:var(--orange);
+  font-size:14px; font-weight:900;
+  padding:14px 26px; border-radius:12px;
+  white-space:nowrap; flex-shrink:0;
+}
 </style>
 </head>
 <body>
 
-<div class="L0"></div>
-<div class="L1-ghost">9+</div>
-<div class="L2"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="notif-glow"></div>
 
-<!-- logo -->
-<div class="logo">
-  <div class="logo-icon"><span>Z</span></div>
-  <div>
-    <div class="logo-name">ZUBA</div>
-    <div class="logo-sub">Delivery Performance</div>
-  </div>
-</div>
-<div class="top-pill">Resultado en tiempo real</div>
+<div class="wrap">
 
-<!-- headline -->
-<div class="L4-headline">
-  <div class="eyebrow">Así se ve el éxito</div>
-  <h1 class="headline">
-    Tu celular<br>debería<br><em>no parar.</em>
-  </h1>
-  <p class="sub">
-    Restaurante bien configurado<br>
-    en plataformas.<br>
-    <strong>El tuyo puede verse igual.</strong>
-  </p>
-</div>
+  <div class="logo-bar">
+    <div class="logo">ZUBA</div>
+    <div class="pill">Sistema Activo</div>
+  </div>
 
-<!-- floating metric pills -->
-<div class="float-pill" style="left:60px;top:496px;">
-  <span class="fp-icon">⭐</span>
-  <div class="fp-label">Rating <span class="fp-val o">4.7</span><small>arriba de 4.3 → algoritmo te favorece</small></div>
-</div>
-<div class="float-pill" style="left:60px;top:570px;">
-  <span class="fp-icon">📍</span>
-  <div class="fp-label">Posición <span class="fp-val g">Top 3</span><small>búsqueda orgánica · sin pauta</small></div>
-</div>
-<div class="float-pill" style="left:60px;top:644px;">
-  <span class="fp-icon">📷</span>
-  <div class="fp-label">Conversión <span class="fp-val g">×3</span><small>con foto HD vs sin foto</small></div>
-</div>
+  <div class="eyebrow">Resultados en tiempo real</div>
 
-<!-- notification stack -->
-<div class="notif-stack" style="position:absolute;right:52px;top:128px;z-index:25;width:370px;display:flex;flex-direction:column;gap:10px;">
-  <div class="notif-stack-glow"></div>
-  <div class="counter-pill">9+ pedidos</div>
+  <div class="headline">
+    Tu celular<br>
+    debería no<br>
+    <span class="accent">parar</span>
+  </div>
 
-  <div class="notif new">
-    <div class="notif-icon">🌮</div>
-    <div class="notif-body">
-      <div class="notif-title">Nuevo pedido #4824 · Uber Eats</div>
-      <div class="notif-sub">hace 1 min · 3 items · Taquería Norte</div>
-    </div>
-    <span class="notif-amount hi">$243</span>
+  <div class="subline">
+    <span class="dot-live"></span>
+    Así se ve la bandeja de entrada de un restaurante optimizado con ZUBA.
   </div>
-  <div class="notif new">
-    <div class="notif-icon">🌮</div>
-    <div class="notif-body">
-      <div class="notif-title">Nuevo pedido #4823 · Uber Eats</div>
-      <div class="notif-sub">hace 4 min · 2 items</div>
-    </div>
-    <span class="notif-amount hi">$186</span>
-  </div>
-  <div class="notif">
-    <div class="notif-icon">🌮</div>
-    <div class="notif-body">
-      <div class="notif-title">Entregado ✓ · Reseña ⭐⭐⭐⭐⭐</div>
-      <div class="notif-sub">hace 18 min · Rappi</div>
-    </div>
-    <span class="notif-amount hi">$312</span>
-  </div>
-  <div class="notif">
-    <div class="notif-icon">☕</div>
-    <div class="notif-body">
-      <div class="notif-title">Entregado ✓ · DiDi Food</div>
-      <div class="notif-sub">hace 31 min</div>
-    </div>
-    <span class="notif-amount hi">$95</span>
-  </div>
-  <div class="notif">
-    <div class="notif-icon">🌮</div>
-    <div class="notif-body">
-      <div class="notif-title">Entregado ✓ · Reseña ⭐⭐⭐⭐⭐</div>
-      <div class="notif-sub">hace 44 min</div>
-    </div>
-    <span class="notif-amount hi">$158</span>
-  </div>
-  <div class="rev-block">
-    <div>
-      <div class="rev-lbl">Ingresos hoy</div>
-      <div class="rev-val">$4,820 MXN</div>
-    </div>
-    <div style="text-align:right">
-      <div class="rev-lbl">vs ayer</div>
-      <div class="rev-change">+38% ↑</div>
-    </div>
-  </div>
-</div>
 
-<!-- metric strip -->
-<div class="metric-strip">
-  <div class="mc co"><span class="mc-v o">3.8→4.7</span><span class="mc-s">Rating real</span></div>
-  <div class="mc cg"><span class="mc-v g">×3</span><span class="mc-s">Más pedidos</span></div>
-  <div class="mc cw"><span class="mc-v w">$0</span><span class="mc-s">Sin pauta</span></div>
-</div>
-
-<!-- proof rows -->
-<div class="proof-rows">
-  <div class="pr">
-    <span class="pr-icon">💡</span>
-    <span class="pr-text"><strong>80% del tráfico</strong> en plataformas va a los primeros 3 resultados.</span>
-    <span class="pr-tag o">El problema</span>
-  </div>
-  <div class="pr">
-    <span class="pr-icon">⚙️</span>
-    <span class="pr-text">En ZUBA te posicionamos arriba — <strong>sin pagar pauta</strong>.</span>
-    <span class="pr-tag g">La solución</span>
-  </div>
-</div>
-
-<!-- CTA -->
-<div class="L7-cta">
-  <div class="cta-bar">
-    <div>
-      <div class="cta-h">Escríbenos ahora →</div>
-      <div class="cta-s">Auditoría gratis · 20 minutos · Sin compromiso</div>
+  <div class="notif-stack">
+    <div class="notif">
+      <div class="platform-icon plat-ue">🟢</div>
+      <div class="notif-body">
+        <div class="notif-title">¡Nuevo pedido — Uber Eats!</div>
+        <div class="notif-sub">Tacos Don Memo · Orden #UE-8821</div>
+      </div>
+      <div class="rev-badge">
+        <div class="rev-amount">$487</div>
+        <div class="rev-time">hace 2 min</div>
+      </div>
     </div>
-    <div class="wa-pill">
-      <svg viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="18" fill="#25D366"/><path d="M26.5 21.8c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.3-.7.1-.3 0-.6-.1-.8-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 3.9c.2.3 2.8 4.2 6.8 5.9 4 1.6 4 1.1 4.7 1 .7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.1-.3-.2-.6-.3z" fill="white"/></svg>
-      <div>
-        <div class="wa-lbl">WhatsApp</div>
-        <div class="wa-num">564 292 6243</div>
+
+    <div class="notif">
+      <div class="platform-icon plat-dd">🔴</div>
+      <div class="notif-body">
+        <div class="notif-title">Pedido confirmado — DiDi Food</div>
+        <div class="notif-sub">2 Quesabirrias + 1 Agua · Orden #DD-3304</div>
+      </div>
+      <div class="rev-badge">
+        <div class="rev-amount">$312</div>
+        <div class="rev-time">hace 8 min</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <div class="platform-icon plat-rp">🟠</div>
+      <div class="notif-body">
+        <div class="notif-title">Nuevo pedido — Rappi</div>
+        <div class="notif-sub">Orden familiar · Orden #RP-7190</div>
+      </div>
+      <div class="rev-badge">
+        <div class="rev-amount">$680</div>
+        <div class="rev-time">hace 14 min</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <div class="platform-icon plat-ue">🟢</div>
+      <div class="notif-body">
+        <div class="notif-title">Reseña nueva ★★★★★ — Uber Eats</div>
+        <div class="notif-sub">"Riquísimo, lo mejor que he pedido"</div>
+      </div>
+      <div class="rev-badge">
+        <div class="rev-amount" style="color:var(--orange)">5.0 ★</div>
+        <div class="rev-time">hace 21 min</div>
+      </div>
+    </div>
+
+    <div class="notif">
+      <div class="platform-icon plat-dd">🔴</div>
+      <div class="notif-body">
+        <div class="notif-title">¡Nuevo pedido — DiDi Food!</div>
+        <div class="notif-sub">3 tacos + 2 aguas · Orden #DD-3391</div>
+      </div>
+      <div class="rev-badge">
+        <div class="rev-amount">$343</div>
+        <div class="rev-time">hace 29 min</div>
       </div>
     </div>
   </div>
-</div>
 
+  <div class="revenue-block">
+    <div class="glass rev-main">
+      <div class="rev-icon">💰</div>
+      <div>
+        <div class="rev-main-val">$4,820</div>
+        <div class="rev-main-lbl">ingresos del día · en curso</div>
+      </div>
+    </div>
+    <div class="glass rev-side">
+      <div class="rev-side-val">+38%</div>
+      <div class="rev-side-lbl">vs. mes anterior</div>
+    </div>
+  </div>
+
+  <div class="cta-bar">
+    <div>
+      <div class="cta-headline">Tu restaurante puede<br>verse así hoy</div>
+      <div class="cta-sub">Diagnóstico gratuito — sin compromiso</div>
+    </div>
+    <div class="cta-btn">Quiero esto →</div>
+  </div>
+
+</div>
 </body>
 </html>
