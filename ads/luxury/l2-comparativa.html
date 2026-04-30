@@ -10,233 +10,220 @@ body {
   width:1080px; height:1350px;
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
-  background:#111;
+  background:#FAFAF8;
 }
 
-/* ══════════════════════════════════════
-   PHOTO BG — reemplaza con tu foto real:
-   background-image: url('tu-foto.jpg');
-   background-size: cover;
-   background-position: center top;
-   ══════════════════════════════════════ */
-.photo-bg {
-  position:absolute; inset:0;
-  background-image: url('photos/taco-overhead.jpg');
-  background-size: cover;
-  background-position: center;
-  z-index:1;
-}
-
-.photo-bg::after {
-  content:'';
-  position:absolute; inset:0;
-  background:
-    radial-gradient(ellipse at 50% 45%, transparent 20%, rgba(0,0,0,0.50) 100%),
-    linear-gradient(180deg, rgba(0,0,0,0.22) 0%, transparent 32%, rgba(0,0,0,0.78) 82%);
-  z-index:2;
-}
-
-/* LOGO */
-.logo-wrap {
-  position:absolute; top:36px; left:44px; z-index:20;
-  display:flex; align-items:center; gap:10px;
-}
-.logo-icon {
-  width:46px; height:46px;
-  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
-  border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:27px; font-weight:900; font-style:italic; color:#fff;
-  box-shadow:0 4px 16px rgba(255,107,53,0.50);
-}
-.logo-name {
-  font-size:28px; font-weight:700; color:#fff;
-  letter-spacing:-0.5px;
-  text-shadow:0 2px 8px rgba(0,0,0,0.60);
-}
-.logo-tag {
-  position:absolute; top:40px; right:44px; z-index:20;
-  background:rgba(0,0,0,0.50);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.22);
-  border-radius:100px;
-  padding:8px 18px;
-  font-size:12px; font-weight:700; color:#fff;
-  letter-spacing:0.8px; text-transform:uppercase;
-}
-
-/* ── Hero text on photo ── */
-.hero-text {
-  position:absolute;
-  bottom:450px; left:44px; right:44px;
-  z-index:20;
-}
-.hero-label {
-  font-size:14px; font-weight:700; color:rgba(255,255,255,0.70);
-  letter-spacing:2px; text-transform:uppercase; margin-bottom:12px;
-}
-.hero-headline {
-  font-size:82px; font-weight:900; font-style:italic;
-  line-height:0.90; letter-spacing:-3.5px;
-  color:#fff;
-  text-shadow:0 4px 24px rgba(0,0,0,0.60);
-}
-.hero-headline .accent { color:#FF6B35; }
-
-/* ── Numbers bar ── floating on gradient edge */
-.numbers-bar {
-  position:absolute;
-  bottom:380px; left:44px; right:44px;
-  z-index:20;
-  display:flex; gap:0;
-  background:rgba(255,255,255,0.11);
-  backdrop-filter:blur(18px);
-  border:1px solid rgba(255,255,255,0.22);
-  border-radius:20px;
-  overflow:hidden;
-}
-.nb-side {
-  flex:1; padding:22px 28px;
-  position:relative;
-}
-.nb-side + .nb-side {
-  border-left:1px solid rgba(255,255,255,0.18);
-}
-.nb-side.good {
-  background:rgba(255,107,53,0.18);
-}
-.nb-chip {
-  font-size:10px; font-weight:700; letter-spacing:1.5px;
-  text-transform:uppercase; margin-bottom:8px;
-}
-.nb-chip.bad  { color:rgba(255,255,255,0.50); }
-.nb-chip.good { color:#FF6B35; }
-.nb-val {
-  font-size:52px; font-weight:900; font-style:italic;
-  line-height:1; letter-spacing:-2.5px;
-}
-.nb-val.dim    { color:rgba(255,255,255,0.28); }
-.nb-val.bright { color:#fff; }
-.nb-sub {
-  font-size:13px; font-weight:600; margin-top:5px;
-}
-.nb-sub.dim    { color:rgba(255,255,255,0.35); }
-.nb-sub.bright { color:rgba(255,255,255,0.80); }
-.nb-delta {
-  display:inline-block; margin-top:8px;
-  background:rgba(16,185,129,0.22);
-  color:#34D399; font-size:12px; font-weight:700;
-  padding:4px 10px; border-radius:8px;
-}
-
-/* Arrow in center of numbers bar */
-.nb-arrow {
-  position:absolute; left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  width:36px; height:36px;
-  background:#FF6B35;
-  border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:18px; color:#fff; font-weight:900;
-  box-shadow:0 4px 16px rgba(255,107,53,0.50);
-  z-index:5;
-}
-
-/* ── Message zone ── */
-.msg-zone {
+/* ── PHOTO ZONE — bottom 40% ── */
+.photo-zone {
   position:absolute;
   bottom:0; left:0; right:0;
-  height:380px;
-  background:#F8F2EE;
-  z-index:10;
-  padding:30px 44px 40px;
+  height:540px; overflow:hidden; z-index:1;
+}
+.photo-zone img {
+  width:100%; height:100%;
+  object-fit:cover; object-position:center 30%;
+  display:block;
+}
+.photo-zone::before {
+  content:''; position:absolute; top:0; left:0; right:0;
+  height:160px; z-index:2;
+  background:linear-gradient(to bottom, #FAFAF8 0%, transparent 100%);
+  pointer-events:none;
+}
+.photo-zone::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:160px; z-index:2;
+  background:linear-gradient(to top, rgba(0,0,0,0.40) 0%, transparent 100%);
+  pointer-events:none;
+}
+
+/* ── CONTENT — top 60% ── */
+.content {
+  position:relative; z-index:10;
+  padding:52px 56px 0;
+  height:810px;
   display:flex; flex-direction:column;
 }
 
+/* Logo */
+.logo-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:36px;
+}
+.logo-inner { display:flex; align-items:center; gap:11px; }
+.logo-icon {
+  width:48px; height:48px;
+  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; font-weight:900; font-style:italic; color:#fff;
+  box-shadow:0 4px 16px rgba(255,107,53,0.40);
+}
+.logo-name { font-size:28px; font-weight:700; color:#111827; letter-spacing:-0.5px; }
+.logo-pill {
+  background:rgba(16,185,129,0.12); color:#059669;
+  font-size:11px; font-weight:700;
+  padding:7px 16px; border-radius:100px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+
+/* Eyebrow */
 .eyebrow {
   font-size:12px; font-weight:700; color:#FF6B35;
-  letter-spacing:2.5px; text-transform:uppercase;
-  margin-bottom:12px;
+  letter-spacing:2.5px; text-transform:uppercase; margin-bottom:14px;
 }
-.msg-headline {
-  font-size:46px; font-weight:900; font-style:italic;
-  line-height:0.92; letter-spacing:-2px;
-  color:#111827; margin-bottom:12px;
-}
-.msg-sub {
-  font-size:16px; font-weight:500; color:#374151;
-  line-height:1.50; margin-bottom:auto;
-}
-.msg-sub strong { color:#111827; font-weight:700; }
 
-.cta-row { display:flex; align-items:center; gap:16px; margin-top:20px; }
+/* Headline */
+.headline {
+  font-size:82px; font-weight:900; font-style:italic;
+  line-height:0.91; letter-spacing:-3.5px;
+  color:#111827; margin-bottom:18px;
+}
+.headline .accent { color:#FF6B35; }
+
+/* Bridge */
+.bridge {
+  font-size:18px; font-weight:500; color:#374151;
+  line-height:1.50; margin-bottom:26px;
+}
+.bridge strong { color:#111827; font-weight:700; }
+
+/* Before/After comparison row */
+.compare-row {
+  display:flex; gap:16px; margin-bottom:26px;
+}
+
+.compare-card {
+  flex:1; border-radius:20px; padding:22px 24px;
+  border:1px solid rgba(0,0,0,0.07);
+  position:relative; overflow:hidden;
+}
+.compare-card.bad {
+  background:#F9FAFB;
+}
+.compare-card.good {
+  background:linear-gradient(135deg,#FFF5F0,#FFF9F7);
+  border-color:rgba(255,107,53,0.22);
+  box-shadow:0 4px 24px rgba(255,107,53,0.10);
+}
+.compare-card.good::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,#FF6B35,#FF9068);
+}
+
+.card-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:10px; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:16px;
+  padding:5px 12px; border-radius:8px;
+}
+.card-tag.bad  { background:rgba(239,68,68,0.10);  color:#EF4444; }
+.card-tag.good { background:rgba(255,107,53,0.12);  color:#FF6B35; }
+
+.big-num {
+  font-size:56px; font-weight:900; font-style:italic;
+  line-height:1; letter-spacing:-2.5px; margin-bottom:4px;
+}
+.big-num.dim    { color:#D1D5DB; }
+.big-num.bright { color:#FF6B35; }
+
+.num-label { font-size:12px; font-weight:600; color:#6B7280; margin-bottom:10px; }
+
+.revenue {
+  font-size:28px; font-weight:900; font-style:italic;
+  letter-spacing:-1px;
+}
+.revenue.dim    { color:#D1D5DB; }
+.revenue.bright { color:#111827; }
+
+.revenue-tag {
+  display:inline-block; margin-top:8px;
+  background:rgba(16,185,129,0.12); color:#059669;
+  font-size:12px; font-weight:700;
+  padding:4px 12px; border-radius:8px;
+}
+
+/* Arrow badge */
+.arrow-badge {
+  width:44px; height:44px; border-radius:50%;
+  background:#FF6B35; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:900;
+  box-shadow:0 4px 16px rgba(255,107,53,0.40);
+  flex-shrink:0; align-self:center;
+}
+
+/* CTA */
+.cta-row {
+  margin-top:auto;
+  display:flex; align-items:center; gap:20px;
+}
 .cta-btn {
   background:#FF6B35; color:#fff;
-  font-size:16px; font-weight:900;
-  padding:18px 36px; border-radius:14px;
-  box-shadow:0 8px 24px rgba(255,107,53,0.40);
+  font-size:17px; font-weight:900;
+  padding:20px 40px; border-radius:14px;
+  box-shadow:0 8px 28px rgba(255,107,53,0.42);
   flex-shrink:0;
 }
-.cta-note { font-size:13px; color:#6B7280; font-weight:500; line-height:1.40; }
+.cta-note { font-size:13px; color:#9CA3AF; font-weight:500; line-height:1.45; }
 </style>
 </head>
 <body>
 
-<div class="photo-bg"></div>
-
-<!-- Logo -->
-<div class="logo-wrap">
-  <div class="logo-icon">Z</div>
-  <div class="logo-name">ZUBA</div>
-</div>
-<div class="logo-tag">Caso real · 30 días</div>
-
-<!-- Hero text on photo -->
-<div class="hero-text">
-  <div class="hero-label">Mismo restaurante. Misma comida.</div>
-  <div class="hero-headline">
-    30 días<br>
-    con <span class="accent">ZUBA</span>
-  </div>
+<div class="photo-zone">
+  <img src="photos/taco-overhead.jpg" alt="">
 </div>
 
-<!-- Numbers comparison bar -->
-<div class="numbers-bar">
-  <div class="nb-side">
-    <div class="nb-chip bad">Antes</div>
-    <div class="nb-val dim">3</div>
-    <div class="nb-sub dim">pedidos por día</div>
-    <div style="margin-top:10px; font-size:36px; font-weight:900; font-style:italic; color:rgba(255,255,255,0.22); letter-spacing:-1.5px;">$4,200<span style="font-size:14px; font-weight:600; margin-left:4px;">/mes</span></div>
-  </div>
-  <div class="nb-arrow">→</div>
-  <div class="nb-side good">
-    <div class="nb-chip good">Con ZUBA</div>
-    <div class="nb-val bright">52</div>
-    <div class="nb-sub bright">pedidos por día</div>
-    <div style="margin-top:6px;">
-      <span style="font-size:36px; font-weight:900; font-style:italic; color:#fff; letter-spacing:-1.5px;">$18,500</span>
-      <span style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.70); margin-left:4px;">/mes</span>
-      <div class="nb-delta">+340% ingresos</div>
+<div class="content">
+
+  <div class="logo-bar">
+    <div class="logo-inner">
+      <div class="logo-icon">Z</div>
+      <div class="logo-name">ZUBA</div>
     </div>
+    <div class="logo-pill">✓ Caso real · 30 días</div>
   </div>
-</div>
 
-<!-- Message zone -->
-<div class="msg-zone">
-  <div class="eyebrow">Sin cambiar el menú · Sin pagar publicidad</div>
-  <div class="msg-headline">
-    ¿Cuánto estás<br>
-    perdiendo tú hoy?
+  <div class="eyebrow">Mismo restaurante. Misma comida.</div>
+
+  <div class="headline">
+    En 30 días<br>
+    con <span class="accent">ZUBA</span><br>
+    esto cambia
   </div>
-  <div class="msg-sub">
-    Solo optimización de perfil en plataformas.<br>
-    <strong>El algoritmo te puede elegir a ti — o a tu competencia.</strong>
+
+  <div class="bridge">
+    Sin cambiar el menú. Sin pagar publicidad extra.<br>
+    <strong>Solo optimización de perfil en plataformas.</strong>
   </div>
+
+  <div class="compare-row">
+
+    <div class="compare-card bad">
+      <div class="card-tag bad">✕  Antes</div>
+      <div class="big-num dim">3</div>
+      <div class="num-label">pedidos por día</div>
+      <div class="revenue dim">$4,200<span style="font-size:14px;font-weight:600">/mes</span></div>
+    </div>
+
+    <div class="arrow-badge">→</div>
+
+    <div class="compare-card good">
+      <div class="card-tag good">✓  Con ZUBA</div>
+      <div class="big-num bright">52</div>
+      <div class="num-label">pedidos por día</div>
+      <div class="revenue bright">$18,500<span style="font-size:14px;font-weight:600;color:#6B7280">/mes</span></div>
+      <div class="revenue-tag">+340% ingresos</div>
+    </div>
+
+  </div>
+
   <div class="cta-row">
-    <div class="cta-btn">Calcularlo gratis →</div>
-    <div class="cta-note">Diagnóstico en 24 horas.<br>Resultado garantizado.</div>
+    <div class="cta-btn">¿Cuánto pierdes tú hoy? →</div>
+    <div class="cta-note">Diagnóstico gratis.<br>Resultado en 24 horas.</div>
   </div>
-</div>
 
+</div>
 </body>
 </html>

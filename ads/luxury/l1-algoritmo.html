@@ -10,203 +10,223 @@ body {
   width:1080px; height:1350px;
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
-  background:#1A0A00;
+  background:#FAFAF8;
 }
 
-/* ══════════════════════════════════════
-   PHOTO ZONE — reemplaza .photo-bg con
-   tu imagen real:
-   background-image: url('tu-foto.jpg');
-   background-size: cover;
-   background-position: center;
-   ══════════════════════════════════════ */
+/* ── PHOTO ZONE — bottom 40% (540px) ── */
 .photo-zone {
   position:absolute;
-  inset:0; bottom:380px;
-  background-image: url('photos/taco-lime.jpg');
-  background-size: cover;
-  background-position: center top;
+  bottom:0; left:0; right:0;
+  height:540px;
+  overflow:hidden;
   z-index:1;
 }
-
+.photo-zone img {
+  width:100%; height:100%;
+  object-fit:cover;
+  object-position:center 55%;
+  display:block;
+}
+/* Fade from page bg into photo */
 .photo-zone::before {
   content:'';
-  position:absolute; inset:0; z-index:2;
-  background: radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(0,0,0,0.35) 100%);
+  position:absolute; top:0; left:0; right:0;
+  height:150px; z-index:2;
+  background:linear-gradient(to bottom, #FAFAF8 0%, transparent 100%);
+  pointer-events:none;
+}
+/* Dark overlay at bottom for depth */
+.photo-zone::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0;
+  height:180px; z-index:2;
+  background:linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%);
   pointer-events:none;
 }
 
-/* Photo → body gradient fade */
-.photo-fade {
-  position:absolute;
-  left:0; right:0; bottom:340px;
-  height:280px;
-  background:linear-gradient(to bottom,
-    transparent 0%,
-    rgba(10,5,0,0.55) 45%,
-    rgba(15,8,0,0.85) 72%,
-    #F8F2EE 100%);
-  z-index:3; pointer-events:none;
-}
-
-/* ── LOGO ── top-left on photo */
-.logo-wrap {
-  position:absolute; top:36px; left:44px;
-  z-index:20;
-  display:flex; align-items:center; gap:10px;
-}
-.logo-icon {
-  width:46px; height:46px;
-  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
-  border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:27px; font-weight:900; font-style:italic; color:#fff;
-  box-shadow:0 4px 16px rgba(255,107,53,0.50);
-}
-.logo-name {
-  font-size:28px; font-weight:700; color:#fff;
-  letter-spacing:-0.5px;
-  text-shadow:0 2px 8px rgba(0,0,0,0.55);
-}
-
-/* Platform pill on photo */
-.platform-pill {
-  position:absolute; top:40px; right:44px; z-index:20;
-  background:rgba(0,0,0,0.52);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.22);
-  border-radius:100px;
-  display:flex; align-items:center; gap:8px;
-  padding:9px 18px;
-}
-.pp-dot { width:9px; height:9px; border-radius:50%; background:#06C167; box-shadow:0 0 0 2.5px rgba(6,193,103,0.30); }
-.pp-text { font-size:13px; font-weight:700; color:#fff; letter-spacing:0.3px; }
-
-/* Mini floating rank card on photo */
-.rank-float {
-  position:absolute; bottom:430px; right:44px; z-index:20;
-  background:rgba(255,255,255,0.13);
-  backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,0.28);
-  border-radius:18px; padding:16px 22px;
-  min-width:200px;
-}
-.rf-row { display:flex; align-items:center; gap:12px; }
-.rf-row + .rf-row { margin-top:10px; border-top:1px solid rgba(255,255,255,0.15); padding-top:10px; }
-.rf-rank { font-size:20px; font-weight:900; width:32px; }
-.rf-rank.w { color:#FF6B35; }
-.rf-rank.l { color:rgba(255,255,255,0.35); }
-.rf-name { font-size:13px; font-weight:700; color:#fff; flex:1; }
-.rf-name.l { color:rgba(255,255,255,0.38); }
-.rf-orders { font-size:14px; font-weight:900; }
-.rf-orders.w { color:#10B981; }
-.rf-orders.l { color:rgba(255,255,255,0.28); }
-
-/* ── MESSAGE ZONE ── */
-.msg-zone {
-  position:absolute;
-  bottom:0; left:0; right:0;
-  height:440px;
-  background:#F8F2EE;
-  z-index:10;
-  padding:32px 44px 40px;
+/* ── CONTENT — top 60% ── */
+.content {
+  position:relative; z-index:10;
+  padding:52px 56px 0;
+  height:810px;
   display:flex; flex-direction:column;
 }
 
+/* Logo bar */
+.logo-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:40px;
+}
+.logo-inner { display:flex; align-items:center; gap:11px; }
+.logo-icon {
+  width:48px; height:48px;
+  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; font-weight:900; font-style:italic; color:#fff;
+  box-shadow:0 4px 16px rgba(255,107,53,0.40);
+}
+.logo-name { font-size:28px; font-weight:700; color:#111827; letter-spacing:-0.5px; }
+.logo-pill {
+  background:rgba(255,107,53,0.12); color:#FF6B35;
+  font-size:11px; font-weight:700;
+  padding:7px 16px; border-radius:100px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+
+/* Eyebrow */
 .eyebrow {
   font-size:12px; font-weight:700; color:#FF6B35;
   letter-spacing:2.5px; text-transform:uppercase;
-  margin-bottom:14px;
+  margin-bottom:16px;
 }
 
+/* Headline */
 .headline {
-  font-size:68px; font-weight:900; font-style:italic;
-  line-height:0.92; letter-spacing:-3px;
-  color:#111827; margin-bottom:14px;
-  flex-shrink:0;
+  font-size:86px; font-weight:900; font-style:italic;
+  line-height:0.90; letter-spacing:-4px;
+  color:#111827; margin-bottom:20px;
 }
 .headline .accent { color:#FF6B35; }
+.headline .dim { color:#6B7280; }
 
+/* Bridge */
 .bridge {
-  font-size:17px; font-weight:500; color:#374151;
-  line-height:1.50; margin-bottom:auto;
+  font-size:19px; font-weight:500; color:#374151;
+  line-height:1.50; margin-bottom:28px;
+  max-width:680px;
 }
 .bridge strong { color:#111827; font-weight:700; }
 
+/* Platform rank card */
+.rank-card {
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:18px;
+  padding:20px 26px;
+  display:flex; align-items:stretch; gap:0;
+  margin-bottom:28px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  overflow:hidden; position:relative;
+}
+.rank-card::before {
+  content:'';
+  position:absolute; top:0; left:0; bottom:0;
+  width:4px; background:#FF6B35;
+}
+.plat-label {
+  font-size:10px; font-weight:700; color:#6B7280;
+  letter-spacing:1.5px; text-transform:uppercase;
+  margin-bottom:14px; padding-left:14px;
+}
+.rank-row {
+  display:flex; align-items:center; gap:14px;
+  padding:10px 0 10px 14px;
+  border-bottom:1px solid #F3F4F6;
+}
+.rank-row:last-child { border-bottom:none; }
+.rank-num { font-size:18px; font-weight:900; width:36px; }
+.rank-num.w { color:#FF6B35; font-size:22px; }
+.rank-num.l { color:#D1D5DB; }
+.rank-thumb {
+  width:46px; height:46px; border-radius:12px;
+  background:linear-gradient(135deg,#FF8C5A,#FF6B35);
+  box-shadow:0 4px 10px rgba(255,107,53,0.28);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0;
+}
+.rank-thumb.l { background:#F3F4F6; box-shadow:none; opacity:0.6; }
+.rank-info { flex:1; }
+.rank-name { font-size:14px; font-weight:700; color:#111827; }
+.rank-name.l { color:#D1D5DB; }
+.rank-meta { font-size:11px; color:#9CA3AF; margin-top:2px; }
+.rank-orders { text-align:right; }
+.orders-val { font-size:20px; font-weight:900; color:#10B981; }
+.orders-val.l { color:#D1D5DB; font-size:16px; }
+.orders-sub { font-size:10px; color:#9CA3AF; }
+
 /* CTA */
 .cta-row {
-  display:flex; align-items:center; gap:16px;
-  margin-top:24px;
+  margin-top:auto;
+  display:flex; align-items:center; gap:20px;
 }
 .cta-btn {
-  background:#FF6B35;
-  color:#fff;
-  font-size:16px; font-weight:900;
-  padding:18px 36px; border-radius:14px;
-  letter-spacing:0.2px;
-  box-shadow:0 8px 24px rgba(255,107,53,0.40);
+  background:#FF6B35; color:#fff;
+  font-size:17px; font-weight:900;
+  padding:20px 40px; border-radius:14px;
+  letter-spacing:0.3px;
+  box-shadow:0 8px 28px rgba(255,107,53,0.42);
   flex-shrink:0;
 }
-.cta-note {
-  font-size:13px; color:#6B7280;
-  font-weight:500; line-height:1.40;
-}
+.cta-note { font-size:13px; color:#9CA3AF; font-weight:500; line-height:1.45; }
 </style>
 </head>
 <body>
 
-<!-- Photo zone (replace background with real photo) -->
-<div class="photo-zone"></div>
-<div class="photo-fade"></div>
-
-<!-- Logo -->
-<div class="logo-wrap">
-  <div class="logo-icon">Z</div>
-  <div class="logo-name">ZUBA</div>
+<!-- Photo zone (bottom 40%) -->
+<div class="photo-zone">
+  <img src="photos/delivery-ue-bag.jpg" alt="">
 </div>
 
-<!-- Platform pill -->
-<div class="platform-pill">
-  <div class="pp-dot"></div>
-  <div class="pp-text">Uber Eats · CDMX</div>
-</div>
+<!-- Content zone (top 60%) -->
+<div class="content">
 
-<!-- Floating rank card -->
-<div class="rank-float">
-  <div class="rf-row">
-    <div class="rf-rank w">#1</div>
-    <div class="rf-name">Tacos Don Memo</div>
-    <div class="rf-orders w">52 ped.</div>
+  <div class="logo-bar">
+    <div class="logo-inner">
+      <div class="logo-icon">Z</div>
+      <div class="logo-name">ZUBA</div>
+    </div>
+    <div class="logo-pill">Optimización de Delivery</div>
   </div>
-  <div class="rf-row">
-    <div class="rf-rank l">#18</div>
-    <div class="rf-name l">Taquería Sin Nombre</div>
-    <div class="rf-orders l">3 ped.</div>
-  </div>
-</div>
-
-<!-- Message zone -->
-<div class="msg-zone">
 
   <div class="eyebrow">El algoritmo te elige o te ignora</div>
 
   <div class="headline">
     ¿Por qué tu vecino<br>
     tiene <span class="accent">52 pedidos</span><br>
-    y tú tienes 3?
+    y tú tienes <span class="dim">3?</span>
   </div>
 
   <div class="bridge">
-    <strong>No es tu comida.</strong> Es dónde apareces en la app.<br>
+    <strong>No es tu comida.</strong> Es dónde apareces en Uber Eats, Rappi y DiDi.<br>
     ZUBA te lleva al Top&nbsp;3 — sin pagar publicidad extra.
+  </div>
+
+  <div class="rank-card">
+    <div style="flex:1;">
+      <div class="plat-label">📍 Resultados — Uber Eats CDMX</div>
+      <div class="rank-row">
+        <div class="rank-num w">#1</div>
+        <div class="rank-thumb">🌮</div>
+        <div class="rank-info">
+          <div class="rank-name">Tacos Don Memo ★★★★★</div>
+          <div class="rank-meta">4.8 · 18 min · Perfil optimizado</div>
+        </div>
+        <div class="rank-orders">
+          <div class="orders-val">52</div>
+          <div class="orders-sub">pedidos/día</div>
+        </div>
+      </div>
+      <div class="rank-row">
+        <div class="rank-num l">#18</div>
+        <div class="rank-thumb l">🍽️</div>
+        <div class="rank-info">
+          <div class="rank-name l">Tu restaurante hoy</div>
+          <div class="rank-meta">Sin foto · Sin optimizar</div>
+        </div>
+        <div class="rank-orders">
+          <div class="orders-val l">3</div>
+          <div class="orders-sub">pedidos/día</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="cta-row">
     <div class="cta-btn">Diagnóstico gratuito →</div>
-    <div class="cta-note">Resultado en 24 horas.<br>Sin compromiso.</div>
+    <div class="cta-note">Resultado en 24 horas.<br>Sin costo. Sin compromiso.</div>
   </div>
 
 </div>
-
 </body>
 </html>
