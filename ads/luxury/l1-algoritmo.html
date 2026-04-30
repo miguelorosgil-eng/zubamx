@@ -23,41 +23,17 @@ body {
 .photo-zone {
   position:absolute;
   inset:0; bottom:380px;
-  /* ── FOTO SIMULADA ── */
-  background:
-    /* lime squeeze highlight */
-    radial-gradient(ellipse at 62% 8%,  rgba(200,230,120,0.45) 0%, transparent 22%),
-    /* hand warmth */
-    radial-gradient(ellipse at 55% 4%,  rgba(180,110,60,0.55)  0%, transparent 28%),
-    /* cilantro / green pops */
-    radial-gradient(ellipse at 18% 38%, rgba(80,150,30,0.60)   0%, transparent 18%),
-    radial-gradient(ellipse at 75% 52%, rgba(60,140,20,0.45)   0%, transparent 15%),
-    radial-gradient(ellipse at 88% 25%, rgba(100,170,40,0.40)  0%, transparent 16%),
-    /* tomato / adobo fill */
-    radial-gradient(ellipse at 42% 55%, rgba(210,60,20,0.60)   0%, transparent 24%),
-    radial-gradient(ellipse at 62% 48%, rgba(230,100,15,0.55)  0%, transparent 20%),
-    /* carrot / orange veggies */
-    radial-gradient(ellipse at 30% 62%, rgba(240,140,20,0.50)  0%, transparent 20%),
-    /* tortilla warm tone */
-    radial-gradient(ellipse at 50% 72%, rgba(220,175,100,0.65) 0%, transparent 30%),
-    radial-gradient(ellipse at 22% 75%, rgba(200,155,80,0.55)  0%, transparent 25%),
-    /* bokeh shadows / depth */
-    radial-gradient(ellipse at 10% 90%, rgba(30,10,0,0.80)     0%, transparent 45%),
-    radial-gradient(ellipse at 85% 85%, rgba(20,8,0,0.75)      0%, transparent 40%),
-    /* base tones */
-    linear-gradient(168deg,
-      #1A0A00 0%, #4A2200 15%, #8B4A10 32%,
-      #C47020 48%, #A05018 62%, #5A2800 78%, #1A0A00 100%);
+  background-image: url('photos/taco-lime.jpg');
+  background-size: cover;
+  background-position: center top;
   z-index:1;
 }
 
-/* Film grain texture */
 .photo-zone::before {
   content:'';
   position:absolute; inset:0; z-index:2;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-  background-size:256px 256px;
-  opacity:0.55; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(0,0,0,0.35) 100%);
+  pointer-events:none;
 }
 
 /* Photo → body gradient fade */
