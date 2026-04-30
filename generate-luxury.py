@@ -23,7 +23,10 @@ async def main():
                 device_scale_factor=2,
             )
             await page.goto(f"file://{SRC / fname}")
-            await page.wait_for_timeout(1200)
+            try:
+                await page.wait_for_load_state("networkidle", timeout=6000)
+            except Exception:
+                await page.wait_for_timeout(3000)
             await page.screenshot(
                 path=str(OUT / outname),
                 full_page=False,

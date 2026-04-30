@@ -6,329 +6,254 @@
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-:root {
-  --orange:  #FF6B35;
-  --og-mid:  rgba(255,107,53,0.14);
-  --green:   #10B981;
-  --green-s: rgba(16,185,129,0.12);
-  --red:     #EF4444;
-  --red-s:   rgba(239,68,68,0.10);
-  --bg:      #F8F4F0;
-  --card:    rgba(255,255,255,0.92);
-  --t1:      #111827;
-  --t2:      #374151;
-  --t3:      #6B7280;
-  --t4:      #D1D5DB;
-}
-
 body {
   width:1080px; height:1350px;
-  background:#F8F4F0;
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
+  background:#111;
 }
 
-/* ── LOGO BAR ── */
-.logo-bar {
-  padding:36px 44px 0;
-  display:flex; align-items:center; justify-content:space-between;
-  position:relative; z-index:10;
+/* ══════════════════════════════════════
+   PHOTO BG — reemplaza con tu foto real:
+   background-image: url('tu-foto.jpg');
+   background-size: cover;
+   background-position: center top;
+   ══════════════════════════════════════ */
+.photo-bg {
+  position:absolute; inset:0;
+  background:
+    /* avocado highlight */
+    radial-gradient(ellipse at 28% 25%, rgba(120,180,40,0.55)  0%, transparent 20%),
+    radial-gradient(ellipse at 72% 18%, rgba(90,160,30,0.50)   0%, transparent 18%),
+    /* tomato / pico de gallo */
+    radial-gradient(ellipse at 48% 40%, rgba(220,55,20,0.55)   0%, transparent 22%),
+    radial-gradient(ellipse at 65% 55%, rgba(240,90,15,0.50)   0%, transparent 20%),
+    /* onion whites */
+    radial-gradient(ellipse at 32% 55%, rgba(240,235,210,0.40) 0%, transparent 16%),
+    /* cilantro */
+    radial-gradient(ellipse at 15% 45%, rgba(60,140,30,0.55)   0%, transparent 15%),
+    radial-gradient(ellipse at 80% 38%, rgba(50,130,25,0.50)   0%, transparent 14%),
+    /* tortilla plates warm */
+    radial-gradient(ellipse at 50% 68%, rgba(230,185,110,0.60) 0%, transparent 35%),
+    radial-gradient(ellipse at 20% 70%, rgba(210,165,90,0.55)  0%, transparent 28%),
+    radial-gradient(ellipse at 80% 72%, rgba(215,170,95,0.55)  0%, transparent 28%),
+    /* plate / background */
+    radial-gradient(ellipse at 50% 85%, rgba(190,160,120,0.45) 0%, transparent 40%),
+    linear-gradient(170deg,
+      #1C1008 0%, #3A2010 18%, #7A4018 35%,
+      #B07030 50%, #7A4018 65%, #3A2010 82%, #1C1008 100%);
+  z-index:1;
 }
-.logo-inner { display:flex; align-items:center; gap:10px; }
+
+/* Overlay: dark vignette + colour grade */
+.photo-bg::after {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 28%, rgba(0,0,0,0.52) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 30%, rgba(0,0,0,0.72) 85%);
+  z-index:2;
+}
+
+/* LOGO */
+.logo-wrap {
+  position:absolute; top:36px; left:44px; z-index:20;
+  display:flex; align-items:center; gap:10px;
+}
 .logo-icon {
-  width:44px; height:44px;
+  width:46px; height:46px;
   background:linear-gradient(145deg,#FF8C5A,#FF6B35);
-  border-radius:11px;
+  border-radius:12px;
   display:flex; align-items:center; justify-content:center;
-  font-size:26px; font-weight:900; font-style:italic; color:#fff;
-  box-shadow:0 4px 12px rgba(255,107,53,0.35);
+  font-size:27px; font-weight:900; font-style:italic; color:#fff;
+  box-shadow:0 4px 16px rgba(255,107,53,0.50);
 }
-.logo-name { font-size:26px; font-weight:700; color:var(--t1); letter-spacing:-0.5px; }
+.logo-name {
+  font-size:28px; font-weight:700; color:#fff;
+  letter-spacing:-0.5px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.60);
+}
 .logo-tag {
-  background:var(--og-mid); color:var(--orange);
-  font-size:11px; font-weight:700;
-  padding:6px 16px; border-radius:100px;
+  position:absolute; top:40px; right:44px; z-index:20;
+  background:rgba(0,0,0,0.50);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.22);
+  border-radius:100px;
+  padding:8px 18px;
+  font-size:12px; font-weight:700; color:#fff;
   letter-spacing:0.8px; text-transform:uppercase;
 }
 
-/* ── HEADLINE BLOCK ── */
-.headline-block {
-  padding:30px 44px 0;
-  position:relative; z-index:10;
-}
-.eyebrow {
-  font-size:13px; font-weight:700; color:var(--orange);
-  letter-spacing:2.5px; text-transform:uppercase; margin-bottom:12px;
-}
-.headline {
-  font-size:72px; font-weight:900; font-style:italic;
-  line-height:0.92; letter-spacing:-3px; color:var(--t1);
-  margin-bottom:10px;
-}
-.headline .accent { color:var(--orange); }
-.subline {
-  font-size:18px; font-weight:500; color:var(--t2); line-height:1.45;
-  margin-bottom:28px;
-}
-
-/* ── COMPARISON PANELS ── */
-.panels-wrap {
-  padding:0 44px;
-  display:flex; gap:18px;
-  position:relative; z-index:10;
-  margin-bottom:22px;
-}
-
-/* ANTES panel */
-.panel {
-  flex:1; border-radius:22px; overflow:hidden;
-  border:1px solid rgba(0,0,0,0.08);
-  box-shadow:0 12px 36px rgba(0,0,0,0.10);
-}
-
-.panel-photo {
-  width:100%; height:200px;
-  position:relative;
-  display:flex; align-items:center; justify-content:center;
-  font-size:80px;
-}
-.panel-photo.bad {
-  background:
-    radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.20) 0%, transparent 70%),
-    linear-gradient(135deg,#D1D5DB 0%,#E5E7EB 100%);
-  filter:grayscale(0.6) brightness(0.9);
-}
-.panel-photo.good {
-  background:
-    radial-gradient(ellipse at 30% 60%, rgba(210,105,30,0.50) 0%, transparent 55%),
-    radial-gradient(ellipse at 70% 30%, rgba(255,160,60,0.35) 0%, transparent 50%),
-    linear-gradient(135deg,#4A2000 0%,#A0520A 30%,#D4780A 55%,#7B3A0A 80%,#2D1000 100%);
-}
-.panel-photo .food-emoji {
-  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.40)) saturate(1.2);
-  line-height:1;
-}
-.panel-photo.bad .food-emoji { filter:grayscale(0.5) drop-shadow(0 4px 8px rgba(0,0,0,0.20)); }
-
-/* Overlay ribbon on photo */
-.photo-ribbon {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:10px 16px;
-  display:flex; align-items:center; gap:8px;
-}
-.photo-ribbon.bad { background:rgba(0,0,0,0.55); }
-.photo-ribbon.good { background:rgba(255,107,53,0.85); }
-.ribbon-text { font-size:12px; font-weight:700; color:#fff; }
-.ribbon-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.ribbon-dot.bad  { background:#EF4444; }
-.ribbon-dot.good { background:#fff; }
-
-/* Panel body */
-.panel-body { background:#fff; padding:20px 22px; }
-.panel-label {
-  display:inline-flex; align-items:center; gap:6px;
-  font-size:11px; font-weight:700; letter-spacing:1px;
-  text-transform:uppercase;
-  padding:5px 12px; border-radius:8px; margin-bottom:14px;
-}
-.panel-label.bad  { background:var(--red-s);   color:var(--red); }
-.panel-label.good { background:var(--green-s);  color:var(--green); }
-
-.metric {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:9px 0; border-bottom:1px solid #F3F4F6;
-}
-.metric:last-child { border-bottom:none; }
-.metric-lbl { font-size:12px; color:var(--t3); font-weight:500; }
-.metric-val { font-size:14px; font-weight:800; }
-.metric-val.bad  { color:var(--red); }
-.metric-val.good { color:var(--green); }
-.metric-val.neu  { color:var(--t1); }
-
-/* Revenue hero numbers */
-.revenue-row {
-  display:grid; grid-template-columns:1fr 1fr;
-  gap:18px; padding:0 44px; margin-bottom:22px;
-  position:relative; z-index:10;
-}
-.rev-card {
-  border-radius:18px; padding:22px 24px;
-  border:1px solid rgba(0,0,0,0.07);
-  box-shadow:0 8px 24px rgba(0,0,0,0.08);
-}
-.rev-card.bad-rev  { background:#fff; }
-.rev-card.good-rev {
-  background:linear-gradient(135deg,#FFF3EE,#FFF8F5);
-  border-color:rgba(255,107,53,0.22);
-}
-.rev-eyebrow { font-size:10px; font-weight:700; color:var(--t3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
-.rev-amount { font-size:44px; font-weight:900; font-style:italic; line-height:1; letter-spacing:-2px; }
-.rev-amount.dim    { color:var(--t4); }
-.rev-amount.bright { color:var(--orange); }
-.rev-sub { font-size:12px; color:var(--t3); margin-top:4px; font-weight:500; }
-.rev-delta {
-  display:inline-block; margin-top:8px;
-  background:var(--green-s); color:var(--green);
-  font-size:12px; font-weight:700;
-  padding:3px 10px; border-radius:8px;
-}
-
-/* VS badge */
-.vs-wrap {
-  position:absolute; left:50%; top:50%;
-  transform:translate(-50%,-50%);
+/* ── Hero text on photo ── */
+.hero-text {
+  position:absolute;
+  bottom:450px; left:44px; right:44px;
   z-index:20;
 }
-.vs-badge {
-  width:44px; height:44px; border-radius:50%;
-  background:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.14);
-  display:flex; align-items:center; justify-content:center;
-  font-size:13px; font-weight:900; color:var(--t2);
+.hero-label {
+  font-size:14px; font-weight:700; color:rgba(255,255,255,0.70);
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:12px;
+}
+.hero-headline {
+  font-size:82px; font-weight:900; font-style:italic;
+  line-height:0.90; letter-spacing:-3.5px;
+  color:#fff;
+  text-shadow:0 4px 24px rgba(0,0,0,0.60);
+}
+.hero-headline .accent { color:#FF6B35; }
+
+/* ── Numbers bar ── floating on gradient edge */
+.numbers-bar {
+  position:absolute;
+  bottom:380px; left:44px; right:44px;
+  z-index:20;
+  display:flex; gap:0;
+  background:rgba(255,255,255,0.11);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.22);
+  border-radius:20px;
+  overflow:hidden;
+}
+.nb-side {
+  flex:1; padding:22px 28px;
+  position:relative;
+}
+.nb-side + .nb-side {
+  border-left:1px solid rgba(255,255,255,0.18);
+}
+.nb-side.good {
+  background:rgba(255,107,53,0.18);
+}
+.nb-chip {
+  font-size:10px; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:8px;
+}
+.nb-chip.bad  { color:rgba(255,255,255,0.50); }
+.nb-chip.good { color:#FF6B35; }
+.nb-val {
+  font-size:52px; font-weight:900; font-style:italic;
+  line-height:1; letter-spacing:-2.5px;
+}
+.nb-val.dim    { color:rgba(255,255,255,0.28); }
+.nb-val.bright { color:#fff; }
+.nb-sub {
+  font-size:13px; font-weight:600; margin-top:5px;
+}
+.nb-sub.dim    { color:rgba(255,255,255,0.35); }
+.nb-sub.bright { color:rgba(255,255,255,0.80); }
+.nb-delta {
+  display:inline-block; margin-top:8px;
+  background:rgba(16,185,129,0.22);
+  color:#34D399; font-size:12px; font-weight:700;
+  padding:4px 10px; border-radius:8px;
 }
 
-/* CTA */
-.cta-wrap { padding:0 44px 40px; position:relative; z-index:10; }
-.cta-bar {
-  background:var(--orange);
-  border-radius:18px;
-  padding:24px 32px;
-  display:flex; align-items:center; justify-content:space-between;
-  box-shadow:0 12px 36px rgba(255,107,53,0.40), 0 4px 10px rgba(255,107,53,0.22);
+/* Arrow in center of numbers bar */
+.nb-arrow {
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:36px; height:36px;
+  background:#FF6B35;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:#fff; font-weight:900;
+  box-shadow:0 4px 16px rgba(255,107,53,0.50);
+  z-index:5;
 }
-.cta-headline { font-size:24px; font-weight:900; color:#fff; line-height:1.08; letter-spacing:-0.5px; }
-.cta-sub { font-size:12px; color:rgba(255,255,255,0.80); margin-top:4px; font-weight:500; }
+
+/* ── Message zone ── */
+.msg-zone {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:380px;
+  background:#F8F2EE;
+  z-index:10;
+  padding:30px 44px 40px;
+  display:flex; flex-direction:column;
+}
+
+.eyebrow {
+  font-size:12px; font-weight:700; color:#FF6B35;
+  letter-spacing:2.5px; text-transform:uppercase;
+  margin-bottom:12px;
+}
+.msg-headline {
+  font-size:46px; font-weight:900; font-style:italic;
+  line-height:0.92; letter-spacing:-2px;
+  color:#111827; margin-bottom:12px;
+}
+.msg-sub {
+  font-size:16px; font-weight:500; color:#374151;
+  line-height:1.50; margin-bottom:auto;
+}
+.msg-sub strong { color:#111827; font-weight:700; }
+
+.cta-row { display:flex; align-items:center; gap:16px; margin-top:20px; }
 .cta-btn {
-  background:#fff; color:var(--orange);
-  font-size:14px; font-weight:900;
-  padding:14px 24px; border-radius:12px;
-  white-space:nowrap; flex-shrink:0;
+  background:#FF6B35; color:#fff;
+  font-size:16px; font-weight:900;
+  padding:18px 36px; border-radius:14px;
+  box-shadow:0 8px 24px rgba(255,107,53,0.40);
+  flex-shrink:0;
 }
+.cta-note { font-size:13px; color:#6B7280; font-weight:500; line-height:1.40; }
 </style>
 </head>
 <body>
 
+<div class="photo-bg"></div>
+
 <!-- Logo -->
-<div class="logo-bar">
-  <div class="logo-inner">
-    <div class="logo-icon">Z</div>
-    <div class="logo-name">ZUBA</div>
-  </div>
-  <div class="logo-tag">Resultado real · 30 días</div>
+<div class="logo-wrap">
+  <div class="logo-icon">Z</div>
+  <div class="logo-name">ZUBA</div>
 </div>
+<div class="logo-tag">Caso real · 30 días</div>
 
-<!-- Headline -->
-<div class="headline-block">
-  <div class="eyebrow">El mismo restaurante. La misma comida.</div>
-  <div class="headline">
-    30 días con <span class="accent">ZUBA</span><br>
-    cambia todo
-  </div>
-  <div class="subline">
-    Sin cambiar tu menú. Sin pagar publicidad extra. Solo optimización.
+<!-- Hero text on photo -->
+<div class="hero-text">
+  <div class="hero-label">Mismo restaurante. Misma comida.</div>
+  <div class="hero-headline">
+    30 días<br>
+    con <span class="accent">ZUBA</span>
   </div>
 </div>
 
-<!-- Comparison panels -->
-<div class="panels-wrap" style="position:relative;">
-
-  <!-- ANTES -->
-  <div class="panel">
-    <div class="panel-photo bad">
-      <span class="food-emoji">🍽️</span>
-      <div class="photo-ribbon bad">
-        <div class="ribbon-dot bad"></div>
-        <div class="ribbon-text">Sin perfil optimizado</div>
-      </div>
-    </div>
-    <div class="panel-body">
-      <div class="panel-label bad">✕ &nbsp;Antes de ZUBA</div>
-      <div class="metric">
-        <div class="metric-lbl">Posición en búsqueda</div>
-        <div class="metric-val bad">#18</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Calificación</div>
-        <div class="metric-val bad">3.8 ★</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Pedidos por día</div>
-        <div class="metric-val bad">3 pedidos</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Foto de portada</div>
-        <div class="metric-val bad">Sin foto</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Tiempo entrega</div>
-        <div class="metric-val neu">52 min</div>
-      </div>
-    </div>
+<!-- Numbers comparison bar -->
+<div class="numbers-bar">
+  <div class="nb-side">
+    <div class="nb-chip bad">Antes</div>
+    <div class="nb-val dim">3</div>
+    <div class="nb-sub dim">pedidos por día</div>
+    <div style="margin-top:10px; font-size:36px; font-weight:900; font-style:italic; color:rgba(255,255,255,0.22); letter-spacing:-1.5px;">$4,200<span style="font-size:14px; font-weight:600; margin-left:4px;">/mes</span></div>
   </div>
-
-  <!-- VS badge -->
-  <div class="vs-wrap">
-    <div class="vs-badge">VS</div>
-  </div>
-
-  <!-- DESPUÉS -->
-  <div class="panel" style="border-color:rgba(16,185,129,0.25); box-shadow:0 12px 36px rgba(0,0,0,0.10), 0 0 0 1.5px rgba(16,185,129,0.18);">
-    <div class="panel-photo good">
-      <span class="food-emoji" style="font-size:88px; filter:drop-shadow(0 10px 24px rgba(0,0,0,0.50)) saturate(1.3);">🌮</span>
-      <div class="photo-ribbon good">
-        <div class="ribbon-dot good"></div>
-        <div class="ribbon-text">Foto editorial · Top 3</div>
-      </div>
+  <div class="nb-arrow">→</div>
+  <div class="nb-side good">
+    <div class="nb-chip good">Con ZUBA</div>
+    <div class="nb-val bright">52</div>
+    <div class="nb-sub bright">pedidos por día</div>
+    <div style="margin-top:6px;">
+      <span style="font-size:36px; font-weight:900; font-style:italic; color:#fff; letter-spacing:-1.5px;">$18,500</span>
+      <span style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.70); margin-left:4px;">/mes</span>
+      <div class="nb-delta">+340% ingresos</div>
     </div>
-    <div class="panel-body" style="background:linear-gradient(180deg,#FAFFFE,#fff);">
-      <div class="panel-label good">✓ &nbsp;Con ZUBA</div>
-      <div class="metric">
-        <div class="metric-lbl">Posición en búsqueda</div>
-        <div class="metric-val good">Top 3 ↑</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Calificación</div>
-        <div class="metric-val good">4.7 ★</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Pedidos por día</div>
-        <div class="metric-val good">52 pedidos</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Foto de portada</div>
-        <div class="metric-val good">Editorial HD</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Tiempo entrega</div>
-        <div class="metric-val neu">22 min</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- Revenue numbers -->
-<div class="revenue-row">
-  <div class="rev-card bad-rev">
-    <div class="rev-eyebrow">Antes · ventas/mes</div>
-    <div class="rev-amount dim">$4,200</div>
-    <div class="rev-sub">3 pedidos por día</div>
-  </div>
-  <div class="rev-card good-rev">
-    <div class="rev-eyebrow">Con ZUBA · ventas/mes</div>
-    <div class="rev-amount bright">$18,500</div>
-    <div class="rev-sub">52 pedidos por día</div>
-    <div class="rev-delta">+340% ingresos</div>
   </div>
 </div>
 
-<!-- CTA -->
-<div class="cta-wrap">
-  <div class="cta-bar">
-    <div>
-      <div class="cta-headline">¿Cuánto estás<br>perdiendo tú hoy?</div>
-      <div class="cta-sub">Diagnóstico gratuito · Resultado en 24 horas</div>
-    </div>
+<!-- Message zone -->
+<div class="msg-zone">
+  <div class="eyebrow">Sin cambiar el menú · Sin pagar publicidad</div>
+  <div class="msg-headline">
+    ¿Cuánto estás<br>
+    perdiendo tú hoy?
+  </div>
+  <div class="msg-sub">
+    Solo optimización de perfil en plataformas.<br>
+    <strong>El algoritmo te puede elegir a ti — o a tu competencia.</strong>
+  </div>
+  <div class="cta-row">
     <div class="cta-btn">Calcularlo gratis →</div>
+    <div class="cta-note">Diagnóstico en 24 horas.<br>Resultado garantizado.</div>
   </div>
 </div>
 
