@@ -7,373 +7,330 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --orange:      #FF6B35;
-  --orange-mid:  rgba(255,107,53,0.18);
-  --green:       #10B981;
-  --green-soft:  rgba(16,185,129,0.12);
-  --green-glow:  rgba(16,185,129,0.22);
-  --bg-center:   #FFF8F5;
-  --bg-edge:     #FFE5D9;
-  --card:        rgba(255,255,255,0.72);
-  --card-stroke: rgba(255,255,255,0.95);
-  --text-1:      #1A1A1A;
-  --text-2:      #2D3748;
-  --text-3:      #6B7280;
-  --text-4:      #D1D5DB;
-  --bad:         #EF4444;
+  --orange:  #FF6B35;
+  --og-mid:  rgba(255,107,53,0.14);
+  --green:   #10B981;
+  --green-s: rgba(16,185,129,0.12);
+  --red:     #EF4444;
+  --red-s:   rgba(239,68,68,0.10);
+  --bg:      #F8F4F0;
+  --card:    rgba(255,255,255,0.92);
+  --t1:      #111827;
+  --t2:      #374151;
+  --t3:      #6B7280;
+  --t4:      #D1D5DB;
 }
 
 body {
   width:1080px; height:1350px;
-  background: radial-gradient(ellipse at 50% 42%, var(--bg-center) 0%, var(--bg-edge) 78%);
+  background:#F8F4F0;
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
 }
 
-.blob { position:absolute; border-radius:50%; pointer-events:none; }
-.blob-1 {
-  width:520px; height:520px; top:-160px; right:-120px;
-  background:radial-gradient(circle,rgba(255,107,53,0.09) 0%,transparent 68%);
-}
-.blob-2 {
-  width:440px; height:440px; bottom:-60px; left:-80px;
-  background:radial-gradient(circle,rgba(255,107,53,0.07) 0%,transparent 68%);
-}
-
-/* Winner glow — behind right panel */
-.winner-glow {
-  position:absolute;
-  width:430px; height:600px;
-  right:52px; top:180px;
-  background:radial-gradient(ellipse at 50% 40%,
-    rgba(16,185,129,0.22) 0%,
-    rgba(16,185,129,0.08) 38%,
-    transparent 68%);
-  filter:blur(28px);
-  z-index:2; pointer-events:none;
-}
-
-.wrap {
-  position:relative; z-index:10;
-  padding:60px 68px;
-  height:100%;
-  display:flex; flex-direction:column;
-}
-
-/* Logo */
+/* ── LOGO BAR ── */
 .logo-bar {
+  padding:36px 44px 0;
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:44px;
+  position:relative; z-index:10;
 }
-.logo { font-size:30px; font-weight:900; color:var(--orange); letter-spacing:-1.2px; }
-.pill {
-  background:var(--orange-mid); color:var(--orange);
-  font-size:12px; font-weight:700;
-  padding:7px 18px; border-radius:100px;
+.logo-inner { display:flex; align-items:center; gap:10px; }
+.logo-icon {
+  width:44px; height:44px;
+  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:900; font-style:italic; color:#fff;
+  box-shadow:0 4px 12px rgba(255,107,53,0.35);
+}
+.logo-name { font-size:26px; font-weight:700; color:var(--t1); letter-spacing:-0.5px; }
+.logo-tag {
+  background:var(--og-mid); color:var(--orange);
+  font-size:11px; font-weight:700;
+  padding:6px 16px; border-radius:100px;
   letter-spacing:0.8px; text-transform:uppercase;
 }
 
-/* Headline */
+/* ── HEADLINE BLOCK ── */
+.headline-block {
+  padding:30px 44px 0;
+  position:relative; z-index:10;
+}
 .eyebrow {
-  font-size:14px; font-weight:700;
-  color:var(--orange); letter-spacing:2.5px;
-  text-transform:uppercase; margin-bottom:16px;
+  font-size:13px; font-weight:700; color:var(--orange);
+  letter-spacing:2.5px; text-transform:uppercase; margin-bottom:12px;
 }
 .headline {
-  font-size:88px; font-weight:900; font-style:italic;
-  line-height:0.90; letter-spacing:-3.5px;
-  color:var(--text-1); margin-bottom:16px;
+  font-size:72px; font-weight:900; font-style:italic;
+  line-height:0.92; letter-spacing:-3px; color:var(--t1);
+  margin-bottom:10px;
 }
 .headline .accent { color:var(--orange); }
 .subline {
-  font-size:18px; font-weight:500;
-  color:var(--text-2); line-height:1.45;
-  margin-bottom:36px;
+  font-size:18px; font-weight:500; color:var(--t2); line-height:1.45;
+  margin-bottom:28px;
 }
 
-/* Comparison panels row */
-.compare-row {
-  display:flex; gap:20px;
-  flex:1; margin-bottom:28px;
+/* ── COMPARISON PANELS ── */
+.panels-wrap {
+  padding:0 44px;
+  display:flex; gap:18px;
+  position:relative; z-index:10;
+  margin-bottom:22px;
 }
 
-/* Glass card base */
-.glass {
-  background:var(--card);
-  backdrop-filter:blur(14px) saturate(150%);
-  -webkit-backdrop-filter:blur(14px) saturate(150%);
-  border:1px solid var(--card-stroke);
-  box-shadow:
-    0 2px 0 rgba(255,107,53,0.05),
-    0 20px 50px rgba(0,0,0,0.10),
-    0 8px 24px rgba(255,107,53,0.05);
-  border-radius:22px;
-  position:relative; overflow:hidden;
-}
-.glass::before {
-  content:'';
-  position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.30), transparent);
+/* ANTES panel */
+.panel {
+  flex:1; border-radius:22px; overflow:hidden;
+  border:1px solid rgba(0,0,0,0.08);
+  box-shadow:0 12px 36px rgba(0,0,0,0.10);
 }
 
-/* Bad panel */
-.panel-bad {
-  flex:1; padding:28px 26px;
-  opacity:0.78;
-}
-.panel-bad .thumb-area {
-  width:100%; height:140px;
-  background:linear-gradient(135deg,#F3F4F6,#E5E7EB);
-  border-radius:14px; margin-bottom:20px;
+.panel-photo {
+  width:100%; height:200px;
+  position:relative;
   display:flex; align-items:center; justify-content:center;
-  font-size:52px; color:#9CA3AF;
+  font-size:80px;
 }
-.panel-label-bad {
+.panel-photo.bad {
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.20) 0%, transparent 70%),
+    linear-gradient(135deg,#D1D5DB 0%,#E5E7EB 100%);
+  filter:grayscale(0.6) brightness(0.9);
+}
+.panel-photo.good {
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(210,105,30,0.50) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 30%, rgba(255,160,60,0.35) 0%, transparent 50%),
+    linear-gradient(135deg,#4A2000 0%,#A0520A 30%,#D4780A 55%,#7B3A0A 80%,#2D1000 100%);
+}
+.panel-photo .food-emoji {
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.40)) saturate(1.2);
+  line-height:1;
+}
+.panel-photo.bad .food-emoji { filter:grayscale(0.5) drop-shadow(0 4px 8px rgba(0,0,0,0.20)); }
+
+/* Overlay ribbon on photo */
+.photo-ribbon {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:10px 16px;
+  display:flex; align-items:center; gap:8px;
+}
+.photo-ribbon.bad { background:rgba(0,0,0,0.55); }
+.photo-ribbon.good { background:rgba(255,107,53,0.85); }
+.ribbon-text { font-size:12px; font-weight:700; color:#fff; }
+.ribbon-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.ribbon-dot.bad  { background:#EF4444; }
+.ribbon-dot.good { background:#fff; }
+
+/* Panel body */
+.panel-body { background:#fff; padding:20px 22px; }
+.panel-label {
   display:inline-flex; align-items:center; gap:6px;
-  background:rgba(239,68,68,0.10); color:var(--bad);
   font-size:11px; font-weight:700; letter-spacing:1px;
   text-transform:uppercase;
   padding:5px 12px; border-radius:8px; margin-bottom:14px;
 }
+.panel-label.bad  { background:var(--red-s);   color:var(--red); }
+.panel-label.good { background:var(--green-s);  color:var(--green); }
 
-/* Good panel */
-.panel-good {
-  flex:1; padding:28px 26px;
-  border-color:rgba(16,185,129,0.30);
-  box-shadow:
-    0 0 0 1.5px rgba(16,185,129,0.18),
-    0 24px 60px rgba(0,0,0,0.12),
-    0 8px 28px rgba(16,185,129,0.10);
-}
-.panel-good::before {
-  background:linear-gradient(90deg, transparent, rgba(16,185,129,0.40), transparent);
-}
-.panel-good .thumb-area {
-  width:100%; height:140px;
-  background:linear-gradient(135deg,#FF6B35,#FF9068,#FFB896);
-  border-radius:14px; margin-bottom:20px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:52px;
-  box-shadow:0 8px 24px rgba(255,107,53,0.28);
-}
-.panel-label-good {
-  display:inline-flex; align-items:center; gap:6px;
-  background:var(--green-soft); color:var(--green);
-  font-size:11px; font-weight:700; letter-spacing:1px;
-  text-transform:uppercase;
-  padding:5px 12px; border-radius:8px; margin-bottom:14px;
-}
-.dot-green {
-  width:7px; height:7px; border-radius:50%;
-  background:var(--green); display:inline-block;
-  box-shadow:0 0 0 2.5px var(--green-glow);
-}
-
-/* Panel content */
-.rest-name-big {
-  font-size:17px; font-weight:900;
-  color:var(--text-1); margin-bottom:8px;
-}
-.rest-name-dim {
-  font-size:17px; font-weight:700;
-  color:var(--text-4); margin-bottom:8px;
-}
-.metric-row {
+.metric {
   display:flex; align-items:center; justify-content:space-between;
-  padding:8px 0;
-  border-bottom:1px solid rgba(0,0,0,0.05);
+  padding:9px 0; border-bottom:1px solid #F3F4F6;
 }
-.metric-row:last-child { border-bottom:none; }
-.metric-lbl { font-size:12px; color:var(--text-3); font-weight:500; }
-.metric-val-bad { font-size:15px; font-weight:700; color:var(--bad); }
-.metric-val-good { font-size:15px; font-weight:700; color:var(--green); }
-.metric-val-neutral { font-size:15px; font-weight:700; color:var(--text-1); }
+.metric:last-child { border-bottom:none; }
+.metric-lbl { font-size:12px; color:var(--t3); font-weight:500; }
+.metric-val { font-size:14px; font-weight:800; }
+.metric-val.bad  { color:var(--red); }
+.metric-val.good { color:var(--green); }
+.metric-val.neu  { color:var(--t1); }
 
-.badge-rank-bad {
-  display:inline-block;
-  font-size:26px; font-weight:900; font-style:italic;
-  color:var(--text-4);
+/* Revenue hero numbers */
+.revenue-row {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:18px; padding:0 44px; margin-bottom:22px;
+  position:relative; z-index:10;
 }
-.badge-rank-good {
-  display:inline-block;
-  font-size:26px; font-weight:900; font-style:italic;
-  color:var(--green);
+.rev-card {
+  border-radius:18px; padding:22px 24px;
+  border:1px solid rgba(0,0,0,0.07);
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+.rev-card.bad-rev  { background:#fff; }
+.rev-card.good-rev {
+  background:linear-gradient(135deg,#FFF3EE,#FFF8F5);
+  border-color:rgba(255,107,53,0.22);
+}
+.rev-eyebrow { font-size:10px; font-weight:700; color:var(--t3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+.rev-amount { font-size:44px; font-weight:900; font-style:italic; line-height:1; letter-spacing:-2px; }
+.rev-amount.dim    { color:var(--t4); }
+.rev-amount.bright { color:var(--orange); }
+.rev-sub { font-size:12px; color:var(--t3); margin-top:4px; font-weight:500; }
+.rev-delta {
+  display:inline-block; margin-top:8px;
+  background:var(--green-s); color:var(--green);
+  font-size:12px; font-weight:700;
+  padding:3px 10px; border-radius:8px;
 }
 
 /* VS badge */
-.vs-badge {
-  position:absolute;
-  left:50%; top:50%;
+.vs-wrap {
+  position:absolute; left:50%; top:50%;
   transform:translate(-50%,-50%);
-  width:48px; height:48px;
-  background:#fff;
-  box-shadow:0 4px 16px rgba(0,0,0,0.12);
-  border-radius:50%;
+  z-index:20;
+}
+.vs-badge {
+  width:44px; height:44px; border-radius:50%;
+  background:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.14);
   display:flex; align-items:center; justify-content:center;
-  font-size:14px; font-weight:900; color:var(--text-2);
-  z-index:20; pointer-events:none;
+  font-size:13px; font-weight:900; color:var(--t2);
 }
 
-/* Bottom result strip */
-.result-strip {
-  display:flex; gap:18px; margin-bottom:28px;
-}
-.result-card {
-  flex:1; padding:20px 22px;
-  display:flex; align-items:center; gap:16px;
-}
-.result-icon {
-  font-size:32px; flex-shrink:0;
-}
-.result-val {
-  font-size:36px; font-weight:900; font-style:italic;
-  color:var(--orange); line-height:1; letter-spacing:-1.5px;
-}
-.result-lbl {
-  font-size:12px; font-weight:600;
-  color:var(--text-2); margin-top:3px; line-height:1.3;
-}
-
-/* CTA bar */
+/* CTA */
+.cta-wrap { padding:0 44px 40px; position:relative; z-index:10; }
 .cta-bar {
   background:var(--orange);
-  border-radius:20px;
-  padding:26px 34px;
+  border-radius:18px;
+  padding:24px 32px;
   display:flex; align-items:center; justify-content:space-between;
-  box-shadow:0 16px 42px rgba(255,107,53,0.38), 0 4px 12px rgba(255,107,53,0.22);
+  box-shadow:0 12px 36px rgba(255,107,53,0.40), 0 4px 10px rgba(255,107,53,0.22);
 }
-.cta-headline {
-  font-size:26px; font-weight:900;
-  color:#fff; line-height:1.08; letter-spacing:-0.5px;
-}
-.cta-sub {
-  font-size:13px; color:rgba(255,255,255,0.78);
-  font-weight:500; margin-top:5px;
-}
+.cta-headline { font-size:24px; font-weight:900; color:#fff; line-height:1.08; letter-spacing:-0.5px; }
+.cta-sub { font-size:12px; color:rgba(255,255,255,0.80); margin-top:4px; font-weight:500; }
 .cta-btn {
   background:#fff; color:var(--orange);
   font-size:14px; font-weight:900;
-  padding:14px 26px; border-radius:12px;
+  padding:14px 24px; border-radius:12px;
   white-space:nowrap; flex-shrink:0;
 }
 </style>
 </head>
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-<div class="winner-glow"></div>
-
-<div class="wrap">
-
-  <div class="logo-bar">
-    <div class="logo">ZUBA</div>
-    <div class="pill">Comparativa de Perfil</div>
+<!-- Logo -->
+<div class="logo-bar">
+  <div class="logo-inner">
+    <div class="logo-icon">Z</div>
+    <div class="logo-name">ZUBA</div>
   </div>
+  <div class="logo-tag">Resultado real · 30 días</div>
+</div>
 
-  <div class="eyebrow">El cliente elige en 3 segundos</div>
-
+<!-- Headline -->
+<div class="headline-block">
+  <div class="eyebrow">El mismo restaurante. La misma comida.</div>
   <div class="headline">
-    ¿Cuál de los<br>
-    dos <span class="accent">restaurantes</span><br>
-    eliges tú?
+    30 días con <span class="accent">ZUBA</span><br>
+    cambia todo
   </div>
-
   <div class="subline">
-    Mismo producto. Distinta estrategia en plataforma. El resultado habla solo.
+    Sin cambiar tu menú. Sin pagar publicidad extra. Solo optimización.
+  </div>
+</div>
+
+<!-- Comparison panels -->
+<div class="panels-wrap" style="position:relative;">
+
+  <!-- ANTES -->
+  <div class="panel">
+    <div class="panel-photo bad">
+      <span class="food-emoji">🍽️</span>
+      <div class="photo-ribbon bad">
+        <div class="ribbon-dot bad"></div>
+        <div class="ribbon-text">Sin perfil optimizado</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="panel-label bad">✕ &nbsp;Antes de ZUBA</div>
+      <div class="metric">
+        <div class="metric-lbl">Posición en búsqueda</div>
+        <div class="metric-val bad">#18</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Calificación</div>
+        <div class="metric-val bad">3.8 ★</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Pedidos por día</div>
+        <div class="metric-val bad">3 pedidos</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Foto de portada</div>
+        <div class="metric-val bad">Sin foto</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Tiempo entrega</div>
+        <div class="metric-val neu">52 min</div>
+      </div>
+    </div>
   </div>
 
-  <div style="position:relative;">
-    <div class="compare-row">
-
-      <!-- BAD panel -->
-      <div class="glass panel-bad">
-        <div class="thumb-area">🍽️</div>
-        <div class="panel-label-bad">✕ Sin optimizar</div>
-        <div class="rest-name-dim">Taquería Sin Nombre</div>
-
-        <div class="metric-row">
-          <div class="metric-lbl">Posición en búsqueda</div>
-          <div class="badge-rank-bad">#18</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Calificación</div>
-          <div class="metric-val-bad">3.8 ★</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Foto de portada</div>
-          <div class="metric-val-bad">Sin foto</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Tiempo entrega</div>
-          <div class="metric-val-bad">52 min</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Pedidos por día</div>
-          <div class="metric-val-bad">3 pedidos</div>
-        </div>
-      </div>
-
-      <!-- GOOD panel -->
-      <div class="glass panel-good">
-        <div class="thumb-area">🌮</div>
-        <div class="panel-label-good">
-          <span class="dot-green"></span>
-          Con ZUBA
-        </div>
-        <div class="rest-name-big">Tacos Don Memo</div>
-
-        <div class="metric-row">
-          <div class="metric-lbl">Posición en búsqueda</div>
-          <div class="badge-rank-good">Top 3</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Calificación</div>
-          <div class="metric-val-good">4.7 ★</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Foto de portada</div>
-          <div class="metric-val-good">Editorial HD</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Tiempo entrega</div>
-          <div class="metric-val-good">22 min</div>
-        </div>
-        <div class="metric-row">
-          <div class="metric-lbl">Pedidos por día</div>
-          <div class="metric-val-good">52 pedidos</div>
-        </div>
-      </div>
-
-    </div>
+  <!-- VS badge -->
+  <div class="vs-wrap">
     <div class="vs-badge">VS</div>
   </div>
 
-  <div class="result-strip">
-    <div class="glass result-card">
-      <div class="result-icon">📈</div>
-      <div>
-        <div class="result-val">+17×</div>
-        <div class="result-lbl">más pedidos con perfil optimizado</div>
+  <!-- DESPUÉS -->
+  <div class="panel" style="border-color:rgba(16,185,129,0.25); box-shadow:0 12px 36px rgba(0,0,0,0.10), 0 0 0 1.5px rgba(16,185,129,0.18);">
+    <div class="panel-photo good">
+      <span class="food-emoji" style="font-size:88px; filter:drop-shadow(0 10px 24px rgba(0,0,0,0.50)) saturate(1.3);">🌮</span>
+      <div class="photo-ribbon good">
+        <div class="ribbon-dot good"></div>
+        <div class="ribbon-text">Foto editorial · Top 3</div>
       </div>
     </div>
-    <div class="glass result-card">
-      <div class="result-icon">💰</div>
-      <div>
-        <div class="result-val">$184K</div>
-        <div class="result-lbl">ventas mensuales promedio</div>
+    <div class="panel-body" style="background:linear-gradient(180deg,#FAFFFE,#fff);">
+      <div class="panel-label good">✓ &nbsp;Con ZUBA</div>
+      <div class="metric">
+        <div class="metric-lbl">Posición en búsqueda</div>
+        <div class="metric-val good">Top 3 ↑</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Calificación</div>
+        <div class="metric-val good">4.7 ★</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Pedidos por día</div>
+        <div class="metric-val good">52 pedidos</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Foto de portada</div>
+        <div class="metric-val good">Editorial HD</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Tiempo entrega</div>
+        <div class="metric-val neu">22 min</div>
       </div>
     </div>
-  </div>
-
-  <div class="cta-bar">
-    <div>
-      <div class="cta-headline">¿En cuál lado estás<br>tú hoy?</div>
-      <div class="cta-sub">Diagnóstico gratuito — resultados en 24 horas</div>
-    </div>
-    <div class="cta-btn">Descúbrelo →</div>
   </div>
 
 </div>
+
+<!-- Revenue numbers -->
+<div class="revenue-row">
+  <div class="rev-card bad-rev">
+    <div class="rev-eyebrow">Antes · ventas/mes</div>
+    <div class="rev-amount dim">$4,200</div>
+    <div class="rev-sub">3 pedidos por día</div>
+  </div>
+  <div class="rev-card good-rev">
+    <div class="rev-eyebrow">Con ZUBA · ventas/mes</div>
+    <div class="rev-amount bright">$18,500</div>
+    <div class="rev-sub">52 pedidos por día</div>
+    <div class="rev-delta">+340% ingresos</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <div class="cta-bar">
+    <div>
+      <div class="cta-headline">¿Cuánto estás<br>perdiendo tú hoy?</div>
+      <div class="cta-sub">Diagnóstico gratuito · Resultado en 24 horas</div>
+    </div>
+    <div class="cta-btn">Calcularlo gratis →</div>
+  </div>
+</div>
+
 </body>
 </html>

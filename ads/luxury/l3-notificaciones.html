@@ -7,351 +7,338 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --orange:      #FF6B35;
-  --orange-mid:  rgba(255,107,53,0.18);
-  --green:       #10B981;
-  --green-soft:  rgba(16,185,129,0.12);
-  --green-glow:  rgba(16,185,129,0.25);
-  --bg-center:   #FFF8F5;
-  --bg-edge:     #FFE5D9;
-  --card:        rgba(255,255,255,0.72);
-  --card-stroke: rgba(255,255,255,0.95);
-  --text-1:      #1A1A1A;
-  --text-2:      #2D3748;
-  --text-3:      #6B7280;
+  --orange:  #FF6B35;
+  --og-mid:  rgba(255,107,53,0.14);
+  --green:   #10B981;
+  --green-s: rgba(16,185,129,0.12);
+  --bg:      #F8F4F0;
+  --card:    rgba(255,255,255,0.92);
+  --t1:      #111827;
+  --t2:      #374151;
+  --t3:      #6B7280;
 }
 
 body {
   width:1080px; height:1350px;
-  background: radial-gradient(ellipse at 48% 40%, var(--bg-center) 0%, var(--bg-edge) 78%);
+  background:#F8F4F0;
   font-family:'Inter',-apple-system,sans-serif;
   overflow:hidden; position:relative;
 }
 
-.blob { position:absolute; border-radius:50%; pointer-events:none; }
-.blob-1 {
-  width:500px; height:500px; top:-140px; left:-100px;
-  background:radial-gradient(circle,rgba(255,107,53,0.09) 0%,transparent 68%);
-}
-.blob-2 {
-  width:420px; height:420px; bottom:-80px; right:-60px;
-  background:radial-gradient(circle,rgba(255,107,53,0.08) 0%,transparent 68%);
-}
-
-/* Notification stack glow */
-.notif-glow {
+/* food photo strip across top */
+.food-strip {
   position:absolute;
-  width:600px; height:520px;
-  left:50%; top:280px;
-  transform:translateX(-50%);
-  background:radial-gradient(ellipse at 50% 45%,
-    rgba(16,185,129,0.16) 0%,
-    rgba(255,107,53,0.06) 40%,
-    transparent 68%);
-  filter:blur(32px);
-  z-index:2; pointer-events:none;
+  top:0; left:0; right:0; height:320px;
+  background:
+    linear-gradient(180deg, transparent 40%, #F8F4F0 100%),
+    radial-gradient(ellipse at 25% 55%, rgba(180,80,20,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 35%, rgba(255,150,40,0.40) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 70%, rgba(80,30,5,0.50) 0%, transparent 55%),
+    linear-gradient(135deg,#2D1000 0%,#7B3500 25%,#C4650A 50%,#7B3500 75%,#2D1000 100%);
+  z-index:1; overflow:hidden;
+}
+/* Delivery bag element on strip */
+.strip-content {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-55%);
+  display:flex; align-items:center; gap:32px; z-index:3;
+}
+.strip-food { font-size:120px; filter:drop-shadow(0 10px 24px rgba(0,0,0,0.50)) saturate(1.25); line-height:1; }
+.strip-delivery-card {
+  background:rgba(0,0,0,0.60);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.20);
+  border-radius:14px; padding:14px 20px;
+}
+.sdc-platform { font-size:13px; font-weight:900; color:#06C167; margin-bottom:4px; }
+.sdc-rest { font-size:14px; font-weight:700; color:#fff; }
+.sdc-amount { font-size:24px; font-weight:900; color:var(--orange); margin-top:4px; }
+.sdc-time { font-size:11px; color:rgba(255,255,255,0.60); margin-top:2px; }
+
+/* ── LOGO ── */
+.logo-wrap {
+  position:relative; z-index:20;
+  padding:32px 44px 0;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.logo-inner { display:flex; align-items:center; gap:10px; }
+.logo-icon {
+  width:44px; height:44px;
+  background:linear-gradient(145deg,#FF8C5A,#FF6B35);
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:900; font-style:italic; color:#fff;
+  box-shadow:0 4px 12px rgba(255,107,53,0.38);
+}
+.logo-name { font-size:26px; font-weight:700; color:#fff; letter-spacing:-0.5px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.40); }
+.logo-tag {
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.32);
+  color:#fff; font-size:11px; font-weight:700;
+  padding:6px 14px; border-radius:100px; letter-spacing:1px;
+  text-transform:uppercase;
 }
 
-.wrap {
-  position:relative; z-index:10;
-  padding:60px 68px;
-  height:100%;
+/* ── BODY ── */
+.body-wrap {
+  position:absolute;
+  top:280px; left:0; right:0; bottom:0;
+  z-index:10; padding:0 44px 40px;
   display:flex; flex-direction:column;
 }
 
-/* Logo */
-.logo-bar {
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:44px;
-}
-.logo { font-size:30px; font-weight:900; color:var(--orange); letter-spacing:-1.2px; }
-.pill {
-  background:var(--orange-mid); color:var(--orange);
-  font-size:12px; font-weight:700;
-  padding:7px 18px; border-radius:100px;
-  letter-spacing:0.8px; text-transform:uppercase;
-}
-
-/* Eyebrow + headline */
+/* Hook / headline */
+.hook-row { margin-bottom:10px; }
 .eyebrow {
-  font-size:14px; font-weight:700;
-  color:var(--orange); letter-spacing:2.5px;
-  text-transform:uppercase; margin-bottom:16px;
+  font-size:13px; font-weight:700; color:var(--orange);
+  letter-spacing:2.5px; text-transform:uppercase; margin-bottom:10px;
 }
-.headline {
-  font-size:90px; font-weight:900; font-style:italic;
-  line-height:0.90; letter-spacing:-3.5px;
-  color:var(--text-1); margin-bottom:16px;
+.hook {
+  font-size:58px; font-weight:900; font-style:italic;
+  line-height:0.92; letter-spacing:-2.5px; color:var(--t1);
 }
-.headline .accent { color:var(--orange); }
-.subline {
-  font-size:18px; font-weight:500;
-  color:var(--text-2); line-height:1.45;
-  margin-bottom:36px;
+.hook .accent { color:var(--orange); }
+.hook .dim { color:var(--t3); }
+
+.sub {
+  font-size:17px; font-weight:500; color:var(--t2); line-height:1.45;
+  margin-bottom:24px; margin-top:10px;
 }
+.sub strong { color:var(--t1); }
 
 /* Notification cards */
-.notif-stack {
-  display:flex; flex-direction:column;
-  gap:0; margin-bottom:32px;
-  position:relative;
-}
+.notif-stack { display:flex; flex-direction:column; gap:0; margin-bottom:24px; }
 
 .notif {
   background:var(--card);
-  backdrop-filter:blur(14px) saturate(150%);
-  -webkit-backdrop-filter:blur(14px) saturate(150%);
-  border:1px solid var(--card-stroke);
-  box-shadow:
-    0 2px 0 rgba(255,107,53,0.05),
-    0 16px 40px rgba(0,0,0,0.10),
-    0 6px 18px rgba(255,107,53,0.05);
-  border-radius:18px;
-  padding:18px 22px;
-  display:flex; align-items:center; gap:16px;
-  position:relative; overflow:hidden;
+  border:1px solid rgba(0,0,0,0.07);
+  border-radius:17px;
+  padding:15px 20px;
+  display:flex; align-items:center; gap:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
   transform-origin:center center;
+  position:relative; overflow:hidden;
 }
 .notif::before {
   content:'';
   position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.28), transparent);
+  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.25), transparent);
 }
 
-/* Individual tilts */
-.notif:nth-child(1) { transform:rotate(-3.5deg) translateX(-10px); margin-bottom:14px; }
-.notif:nth-child(2) { transform:rotate(-1.5deg) translateX(-4px); margin-bottom:14px; }
-.notif:nth-child(3) { transform:rotate( 0.5deg) translateX( 2px); margin-bottom:14px; }
-.notif:nth-child(4) { transform:rotate( 2.5deg) translateX( 8px); margin-bottom:14px; }
-.notif:nth-child(5) { transform:rotate(-1deg)   translateX(-2px); margin-bottom:0; }
+/* tilts */
+.notif:nth-child(1) { transform:rotate(-3deg) translateX(-8px);   margin-bottom:12px; }
+.notif:nth-child(2) { transform:rotate(-1.5deg) translateX(-3px); margin-bottom:12px; }
+.notif:nth-child(3) { transform:rotate( 0.5deg) translateX( 2px); margin-bottom:12px; }
+.notif:nth-child(4) { transform:rotate( 2deg) translateX( 7px);   margin-bottom:12px; }
+.notif:nth-child(5) { transform:rotate(-1deg) translateX(-2px);   margin-bottom:0; }
 
 /* Platform icon */
-.platform-icon {
+.plat-icon {
   width:44px; height:44px; border-radius:12px;
   display:flex; align-items:center; justify-content:center;
-  font-size:22px; flex-shrink:0;
+  font-size:13px; font-weight:900; color:#fff; flex-shrink:0;
+  letter-spacing:-0.3px;
 }
-.plat-ue  { background:linear-gradient(135deg,#06C167,#05A356); }
-.plat-dd  { background:linear-gradient(135deg,#E8521C,#FF6B35); }
-.plat-rp  { background:linear-gradient(135deg,#FF6D3B,#FA4616); }
+.plat-ue { background:linear-gradient(135deg,#06C167,#05A356); }
+.plat-dd { background:linear-gradient(135deg,#E8521C,#FF6B35); }
+.plat-rp { background:linear-gradient(135deg,#FF6D3B,#FA4616); }
 
-/* Notification content */
+/* Notif body */
 .notif-body { flex:1; min-width:0; }
-.notif-title {
-  font-size:14px; font-weight:700;
-  color:var(--text-1); white-space:nowrap;
-  overflow:hidden; text-overflow:ellipsis;
-}
-.notif-sub {
-  font-size:12px; color:var(--text-3);
-  margin-top:2px; font-weight:500;
-}
+.notif-title { font-size:14px; font-weight:700; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.notif-sub   { font-size:12px; font-weight:500; color:var(--t3); margin-top:2px; }
 
-/* Revenue badge */
-.rev-badge {
-  flex-shrink:0;
-  text-align:right;
-}
-.rev-amount {
-  font-size:17px; font-weight:900;
-  color:var(--green);
-}
-.rev-time {
-  font-size:11px; color:var(--text-3); margin-top:1px;
-}
+/* Amount */
+.notif-amount { text-align:right; flex-shrink:0; }
+.amount-val { font-size:18px; font-weight:900; color:var(--green); }
+.amount-val.orange { color:var(--orange); }
+.amount-time { font-size:11px; color:var(--t3); margin-top:1px; }
 
-/* Dot live */
-.dot-live {
-  display:inline-block;
-  width:9px; height:9px; border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 0 3px var(--green-glow);
-  margin-right:8px; vertical-align:middle;
-  flex-shrink:0;
-}
-
-/* Revenue block */
-.revenue-block {
-  display:flex; gap:18px; margin-bottom:28px;
+/* Revenue hero */
+.rev-hero {
+  display:flex; gap:16px; margin-bottom:24px;
 }
 .rev-main {
-  flex:2; padding:26px 28px;
-  display:flex; align-items:center; gap:22px;
+  flex:2;
+  background:linear-gradient(135deg,var(--orange),#FF8C5A);
+  border-radius:18px; padding:22px 26px;
+  display:flex; align-items:center; gap:18px;
+  box-shadow:0 10px 28px rgba(255,107,53,0.35);
 }
-.rev-icon { font-size:40px; flex-shrink:0; }
+.rev-icon { font-size:36px; flex-shrink:0; }
 .rev-main-val {
-  font-size:56px; font-weight:900; font-style:italic;
-  color:var(--orange); line-height:1; letter-spacing:-2.5px;
+  font-size:52px; font-weight:900; font-style:italic;
+  color:#fff; line-height:1; letter-spacing:-2.5px;
 }
-.rev-main-lbl {
-  font-size:13px; font-weight:600;
-  color:var(--text-2); margin-top:5px; line-height:1.35;
-}
+.rev-main-lbl { font-size:12px; color:rgba(255,255,255,0.82); margin-top:4px; font-weight:600; }
 
 .rev-side {
-  flex:1; padding:24px 20px; text-align:center;
+  flex:1;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.07);
+  border-radius:18px; padding:20px 18px; text-align:center;
+  box-shadow:0 8px 20px rgba(0,0,0,0.08);
 }
 .rev-side-val {
   font-size:38px; font-weight:900; font-style:italic;
   color:var(--green); line-height:1; letter-spacing:-1.5px;
 }
-.rev-side-lbl {
-  font-size:12px; font-weight:600;
-  color:var(--text-2); margin-top:5px; line-height:1.3;
+.rev-side-lbl { font-size:11px; font-weight:600; color:var(--t2); margin-top:4px; line-height:1.3; }
+.live-dot {
+  display:inline-block; width:8px; height:8px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 0 3px rgba(16,185,129,0.22);
+  margin-right:6px; vertical-align:middle;
 }
 
-/* Glass base */
-.glass {
-  background:var(--card);
-  backdrop-filter:blur(14px) saturate(150%);
-  -webkit-backdrop-filter:blur(14px) saturate(150%);
-  border:1px solid var(--card-stroke);
-  box-shadow:
-    0 2px 0 rgba(255,107,53,0.05),
-    0 20px 50px rgba(0,0,0,0.10),
-    0 8px 24px rgba(255,107,53,0.05);
-  border-radius:22px;
-  position:relative; overflow:hidden;
-}
-.glass::before {
-  content:'';
-  position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(255,107,53,0.30), transparent);
-}
-
-/* CTA bar */
+/* CTA */
 .cta-bar {
   margin-top:auto;
   background:var(--orange);
-  border-radius:20px;
-  padding:26px 34px;
+  border-radius:18px;
+  padding:24px 32px;
   display:flex; align-items:center; justify-content:space-between;
-  box-shadow:0 16px 42px rgba(255,107,53,0.38), 0 4px 12px rgba(255,107,53,0.22);
+  box-shadow:0 12px 36px rgba(255,107,53,0.40), 0 4px 10px rgba(255,107,53,0.22);
 }
-.cta-headline {
-  font-size:26px; font-weight:900;
-  color:#fff; line-height:1.08; letter-spacing:-0.5px;
-}
-.cta-sub {
-  font-size:13px; color:rgba(255,255,255,0.78);
-  font-weight:500; margin-top:5px;
-}
+.cta-headline { font-size:24px; font-weight:900; color:#fff; line-height:1.08; letter-spacing:-0.5px; }
+.cta-sub { font-size:12px; color:rgba(255,255,255,0.80); margin-top:4px; font-weight:500; }
 .cta-btn {
   background:#fff; color:var(--orange);
   font-size:14px; font-weight:900;
-  padding:14px 26px; border-radius:12px;
+  padding:14px 24px; border-radius:12px;
   white-space:nowrap; flex-shrink:0;
 }
 </style>
 </head>
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-<div class="notif-glow"></div>
+<!-- Food photo strip -->
+<div class="food-strip">
+  <div class="strip-content">
+    <span class="strip-food">🫕</span>
+    <div class="strip-delivery-card">
+      <div class="sdc-platform">Uber Eats</div>
+      <div class="sdc-rest">Tacos Don Memo</div>
+      <div class="sdc-amount">$487 MXN</div>
+      <div class="sdc-time">Pedido en camino · 18 min</div>
+    </div>
+    <span class="strip-food" style="font-size:90px; opacity:0.80;">🌮</span>
+  </div>
+</div>
 
-<div class="wrap">
+<!-- Logo overlaid -->
+<div class="logo-wrap">
+  <div class="logo-inner">
+    <div class="logo-icon">Z</div>
+    <div class="logo-name">ZUBA</div>
+  </div>
+  <div class="logo-tag">Sistema Activo</div>
+</div>
 
-  <div class="logo-bar">
-    <div class="logo">ZUBA</div>
-    <div class="pill">Sistema Activo</div>
+<!-- Body -->
+<div class="body-wrap">
+
+  <div class="hook-row">
+    <div class="eyebrow">Mientras lees esto…</div>
+    <div class="hook">
+      Tu competencia<br>ya recibió<br>
+      <span class="accent">3 pedidos</span> más
+    </div>
+    <div class="sub">
+      Esto es lo que ve un restaurante optimizado con ZUBA.<br>
+      <strong>¿Cuándo fue la última vez que tu celular no paraba?</strong>
+    </div>
   </div>
 
-  <div class="eyebrow">Resultados en tiempo real</div>
-
-  <div class="headline">
-    Tu celular<br>
-    debería no<br>
-    <span class="accent">parar</span>
-  </div>
-
-  <div class="subline">
-    <span class="dot-live"></span>
-    Así se ve la bandeja de entrada de un restaurante optimizado con ZUBA.
-  </div>
-
+  <!-- Notification stack -->
   <div class="notif-stack">
+
     <div class="notif">
-      <div class="platform-icon plat-ue">🟢</div>
+      <div class="plat-icon plat-ue">UE</div>
       <div class="notif-body">
         <div class="notif-title">¡Nuevo pedido — Uber Eats!</div>
-        <div class="notif-sub">Tacos Don Memo · Orden #UE-8821</div>
+        <div class="notif-sub">Tacos Don Memo · Orden #UE-8821 · 3 productos</div>
       </div>
-      <div class="rev-badge">
-        <div class="rev-amount">$487</div>
-        <div class="rev-time">hace 2 min</div>
+      <div class="notif-amount">
+        <div class="amount-val">$487</div>
+        <div class="amount-time">hace 2 min</div>
       </div>
     </div>
 
     <div class="notif">
-      <div class="platform-icon plat-dd">🔴</div>
+      <div class="plat-icon plat-dd">DD</div>
       <div class="notif-body">
         <div class="notif-title">Pedido confirmado — DiDi Food</div>
-        <div class="notif-sub">2 Quesabirrias + 1 Agua · Orden #DD-3304</div>
+        <div class="notif-sub">2 Quesabirrias + 1 Agua de horchata</div>
       </div>
-      <div class="rev-badge">
-        <div class="rev-amount">$312</div>
-        <div class="rev-time">hace 8 min</div>
+      <div class="notif-amount">
+        <div class="amount-val">$312</div>
+        <div class="amount-time">hace 8 min</div>
       </div>
     </div>
 
     <div class="notif">
-      <div class="platform-icon plat-rp">🟠</div>
+      <div class="plat-icon plat-rp">RP</div>
       <div class="notif-body">
         <div class="notif-title">Nuevo pedido — Rappi</div>
-        <div class="notif-sub">Orden familiar · Orden #RP-7190</div>
+        <div class="notif-sub">Orden familiar · 6 productos · Orden #RP-7190</div>
       </div>
-      <div class="rev-badge">
-        <div class="rev-amount">$680</div>
-        <div class="rev-time">hace 14 min</div>
+      <div class="notif-amount">
+        <div class="amount-val">$680</div>
+        <div class="amount-time">hace 14 min</div>
       </div>
     </div>
 
     <div class="notif">
-      <div class="platform-icon plat-ue">🟢</div>
+      <div class="plat-icon plat-ue">UE</div>
       <div class="notif-body">
-        <div class="notif-title">Reseña nueva ★★★★★ — Uber Eats</div>
-        <div class="notif-sub">"Riquísimo, lo mejor que he pedido"</div>
+        <div class="notif-title">Reseña nueva ★★★★★</div>
+        <div class="notif-sub">"Riquísimo, lo mejor que he pedido" — Cliente verificado</div>
       </div>
-      <div class="rev-badge">
-        <div class="rev-amount" style="color:var(--orange)">5.0 ★</div>
-        <div class="rev-time">hace 21 min</div>
+      <div class="notif-amount">
+        <div class="amount-val orange">5.0 ★</div>
+        <div class="amount-time">hace 21 min</div>
       </div>
     </div>
 
     <div class="notif">
-      <div class="platform-icon plat-dd">🔴</div>
+      <div class="plat-icon plat-dd">DD</div>
       <div class="notif-body">
         <div class="notif-title">¡Nuevo pedido — DiDi Food!</div>
         <div class="notif-sub">3 tacos + 2 aguas · Orden #DD-3391</div>
       </div>
-      <div class="rev-badge">
-        <div class="rev-amount">$343</div>
-        <div class="rev-time">hace 29 min</div>
+      <div class="notif-amount">
+        <div class="amount-val">$343</div>
+        <div class="amount-time">hace 29 min</div>
       </div>
     </div>
+
   </div>
 
-  <div class="revenue-block">
-    <div class="glass rev-main">
+  <!-- Revenue hero -->
+  <div class="rev-hero">
+    <div class="rev-main">
       <div class="rev-icon">💰</div>
       <div>
         <div class="rev-main-val">$4,820</div>
         <div class="rev-main-lbl">ingresos del día · en curso</div>
       </div>
     </div>
-    <div class="glass rev-side">
+    <div class="rev-side">
+      <div style="margin-bottom:4px;"><span class="live-dot"></span><span style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;">En vivo</span></div>
       <div class="rev-side-val">+38%</div>
       <div class="rev-side-lbl">vs. mes anterior</div>
     </div>
   </div>
 
+  <!-- CTA -->
   <div class="cta-bar">
     <div>
       <div class="cta-headline">Tu restaurante puede<br>verse así hoy</div>
-      <div class="cta-sub">Diagnóstico gratuito — sin compromiso</div>
+      <div class="cta-sub">Diagnóstico gratuito · Sin compromiso · 24 horas</div>
     </div>
-    <div class="cta-btn">Quiero esto →</div>
+    <div class="cta-btn">Actívalo ahora →</div>
   </div>
 
 </div>
