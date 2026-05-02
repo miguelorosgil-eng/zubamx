@@ -7,27 +7,403 @@ import {
   useVideoConfig,
 } from "remotion";
 
-const fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif';
-
-// Brand colors
-const PURPLE = "#7C3AED";
-const PINK = "#EC4899";
+const ORANGE = "#FF6B35";
+const ORANGE_DARK = "#FF3D00";
+const CREAM = "#FBF7F4";
+const BLACK = "#0A0A0A";
 const WHITE = "#FFFFFF";
-const BG = "#0A0A0A";
+const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
 
-const features = [
-  { emoji: "⚡", text: "Pagos instantáneos" },
-  { emoji: "🔒", text: "100% seguro" },
-  { emoji: "💸", text: "Sin comisiones" },
-];
+// ── helpers ──────────────────────────────────────────────────────────────────
 
-const Logo: React.FC<{ progress: number }> = ({ progress }) => {
-  const scale = interpolate(progress, [0, 1], [0.6, 1], {
-    extrapolateLeft: "clamp",
+function fadeSlide(
+  frame: number,
+  from: number,
+  fps: number,
+  dir: "up" | "left" = "up"
+) {
+  const p = spring({
+    fps,
+    frame: frame - from,
+    config: { damping: 22, stiffness: 120 },
+    durationInFrames: 40,
+  });
+  const dist = 60;
+  const tx = dir === "left" ? interpolate(p, [0, 1], [-dist, 0]) : 0;
+  const ty = dir === "up" ? interpolate(p, [0, 1], [dist, 0]) : 0;
+  const opacity = interpolate(p, [0, 0.4], [0, 1], {
     extrapolateRight: "clamp",
   });
-  const opacity = interpolate(progress, [0, 0.4], [0, 1], {
-    extrapolateLeft: "clamp",
+  return { opacity, transform: `translate(${tx}px, ${ty}px)` };
+}
+
+// ── sub-components ────────────────────────────────────────────────────────────
+
+const ZubaLogo: React.FC<{ scale: number; opacity: number }> = ({
+  scale,
+  opacity,
+}) => (
+  <div
+    style={{
+      opacity,
+      transform: `scale(${scale})`,
+      display: "flex",
+      alignItems: "center",
+      gap: 20,
+    }}
+  >
+    <div
+      style={{
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        background: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_DARK})`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: `0 12px 40px ${ORANGE}66`,
+      }}
+    >
+      <span
+        style={{
+          color: WHITE,
+          fontFamily: font,
+          fontWeight: 900,
+          fontSize: 40,
+          letterSpacing: -1,
+        }}
+      >
+        Z
+      </span>
+    </div>
+    <span
+      style={{
+        fontFamily: font,
+        fontWeight: 900,
+        fontSize: 52,
+        color: BLACK,
+        letterSpacing: -1.5,
+      }}
+    >
+      ZUBA
+    </span>
+  </div>
+);
+
+const Hook: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const line1 = fadeSlide(frame, 0, fps, "up");
+  const line2 = fadeSlide(frame, 12, fps, "up");
+  const badge = fadeSlide(frame, 25, fps, "up");
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 20,
+        padding: "0 64px",
+      }}
+    >
+      {/* Badge */}
+      <div
+        style={{
+          ...badge,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          background: `${ORANGE}18`,
+          border: `1px solid ${ORANGE}40`,
+          borderRadius: 100,
+          padding: "10px 24px",
+        }}
+      >
+        <div
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: ORANGE,
+          }}
+        />
+        <span
+          style={{
+            fontFamily: font,
+            fontWeight: 700,
+            fontSize: 28,
+            color: ORANGE,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}
+        >
+          Consultoría de Delivery · México
+        </span>
+      </div>
+
+      {/* Headline */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div
+          style={{
+            ...line1,
+            fontFamily: font,
+            fontWeight: 900,
+            fontSize: 88,
+            color: BLACK,
+            lineHeight: 1.0,
+            letterSpacing: -3,
+          }}
+        >
+          Tu restaurante
+        </div>
+        <div
+          style={{
+            ...line1,
+            fontFamily: font,
+            fontWeight: 900,
+            fontSize: 88,
+            lineHeight: 1.0,
+            letterSpacing: -3,
+            background: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_DARK})`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          en el Top de
+        </div>
+        <div
+          style={{
+            ...line2,
+            fontFamily: font,
+            fontWeight: 900,
+            fontSize: 88,
+            color: BLACK,
+            lineHeight: 1.0,
+            letterSpacing: -3,
+          }}
+        >
+          Uber Eats, Rappi
+        </div>
+        <div
+          style={{
+            ...line2,
+            fontFamily: font,
+            fontWeight: 900,
+            fontSize: 88,
+            color: BLACK,
+            lineHeight: 1.0,
+            letterSpacing: -3,
+          }}
+        >
+          y DiDi.
+        </div>
+      </div>
+
+      {/* Sub */}
+      <div
+        style={{
+          ...badge,
+          fontFamily: font,
+          fontWeight: 300,
+          fontSize: 38,
+          color: "rgba(10,10,10,0.55)",
+          lineHeight: 1.55,
+          maxWidth: 820,
+        }}
+      >
+        Optimizamos los 5 factores que el algoritmo premia.{" "}
+        <strong style={{ fontWeight: 700, color: BLACK }}>
+          Sin gastar en publicidad.
+        </strong>
+      </div>
+    </div>
+  );
+};
+
+const Stats: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const stats = [
+    {
+      n: "+65%",
+      l: "Incremento en ventas",
+      bg: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_DARK})`,
+      text: WHITE,
+      sub: "rgba(255,255,255,0.75)",
+    },
+    {
+      n: "Top 3",
+      l: "En plataformas",
+      bg: BLACK,
+      text: WHITE,
+      sub: "rgba(255,255,255,0.5)",
+    },
+    {
+      n: "$0",
+      l: "Sin crecimiento\n= sin fee",
+      bg: "#F0FDF4",
+      text: "#16a34a",
+      sub: "rgba(22,163,74,0.65)",
+      border: "1.5px solid rgba(22,163,74,0.25)",
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 20,
+        padding: "0 64px",
+        flexWrap: "wrap",
+      }}
+    >
+      {stats.map((s, i) => {
+        const p = spring({
+          fps,
+          frame: frame - i * 10,
+          config: { damping: 20, stiffness: 100 },
+          durationInFrames: 35,
+        });
+        const opacity = interpolate(p, [0, 0.4], [0, 1], {
+          extrapolateRight: "clamp",
+        });
+        const ty = interpolate(p, [0, 1], [50, 0]);
+
+        return (
+          <div
+            key={s.n}
+            style={{
+              opacity,
+              transform: `translateY(${ty}px)`,
+              flex: "1 1 auto",
+              background: s.bg,
+              border: s.border ?? "none",
+              borderRadius: 28,
+              padding: "28px 32px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: font,
+                fontWeight: 900,
+                fontSize: 68,
+                color: s.text,
+                letterSpacing: -2,
+                lineHeight: 1,
+              }}
+            >
+              {s.n}
+            </div>
+            <div
+              style={{
+                fontFamily: font,
+                fontWeight: 500,
+                fontSize: 26,
+                color: s.sub,
+                lineHeight: 1.3,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {s.l}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const Features: React.FC<{ frame: number; fps: number }> = ({
+  frame,
+  fps,
+}) => {
+  const items = [
+    { icon: "📷", text: "Fotografía ×3 conversión" },
+    { icon: "🗂", text: "Arquitectura de menú" },
+    { icon: "💎", text: "Éxito compartido" },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        padding: "0 64px",
+      }}
+    >
+      {items.map((item, i) => {
+        const p = spring({
+          fps,
+          frame: frame - i * 12,
+          config: { damping: 22, stiffness: 110 },
+          durationInFrames: 35,
+        });
+        const opacity = interpolate(p, [0, 0.4], [0, 1], {
+          extrapolateRight: "clamp",
+        });
+        const tx = interpolate(p, [0, 1], [-80, 0], {
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+        });
+
+        return (
+          <div
+            key={item.text}
+            style={{
+              opacity,
+              transform: `translateX(${tx}px)`,
+              display: "flex",
+              alignItems: "center",
+              gap: 24,
+              background: WHITE,
+              border: `1.5px solid ${ORANGE}25`,
+              borderRadius: 28,
+              padding: "28px 36px",
+            }}
+          >
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 22,
+                background: `${ORANGE}14`,
+                border: `1.5px solid ${ORANGE}30`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 36,
+                flexShrink: 0,
+              }}
+            >
+              {item.icon}
+            </div>
+            <span
+              style={{
+                fontFamily: font,
+                fontWeight: 700,
+                fontSize: 40,
+                color: BLACK,
+                letterSpacing: -0.5,
+              }}
+            >
+              {item.text}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const CTA: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const p = spring({
+    fps,
+    frame,
+    config: { damping: 18, stiffness: 90 },
+    durationInFrames: 40,
+  });
+  const scale = interpolate(p, [0, 1], [0.85, 1]);
+  const opacity = interpolate(p, [0, 0.4], [0, 1], {
     extrapolateRight: "clamp",
   });
 
@@ -39,291 +415,241 @@ const Logo: React.FC<{ progress: number }> = ({ progress }) => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 16,
+        gap: 24,
+        padding: "0 64px",
+        width: "100%",
       }}
     >
       <div
         style={{
-          fontSize: 140,
-          fontWeight: 900,
-          fontFamily,
-          background: `linear-gradient(135deg, ${PURPLE}, ${PINK})`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          letterSpacing: -4,
-          lineHeight: 1,
+          width: "100%",
+          background: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_DARK})`,
+          borderRadius: 36,
+          padding: "44px 48px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+          boxShadow: `0 24px 64px ${ORANGE}55`,
         }}
       >
-        ZUBA
+        <span
+          style={{
+            fontFamily: font,
+            fontWeight: 900,
+            fontSize: 52,
+            color: WHITE,
+            letterSpacing: -1,
+          }}
+        >
+          Auditoría gratuita →
+        </span>
+        <span
+          style={{
+            fontFamily: font,
+            fontWeight: 400,
+            fontSize: 30,
+            color: "rgba(255,255,255,0.75)",
+          }}
+        >
+          Sin costo · Sin compromiso
+        </span>
       </div>
-      <div
+
+      <span
         style={{
-          fontSize: 36,
+          fontFamily: font,
           fontWeight: 400,
-          fontFamily,
-          color: "rgba(255,255,255,0.7)",
-          letterSpacing: 8,
+          fontSize: 28,
+          color: "rgba(10,10,10,0.35)",
+          letterSpacing: 3,
           textTransform: "uppercase",
         }}
       >
-        Tu dinero, tu poder
-      </div>
+        zubamx.vercel.app
+      </span>
     </div>
   );
 };
 
-const FeatureRow: React.FC<{
-  emoji: string;
-  text: string;
-  progress: number;
-}> = ({ emoji, text, progress }) => {
-  const x = interpolate(progress, [0, 1], [-120, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-  });
-  const opacity = interpolate(progress, [0, 0.5], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 24,
-        transform: `translateX(${x}px)`,
-        opacity,
-      }}
-    >
-      <div
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: 24,
-          background: `linear-gradient(135deg, ${PURPLE}33, ${PINK}33)`,
-          border: `2px solid ${PURPLE}66`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 36,
-          flexShrink: 0,
-        }}
-      >
-        {emoji}
-      </div>
-      <div
-        style={{
-          fontSize: 44,
-          fontWeight: 700,
-          fontFamily,
-          color: WHITE,
-        }}
-      >
-        {text}
-      </div>
-    </div>
-  );
-};
-
-const GlowOrb: React.FC<{
-  x: number;
-  y: number;
-  color: string;
-  size: number;
-  opacity: number;
-}> = ({ x, y, color, size, opacity }) => (
-  <div
-    style={{
-      position: "absolute",
-      left: x,
-      top: y,
-      width: size,
-      height: size,
-      borderRadius: "50%",
-      background: color,
-      filter: `blur(${size * 0.4}px)`,
-      opacity,
-      transform: "translate(-50%, -50%)",
-    }}
-  />
-);
+// ── scene layout ──────────────────────────────────────────────────────────────
+// Total: 270 frames = 9s @ 30fps
+// Scene 1 (0–90):   Hook — headline + badge + sub
+// Scene 2 (90–180): Stats + features
+// Scene 3 (180–270): CTA
 
 export const ZubaTikTok: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Phase 1: Logo reveal (0-60)
-  const logoProgress = spring({
-    fps,
-    frame,
-    config: { damping: 18, stiffness: 80 },
-    durationInFrames: 50,
-  });
-
-  // Phase 2: Features slide in (60-150)
-  const featuresStart = 60;
-  const featureProgresses = features.map((_, i) =>
-    spring({
-      fps,
-      frame: frame - featuresStart - i * 15,
-      config: { damping: 20, stiffness: 100 },
-      durationInFrames: 35,
-    })
+  // Ambient glow pulse
+  const glowOpacity = interpolate(
+    Math.sin(frame * 0.04),
+    [-1, 1],
+    [0.12, 0.22]
   );
 
-  // Phase 3: CTA (150-210)
-  const ctaProgress = spring({
-    fps,
-    frame: frame - 150,
-    config: { damping: 15, stiffness: 80 },
-    durationInFrames: 40,
-  });
-
-  const ctaScale = interpolate(ctaProgress, [0, 1], [0.8, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // Ambient orb pulse
-  const pulse = interpolate(frame, [0, 60], [0.15, 0.25], {
-    extrapolateRight: "clamp",
-  });
-
-  const featuresOpacity = interpolate(frame, [55, 70], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const logoY = interpolate(frame, [55, 80], [0, -220], {
+  // Scene transitions
+  const scene1Out = interpolate(frame, [72, 90], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.4, 0, 0.2, 1),
   });
+  const scene2In = interpolate(frame, [90, 110], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.16, 1, 0.3, 1),
+  });
+  const scene2Out = interpolate(frame, [162, 180], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+  const scene3In = interpolate(frame, [180, 200], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.16, 1, 0.3, 1),
+  });
+
+  const logoP = spring({
+    fps,
+    frame,
+    config: { damping: 20, stiffness: 100 },
+    durationInFrames: 40,
+  });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: BG, overflow: "hidden" }}>
-      {/* Background glow orbs */}
-      <GlowOrb x={200} y={400} color={PURPLE} size={500} opacity={pulse} />
-      <GlowOrb
-        x={900}
-        y={1600}
-        color={PINK}
-        size={400}
-        opacity={pulse * 0.8}
-      />
-      <GlowOrb
-        x={1000}
-        y={600}
-        color={PURPLE}
-        size={300}
-        opacity={pulse * 0.6}
-      />
-
-      {/* Grid lines */}
+    <AbsoluteFill style={{ backgroundColor: CREAM, overflow: "hidden" }}>
+      {/* Ambient background glow */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
-          backgroundImage: `
-            linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px)
-          `,
-          backgroundSize: "80px 80px",
+          width: 900,
+          height: 900,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${ORANGE}30 0%, transparent 70%)`,
+          top: -300,
+          left: -200,
+          opacity: glowOpacity,
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 600,
+          height: 600,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${ORANGE}18 0%, transparent 70%)`,
+          bottom: -100,
+          right: -100,
+          opacity: glowOpacity * 0.7,
+          pointerEvents: "none",
         }}
       />
 
-      {/* Logo section */}
+      {/* ── Logo top ── */}
+      <div
+        style={{
+          position: "absolute",
+          top: 80,
+          left: 64,
+        }}
+      >
+        <ZubaLogo
+          scale={logoP}
+          opacity={interpolate(logoP, [0, 0.4], [0, 1], {
+            extrapolateRight: "clamp",
+          })}
+        />
+      </div>
+
+      {/* ── Scene 1: Hook ── */}
       <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
+          bottom: 0,
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          height: 1920,
-          transform: `translateY(${logoY}px)`,
+          gap: 36,
+          opacity: 1 - scene1Out,
+          transform: `translateY(${interpolate(scene1Out, [0, 1], [0, -80])}px)`,
         }}
       >
-        <Logo progress={logoProgress} />
+        <Hook frame={frame} fps={fps} />
       </div>
 
-      {/* Features section */}
+      {/* ── Scene 2: Stats + Features ── */}
       <div
         style={{
           position: "absolute",
-          top: 820,
-          left: 80,
-          right: 80,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           display: "flex",
           flexDirection: "column",
-          gap: 40,
-          opacity: featuresOpacity,
+          justifyContent: "center",
+          gap: 36,
+          opacity: scene2In * (1 - scene2Out),
+          transform: `translateY(${interpolate(scene2In, [0, 1], [80, 0])}px)`,
         }}
       >
-        {features.map((f, i) => (
-          <FeatureRow
-            key={f.text}
-            emoji={f.emoji}
-            text={f.text}
-            progress={featureProgresses[i]}
+        <Stats frame={frame - 90} fps={fps} />
+        <Features frame={frame - 115} fps={fps} />
+      </div>
+
+      {/* ── Scene 3: CTA ── */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 48,
+          opacity: scene3In,
+          transform: `translateY(${interpolate(scene3In, [0, 1], [80, 0])}px)`,
+        }}
+      >
+        <div style={{ padding: "0 64px" }}>
+          <ZubaLogo
+            scale={1}
+            opacity={1}
           />
-        ))}
-      </div>
-
-      {/* CTA */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 180,
-          left: 80,
-          right: 80,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 32,
-          opacity: ctaProgress,
-          transform: `scale(${ctaScale})`,
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            height: 120,
-            borderRadius: 36,
-            background: `linear-gradient(135deg, ${PURPLE}, ${PINK})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: `0 20px 60px ${PURPLE}66`,
-          }}
-        >
-          <span
+        </div>
+        <div style={{ padding: "0 64px" }}>
+          <p
             style={{
-              fontSize: 48,
+              fontFamily: font,
               fontWeight: 900,
-              fontFamily,
-              color: WHITE,
-              letterSpacing: 2,
+              fontSize: 80,
+              color: BLACK,
+              lineHeight: 1.05,
+              letterSpacing: -2.5,
+              margin: 0,
             }}
           >
-            Descarga gratis →
-          </span>
+            Si no creces,{" "}
+            <span
+              style={{
+                background: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_DARK})`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              no cobramos.
+            </span>
+          </p>
         </div>
-        <div
-          style={{
-            fontSize: 32,
-            fontFamily,
-            color: "rgba(255,255,255,0.4)",
-            letterSpacing: 4,
-            textTransform: "uppercase",
-          }}
-        >
-          zuba.mx
-        </div>
+        <CTA frame={frame - 195} fps={fps} />
       </div>
     </AbsoluteFill>
   );
