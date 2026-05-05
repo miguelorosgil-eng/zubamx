@@ -14,21 +14,27 @@ export const ZubaAdSchema = z.object({
 });
 type Props = z.infer<typeof ZubaAdSchema>;
 
-// ── Brand ─────────────────────────────────────────────────────────────────────
+// ── Brand — Apple design tokens + ZUBA identity ───────────────────────────────
+// Source: apple.com/mx branding data
 const C = {
   black: "#000000",
   nearBlack: "#0A0A0A",
   white: "#FFFFFF",
-  offWhite: "#F5F5F7",
-  cream: "#FBF7F4",
-  orange: "#FF6B35",
+  offWhite: "#F5F5F7",   // Apple: buttonSecondary.background
+  lightBg: "#FFFFFF",    // Apple: background
+  textPrimary: "#333336", // Apple: textPrimary
+  orange: "#FF6B35",     // ZUBA primary
   orangeWarm: "#FF8C42",
-  gray: "#86868B",
-  darkGray: "#1D1D1F",
+  orangeDark: "#E85A2A",
+  gray: "#86868B",       // Apple: gray
+  darkGray: "#1D1D1F",   // Apple: darkGray
   green: "#25D366",
 };
+// Apple exact font stack from branding data
 const font =
-  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+  '"SF Pro Display", "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif';
+// Apple button pill radius
+const BTN_RADIUS = 980;
 
 // ── Voiceover scripts (regenerated — shorter, punchier) ───────────────────────
 // pain:      "¿Tu restaurante está en Uber Eats o Rappi y no te llegan pedidos?
@@ -124,11 +130,11 @@ const CaptionBar: React.FC<{ hook: Props["hook"]; frame: number }> = ({ hook, fr
     }}>
       <div style={{
         display: "inline-block",
-        background: "rgba(0,0,0,0.72)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderRadius: 16,
-        padding: "14px 28px",
+        background: "rgba(0,0,0,0.76)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderRadius: BTN_RADIUS,
+        padding: "12px 32px",
       }}>
         <span style={{
           fontFamily: font,
@@ -248,9 +254,9 @@ const SceneHook: React.FC<{ hook: Props["hook"]; frame: number; fps: number }> =
           transform: `translateY(${interpolate(ease(frame, 0, 25), [0, 1], [20, 0])}px)`,
           marginBottom: 48,
           display: "flex", alignItems: "center", gap: 10,
-          background: `${C.orange}18`,
-          border: `1px solid ${C.orange}35`,
-          borderRadius: 100, padding: "10px 24px",
+          background: `${C.orange}16`,
+          border: `1px solid ${C.orange}40`,
+          borderRadius: BTN_RADIUS, padding: "10px 28px",
         }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.orange }} />
           <span style={{ fontFamily: font, fontWeight: 600, fontSize: 22, color: C.orange, letterSpacing: 1, textTransform: "uppercase" }}>
@@ -374,7 +380,7 @@ const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => 
   const f = frame - 270;
 
   return (
-    <AbsoluteFill style={{ background: C.cream, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: C.lightBg, overflow: "hidden" }}>
       {/* Top-right warm glow */}
       <div style={{
         position: "absolute", top: -80, right: -80,
@@ -404,8 +410,8 @@ const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => 
             <span style={{ color: C.white, fontFamily: font, fontWeight: 900, fontSize: 34 }}>Z</span>
           </div>
           <div>
-            <div style={{ fontFamily: font, fontWeight: 900, fontSize: 44, color: C.darkGray, letterSpacing: -1 }}>ZUBA</div>
-            <div style={{ fontFamily: font, fontWeight: 400, fontSize: 22, color: C.gray, letterSpacing: 0.5 }}>Consultoría de operación</div>
+            <div style={{ fontFamily: font, fontWeight: 900, fontSize: 44, color: C.textPrimary, letterSpacing: -1 }}>ZUBA</div>
+            <div style={{ fontFamily: font, fontWeight: 400, fontSize: 22, color: C.gray, letterSpacing: 0.2 }}>Consultoría de operación</div>
           </div>
         </div>
 
@@ -414,7 +420,7 @@ const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => 
           opacity: ease(f, 15, 45),
           transform: `translateY(${interpolate(ease(f, 15, 45), [0, 1], [28, 0])}px)`,
         }}>
-          <div style={{ fontFamily: font, fontWeight: 900, fontSize: 80, color: C.darkGray, lineHeight: 1.0, letterSpacing: -3 }}>
+          <div style={{ fontFamily: font, fontWeight: 900, fontSize: 80, color: C.textPrimary, lineHeight: 1.0, letterSpacing: -3 }}>
             No es marketing.
           </div>
           <div style={{
@@ -436,9 +442,9 @@ const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => 
                 opacity: op,
                 transform: `translateX(${interpolate(op, [0, 1], [-32, 0])}px)`,
                 display: "flex", alignItems: "center", gap: 18,
-                background: i === 0 ? `${C.orange}12` : C.white,
-                border: `1.5px solid ${i === 0 ? C.orange + "30" : "rgba(0,0,0,0.06)"}`,
-                borderRadius: 20, padding: "16px 24px",
+                background: i === 0 ? `${C.orange}10` : C.offWhite,
+                border: `1.5px solid ${i === 0 ? C.orange + "35" : "rgba(0,0,0,0.05)"}`,
+                borderRadius: 16, padding: "16px 24px",
               }}>
                 <span style={{
                   fontFamily: font, fontWeight: 900, fontSize: 22,
@@ -446,7 +452,7 @@ const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => 
                 }}>{s.n}</span>
                 <span style={{
                   fontFamily: font, fontWeight: 600, fontSize: 32,
-                  color: C.darkGray, letterSpacing: -0.3,
+                  color: C.textPrimary, letterSpacing: -0.3,
                 }}>{s.label}</span>
                 {i === 0 && (
                   <div style={{
@@ -530,10 +536,10 @@ const SceneCTA: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
           transform: `scale(${pulse}) translateY(${interpolate(ease(f, 30, 55), [0, 1], [30, 0])}px)`,
           width: "100%",
           background: C.green,
-          borderRadius: 28, padding: "38px 48px",
+          borderRadius: BTN_RADIUS, padding: "36px 52px",
           display: "flex", alignItems: "center",
-          justifyContent: "center", gap: 18,
-          boxShadow: `0 20px 60px ${C.green}55`,
+          justifyContent: "center", gap: 20,
+          boxShadow: `0 16px 48px ${C.green}60`,
           marginBottom: 24,
         }}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
