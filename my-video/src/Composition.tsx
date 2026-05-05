@@ -14,277 +14,341 @@ export const ZubaAdSchema = z.object({
 });
 type Props = z.infer<typeof ZubaAdSchema>;
 
-// ── Brand ────────────────────────────────────────────────────────────────────
+// ── Brand ─────────────────────────────────────────────────────────────────────
 const C = {
-  orange: "#FF6B35",
-  orangeDark: "#FF3D00",
-  orange2: "#FF8C42",
-  black: "#0A0A0A",
-  dark: "#111111",
+  black: "#000000",
+  nearBlack: "#0A0A0A",
   white: "#FFFFFF",
+  offWhite: "#F5F5F7",
   cream: "#FBF7F4",
+  orange: "#FF6B35",
+  orangeWarm: "#FF8C42",
+  gray: "#86868B",
+  darkGray: "#1D1D1F",
   green: "#25D366",
-  muted: "rgba(255,255,255,0.5)",
-  card: "rgba(255,255,255,0.06)",
-  cardBorder: "rgba(255,255,255,0.1)",
 };
 const font =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 
-// ── Voiceover scripts (place generated MP3 in public/vo-pain.mp3 etc.) ───────
-// Hook "pain":      "¿Tu restaurante está en Uber Eats o Rappi… y casi no te llegan pedidos?
-//                    El problema no es tu comida. Es cómo te ve el algoritmo.
-//                    ZUBA optimiza los 5 factores que las apps premian:
-//                    foto, menú, rating, horarios y pauta interna.
-//                    Operación técnica completa. Y si no creces… no cobramos.
-//                    Agenda tu auditoría gratis hoy."
+// ── Voiceover scripts (regenerated — shorter, punchier) ───────────────────────
+// pain:      "¿Tu restaurante está en Uber Eats o Rappi y no te llegan pedidos?
+//             No es tu comida. Es cómo te ve el algoritmo.
+//             ZUBA optimiza los 5 factores clave.
+//             Si no creces, no cobramos."
 //
-// Hook "mecanismo": "El algoritmo de Uber Eats, Rappi y DiDi decide quién aparece primero.
-//                    Y premia exactamente 5 cosas. Si fallas en una, quedas abajo.
-//                    ZUBA entra a tu operación y optimiza las 5 por ti.
-//                    Sin gastar en publicidad externa. Si no creces, no cobramos."
+// mecanismo: "El algoritmo de Uber Eats y Rappi decide quién vende y quién no.
+//             Premia 5 cosas exactas. Si fallas en una, quedas abajo.
+//             ZUBA los optimiza todos por ti.
+//             Si no creces, no cobramos."
 //
-// Hook "riesgo":    "¿Cuánto llevas perdiendo en apps sin ver resultados reales?
-//                    El problema casi siempre es el mismo: operación mal configurada.
-//                    ZUBA lo arregla todo: foto, menú, rating, horarios y pauta interna.
-//                    Con garantía: si no creces, no pagas."
+// riesgo:    "¿Cuánto llevas perdiendo en apps sin resultados?
+//             El problema siempre es el mismo: operación mal configurada.
+//             ZUBA lo arregla todo.
+//             Con garantía: si no creces, no pagas."
 
-// ── Utils ────────────────────────────────────────────────────────────────────
-const spr = (frame: number, from: number, fps: number, d = 22, s = 120) =>
-  spring({ fps, frame: frame - from, config: { damping: d, stiffness: s }, durationInFrames: 45 });
+// ── Caption timing per hook (frames at 30fps) ─────────────────────────────────
+// Sync these to match the voiceover phrases
+const CAPTIONS: Record<Props["hook"], { text: string; from: number; to: number }[]> = {
+  pain: [
+    { text: "¿Tu restaurante está en Uber Eats o Rappi", from: 5,   to: 95  },
+    { text: "y no te llegan pedidos?",                  from: 90,  to: 155 },
+    { text: "No es tu comida.",                          from: 150, to: 205 },
+    { text: "Es cómo te ve el algoritmo.",               from: 200, to: 275 },
+    { text: "ZUBA optimiza los 5 factores clave.",       from: 270, to: 355 },
+    { text: "Si no creces, no cobramos.",                from: 350, to: 440 },
+  ],
+  mecanismo: [
+    { text: "El algoritmo decide quién vende y quién no.", from: 5,   to: 110 },
+    { text: "Premia 5 cosas exactas.",                     from: 105, to: 170 },
+    { text: "Si fallas en una, quedas abajo.",             from: 165, to: 250 },
+    { text: "ZUBA los optimiza todos por ti.",             from: 245, to: 330 },
+    { text: "Si no creces, no cobramos.",                  from: 325, to: 420 },
+  ],
+  riesgo: [
+    { text: "¿Cuánto llevas perdiendo en apps?",         from: 5,   to: 90  },
+    { text: "Siempre el mismo problema:",                 from: 85,  to: 150 },
+    { text: "operación mal configurada.",                  from: 145, to: 220 },
+    { text: "ZUBA lo arregla todo.",                      from: 215, to: 290 },
+    { text: "Si no creces, no pagas.",                    from: 285, to: 380 },
+  ],
+};
 
-const op = (p: number, edge = 0.35) =>
-  interpolate(p, [0, edge], [0, 1], { extrapolateRight: "clamp" });
+// ── Utils ─────────────────────────────────────────────────────────────────────
+const spr = (frame: number, from: number, fps: number, d = 20, s = 80) =>
+  spring({ fps, frame: frame - from, config: { damping: d, stiffness: s }, durationInFrames: 50 });
 
-function fadeUp(frame: number, from: number, fps: number, dist = 55) {
-  const p = spr(frame, from, fps);
+const ease = (frame: number, from: number, to: number, easeIn = false) =>
+  interpolate(frame, [from, to], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: easeIn ? Easing.bezier(0.4, 0, 1, 1) : Easing.bezier(0.16, 1, 0.3, 1),
+  });
+
+// Word-by-word spring reveal
+function wordEnter(frame: number, startAt: number, fps: number) {
+  const p = spr(frame, startAt, fps, 28, 90);
   return {
-    opacity: op(p),
-    transform: `translateY(${interpolate(p, [0, 1], [dist, 0])}px)`,
+    opacity: interpolate(p, [0, 0.4], [0, 1], { extrapolateRight: "clamp" }),
+    transform: `translateY(${interpolate(p, [0, 1], [30, 0])}px)`,
+    display: "inline-block",
   };
 }
 
-function fadeLeft(frame: number, from: number, fps: number, dist = 80) {
-  const p = spr(frame, from, fps, 20, 100);
-  return {
-    opacity: op(p),
-    transform: `translateX(${interpolate(p, [0, 1], [-dist, 0], {
-      easing: Easing.bezier(0.16, 1, 0.3, 1),
-    })}px)`,
-  };
-}
-
-function sceneBlend(frame: number, inF: number, outF: number) {
-  const i = interpolate(frame, [inF, inF + 22], [0, 1], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-  });
-  const o = interpolate(frame, [outF, outF + 18], [0, 1], {
-    extrapolateLeft: "clamp", extrapolateRight: "clamp",
-    easing: Easing.bezier(0.4, 0, 0.2, 1),
-  });
+// Scene cross-fade
+function blend(frame: number, inF: number, outF: number, fadeLen = 25) {
+  const i = ease(frame, inF, inF + fadeLen);
+  const o = ease(frame, outF, outF + fadeLen, true);
   return Math.max(0, i - o);
 }
 
-// ── Ambient orbs ─────────────────────────────────────────────────────────────
-const Orb: React.FC<{ x: number; y: number; size: number; color: string; opacity: number }> = ({
-  x, y, size, color, opacity,
-}) => (
-  <div style={{
-    position: "absolute", left: x, top: y, width: size, height: size,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-    opacity, transform: "translate(-50%,-50%)", pointerEvents: "none",
-  }} />
-);
+// ── Caption component ─────────────────────────────────────────────────────────
+const CaptionBar: React.FC<{ hook: Props["hook"]; frame: number }> = ({ hook, frame }) => {
+  const caps = CAPTIONS[hook];
+  const active = caps.find((c) => frame >= c.from && frame <= c.to);
+  if (!active) return null;
 
-// ── ZUBA Logo ─────────────────────────────────────────────────────────────────
-const Logo: React.FC<{ size?: "sm" | "md" }> = ({ size = "md" }) => {
-  const box = size === "md" ? 72 : 52;
-  const fontSize = size === "md" ? 36 : 26;
-  const textSize = size === "md" ? 46 : 34;
+  const progress = ease(frame, active.from, active.from + 20);
+  const fadeOut = ease(frame, active.to - 15, active.to);
+  const opacity = Math.max(0, progress - fadeOut);
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+    <div style={{
+      position: "absolute",
+      bottom: 210,
+      left: 0, right: 0,
+      padding: "0 60px",
+      textAlign: "center",
+      opacity,
+      transform: `translateY(${interpolate(progress, [0, 1], [14, 0])}px)`,
+      pointerEvents: "none",
+    }}>
       <div style={{
-        width: box, height: box, borderRadius: box * 0.3,
-        background: `linear-gradient(135deg, ${C.orange}, ${C.orangeDark})`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: `0 8px 32px ${C.orange}55`,
+        display: "inline-block",
+        background: "rgba(0,0,0,0.72)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderRadius: 16,
+        padding: "14px 28px",
       }}>
-        <span style={{ color: C.white, fontFamily: font, fontWeight: 900, fontSize }}> Z </span>
+        <span style={{
+          fontFamily: font,
+          fontSize: 32,
+          fontWeight: 500,
+          color: C.offWhite,
+          letterSpacing: 0.2,
+          lineHeight: 1.3,
+        }}>
+          {active.text}
+        </span>
       </div>
-      <span style={{ fontFamily: font, fontWeight: 900, fontSize: textSize, color: C.white, letterSpacing: -1 }}>
-        ZUBA
-      </span>
     </div>
   );
 };
 
-// ── Badge ────────────────────────────────────────────────────────────────────
-const Tag: React.FC<{ children: string; dark?: boolean }> = ({ children, dark }) => (
-  <div style={{
-    display: "inline-flex", alignItems: "center", gap: 10,
-    background: dark ? `${C.orange}22` : `${C.black}18`,
-    border: `1px solid ${dark ? C.orange + "45" : C.orange + "35"}`,
-    borderRadius: 100, padding: "10px 24px",
-  }}>
-    <div style={{ width: 7, height: 7, borderRadius: "50%", background: C.orange }} />
-    <span style={{
-      fontFamily: font, fontWeight: 700, fontSize: 24,
-      color: dark ? C.orange : C.orange,
-      letterSpacing: 0.5, textTransform: "uppercase",
-    }}>{children}</span>
-  </div>
-);
+// ── WordReveal ─────────────────────────────────────────────────────────────────
+const WordReveal: React.FC<{
+  text: string;
+  frame: number;
+  fps: number;
+  startAt: number;
+  fontSize: number;
+  color?: string;
+  accentWord?: string;
+  accentColor?: string;
+  stagger?: number;
+  weight?: number;
+  align?: "left" | "center";
+}> = ({
+  text, frame, fps, startAt, fontSize, color = C.white,
+  accentWord, accentColor = C.orange, stagger = 10, weight = 700, align = "center",
+}) => {
+  const words = text.split(" ");
+  return (
+    <div style={{
+      fontFamily: font,
+      fontSize,
+      fontWeight: weight,
+      lineHeight: 1.05,
+      letterSpacing: fontSize > 80 ? -3.5 : -1,
+      textAlign: align,
+      display: "flex",
+      flexWrap: "wrap",
+      gap: fontSize > 100 ? "0 16px" : "0 10px",
+      justifyContent: align === "center" ? "center" : "flex-start",
+    }}>
+      {words.map((word, i) => {
+        const isAccent = accentWord && word.replace(/[¿?,!.]/g, "").toLowerCase() === accentWord.toLowerCase();
+        return (
+          <span
+            key={i}
+            style={{
+              ...wordEnter(frame, startAt + i * stagger, fps),
+              color: isAccent ? accentColor : color,
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
 
-// ────────────────────────────────────────────────────────────────────────────
-// SCENE 1 — HOOK  (0–75f · 2.5s)
-// ────────────────────────────────────────────────────────────────────────────
-const HOOKS = {
-  pain:      { l1: "¿Por qué tu", l2: "restaurante no", l3: "vende en apps?" },
-  mecanismo: { l1: "El algoritmo", l2: "decide quién", l3: "vende y quién no." },
-  riesgo:    { l1: "¿Cuánto llevas", l2: "perdiendo en apps", l3: "sin resultados?" },
+// ── Divider line ──────────────────────────────────────────────────────────────
+const Line: React.FC<{ frame: number; startAt: number; color?: string }> = ({
+  frame, startAt, color = C.orange,
+}) => {
+  const w = interpolate(spr(frame, startAt, 30, 22, 100), [0, 1], [0, 480], {
+    extrapolateRight: "clamp",
+  });
+  return (
+    <div style={{
+      height: 3,
+      width: w,
+      background: `linear-gradient(90deg, ${color}, transparent)`,
+      borderRadius: 2,
+    }} />
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENE 1 — HOOK  (0–120f · 4s)  ·  Apple: big single question
+// ─────────────────────────────────────────────────────────────────────────────
+const HOOK_TEXT = {
+  pain:      { l1: "¿Por qué", l2: "tu restaurante", l3: "no vende?" },
+  mecanismo: { l1: "El algoritmo", l2: "decide", l3: "quién gana." },
+  riesgo:    { l1: "¿Cuánto llevas", l2: "perdiendo", l3: "en apps?" },
 };
 
 const SceneHook: React.FC<{ hook: Props["hook"]; frame: number; fps: number }> = ({ hook, frame, fps }) => {
-  const h = HOOKS[hook];
-  const pulse = interpolate(Math.sin(frame * 0.06), [-1, 1], [0.18, 0.28]);
-
+  const t = HOOK_TEXT[hook];
   return (
     <AbsoluteFill style={{ background: C.black, overflow: "hidden" }}>
-      <Orb x={180} y={350} size={700} color={`${C.orange}35`} opacity={pulse} />
-      <Orb x={900} y={1500} size={500} color={`${C.orangeDark}20`} opacity={pulse * 0.7} />
-
-      {/* Grid */}
+      {/* Subtle ambient glow */}
       <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `linear-gradient(${C.orange}08 1px, transparent 1px),
-                          linear-gradient(90deg, ${C.orange}08 1px, transparent 1px)`,
-        backgroundSize: "90px 90px",
+        position: "absolute",
+        top: "20%", left: "50%",
+        transform: "translate(-50%,-50%)",
+        width: 800, height: 800,
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${C.orange}18 0%, transparent 65%)`,
+        opacity: interpolate(frame, [0, 60], [0, 1], { extrapolateRight: "clamp" }),
       }} />
 
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", flexDirection: "column",
-        justifyContent: "center", padding: "0 72px", gap: 32,
+        justifyContent: "center", alignItems: "center",
+        padding: "140px 64px 240px",
+        gap: 0,
       }}>
-        <div style={fadeUp(frame, 0, fps, 30)}>
-          <Tag dark>Consultoría · Uber Eats · Rappi · DiDi</Tag>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {[h.l1, h.l2, h.l3].map((line, i) => (
-            <div key={i} style={{
-              ...fadeUp(frame, 10 + i * 14, fps),
-              fontFamily: font, fontWeight: 900,
-              fontSize: i === 1 ? 100 : 90,
-              lineHeight: 1.0, letterSpacing: -3.5,
-              color: i === 1 ? "transparent" : C.white,
-              background: i === 1
-                ? `linear-gradient(135deg, ${C.orange}, ${C.orange2})`
-                : "none",
-              WebkitBackgroundClip: i === 1 ? "text" : "unset",
-              WebkitTextFillColor: i === 1 ? "transparent" : C.white,
-            }}>
-              {line}
-            </div>
-          ))}
-        </div>
-
-        {/* Animated underline */}
+        {/* Tag */}
         <div style={{
-          ...fadeUp(frame, 45, fps),
-          height: 4, borderRadius: 2,
-          background: `linear-gradient(90deg, ${C.orange}, ${C.orangeDark}, transparent)`,
-          width: interpolate(spr(frame, 45, fps), [0, 1], [0, 600]),
-        }} />
-
-        <div style={{
-          ...fadeUp(frame, 52, fps),
-          fontFamily: font, fontWeight: 300, fontSize: 34,
-          color: C.muted, lineHeight: 1.5,
+          opacity: ease(frame, 0, 25),
+          transform: `translateY(${interpolate(ease(frame, 0, 25), [0, 1], [20, 0])}px)`,
+          marginBottom: 48,
+          display: "flex", alignItems: "center", gap: 10,
+          background: `${C.orange}18`,
+          border: `1px solid ${C.orange}35`,
+          borderRadius: 100, padding: "10px 24px",
         }}>
-          No es tu comida.{" "}
-          <span style={{ color: C.white, fontWeight: 600 }}>Es cómo te ve el algoritmo.</span>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.orange }} />
+          <span style={{ fontFamily: font, fontWeight: 600, fontSize: 22, color: C.orange, letterSpacing: 1, textTransform: "uppercase" }}>
+            Uber Eats · Rappi · DiDi
+          </span>
+        </div>
+
+        {/* Big question */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          <WordReveal text={t.l1} frame={frame} fps={fps} startAt={8} fontSize={96} weight={900} color={C.offWhite} />
+          <WordReveal text={t.l2} frame={frame} fps={fps} startAt={20} fontSize={112} weight={900} accentWord={t.l2.split(" ")[0]} accentColor={C.orange} />
+          <WordReveal text={t.l3} frame={frame} fps={fps} startAt={32} fontSize={96} weight={900} color={C.offWhite} />
+        </div>
+
+        <div style={{ marginTop: 40 }}>
+          <Line frame={frame} startAt={55} />
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// SCENE 2 — PROBLEMA  (75–210f · 2.5–7s)
-// ────────────────────────────────────────────────────────────────────────────
-const PROBLEMS = [
-  { icon: "📉", text: "Rating bajo en plataformas" },
-  { icon: "📷", text: "Fotos que no convierten" },
-  { icon: "📋", text: "Menú sin estrategia de precio" },
-  { icon: "🔍", text: "Sin visibilidad en búsqueda" },
-  { icon: "📢", text: "Pauta interna mal configurada" },
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENE 2 — ALGORITMO  (120–270f · 5s)
+// ─────────────────────────────────────────────────────────────────────────────
+const PROBLEMS = ["Rating", "Fotografía", "Menú", "Horarios", "Pauta interna"];
 
-const SceneProblem: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
-  const f = frame - 75;
+const SceneAlgo: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const f = frame - 120;
+
   return (
-    <AbsoluteFill style={{ background: C.dark, overflow: "hidden" }}>
-      <Orb x={1000} y={300} size={600} color={`${C.orangeDark}20`} opacity={0.6} />
+    <AbsoluteFill style={{ background: C.nearBlack, overflow: "hidden" }}>
+      {/* Right-side glow */}
+      <div style={{
+        position: "absolute", right: -100, top: "30%",
+        width: 600, height: 600, borderRadius: "50%",
+        background: `radial-gradient(circle, ${C.orange}15 0%, transparent 70%)`,
+      }} />
 
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", flexDirection: "column",
-        justifyContent: "center", padding: "0 68px", gap: 44,
+        justifyContent: "center",
+        padding: "140px 72px 240px",
+        gap: 48,
       }}>
-        <div style={fadeUp(f, 0, fps, 40)}>
+        {/* Statement */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{
-            fontFamily: font, fontWeight: 900,
-            fontSize: 72, color: C.white,
-            lineHeight: 1.1, letterSpacing: -2.5,
+            opacity: ease(f, 0, 30),
+            transform: `translateY(${interpolate(ease(f, 0, 30), [0, 1], [30, 0])}px)`,
+            fontFamily: font, fontWeight: 900, fontSize: 78,
+            color: C.offWhite, lineHeight: 1.05, letterSpacing: -2.5,
           }}>
-            El algoritmo premia{" "}
-            <span style={{
-              background: `linear-gradient(135deg, ${C.orange}, ${C.orangeDark})`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>5 factores.</span>
+            El algoritmo
           </div>
           <div style={{
-            fontFamily: font, fontWeight: 400, fontSize: 36,
-            color: C.muted, marginTop: 12,
+            opacity: ease(f, 12, 40),
+            transform: `translateY(${interpolate(ease(f, 12, 40), [0, 1], [30, 0])}px)`,
+            fontFamily: font, fontWeight: 900, fontSize: 78,
+            lineHeight: 1.05, letterSpacing: -2.5,
+            color: C.orange,
           }}>
-            Fallar en uno te manda al fondo.
+            premia 5 cosas.
+          </div>
+          <div style={{
+            opacity: ease(f, 28, 55),
+            fontFamily: font, fontWeight: 300, fontSize: 34,
+            color: C.gray, marginTop: 8,
+          }}>
+            Fallar en una te manda al fondo.
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+        {/* 5 factors */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {PROBLEMS.map((p, i) => {
-            const pf = f - i * 12;
-            const sp = spr(pf, 12, fps, 22, 100);
+            const op = ease(f, 50 + i * 14, 80 + i * 14);
             return (
-              <div key={p.text} style={{
-                opacity: op(sp),
-                transform: `translateX(${interpolate(sp, [0, 1], [-80, 0], {
-                  easing: Easing.bezier(0.16, 1, 0.3, 1),
-                })}px)`,
-                display: "flex", alignItems: "center", gap: 22,
-                background: C.card,
-                border: `1px solid ${C.cardBorder}`,
-                borderRadius: 22, padding: "20px 28px",
+              <div key={p} style={{
+                opacity: op,
+                transform: `translateX(${interpolate(op, [0, 1], [-40, 0])}px)`,
+                display: "flex", alignItems: "center", gap: 20,
               }}>
                 <div style={{
-                  width: 68, height: 68, borderRadius: 18,
-                  background: `${C.orange}15`,
-                  border: `1.5px solid ${C.orange}30`,
-                  display: "flex", alignItems: "center",
-                  justifyContent: "center", fontSize: 28, flexShrink: 0,
-                }}>{p.icon}</div>
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: C.orange,
+                  flexShrink: 0,
+                  boxShadow: `0 0 12px ${C.orange}80`,
+                }} />
                 <span style={{
-                  fontFamily: font, fontWeight: 600,
-                  fontSize: 36, color: "rgba(255,255,255,0.8)",
-                }}>{p.text}</span>
+                  fontFamily: font, fontWeight: 500, fontSize: 38,
+                  color: C.offWhite, letterSpacing: -0.5,
+                }}>{p}</span>
                 <div style={{
-                  marginLeft: "auto", width: 36, height: 36,
-                  borderRadius: "50%", background: "rgba(255,60,0,0.2)",
-                  display: "flex", alignItems: "center",
-                  justifyContent: "center", fontSize: 20, flexShrink: 0,
+                  marginLeft: "auto",
+                  fontFamily: font, fontWeight: 400, fontSize: 26,
+                  color: "rgba(255,60,0,0.5)",
                 }}>✕</div>
               </div>
             );
@@ -295,87 +359,105 @@ const SceneProblem: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) 
   );
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// SCENE 3 — SOLUCIÓN  (210–420f · 7–14s)
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENE 3 — ZUBA  (270–450f · 6s)  · white bg, brand reveal
+// ─────────────────────────────────────────────────────────────────────────────
 const STEPS = [
-  { n: "01", icon: "🔍", title: "Diagnóstico completo", desc: "Auditamos tu cuenta en todas las apps" },
-  { n: "02", icon: "📸", title: "Fotografía de impacto", desc: "Sesión profesional que convierte" },
-  { n: "03", icon: "📐", title: "Menú estratégico", desc: "Nombre, precio y descripción optimizados" },
-  { n: "04", icon: "🚀", title: "Activación y seguimiento", desc: "Monitoreamos el crecimiento semana a semana" },
-  { n: "05", icon: "🎯", title: "Pauta interna", desc: "Top posición en las plataformas" },
+  { n: "01", label: "Diagnóstico" },
+  { n: "02", label: "Fotografía" },
+  { n: "03", label: "Menú" },
+  { n: "04", label: "Activación" },
+  { n: "05", label: "Pauta interna" },
 ];
 
-const SceneSolution: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
-  const f = frame - 210;
+const SceneZuba: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const f = frame - 270;
+
   return (
     <AbsoluteFill style={{ background: C.cream, overflow: "hidden" }}>
-      {/* Orange glow top-right */}
+      {/* Top-right warm glow */}
       <div style={{
-        position: "absolute", top: -100, right: -100,
-        width: 500, height: 500, borderRadius: "50%",
-        background: `radial-gradient(circle, ${C.orange}20 0%, transparent 70%)`,
-        pointerEvents: "none",
+        position: "absolute", top: -80, right: -80,
+        width: 560, height: 560, borderRadius: "50%",
+        background: `radial-gradient(circle, ${C.orange}22 0%, transparent 65%)`,
       }} />
 
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", flexDirection: "column",
-        padding: "0 64px", justifyContent: "center", gap: 32,
+        justifyContent: "center",
+        padding: "140px 72px 240px",
+        gap: 44,
       }}>
-        {/* Header */}
-        <div style={fadeUp(f, 0, fps, 40)}>
-          <Tag>ZUBA · Así funciona</Tag>
+        {/* ZUBA brand stamp */}
+        <div style={{
+          opacity: ease(f, 0, 30),
+          transform: `scale(${interpolate(ease(f, 0, 30), [0, 1], [0.92, 1])})`,
+          display: "flex", alignItems: "center", gap: 18,
+        }}>
           <div style={{
-            fontFamily: font, fontWeight: 900,
-            fontSize: 76, color: C.black,
-            lineHeight: 1.05, letterSpacing: -2.5, marginTop: 20,
+            width: 68, height: 68, borderRadius: 20,
+            background: `linear-gradient(135deg, ${C.orange}, #FF3D00)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 12px 40px ${C.orange}50`,
           }}>
-            No es marketing.{"\n"}
-            <span style={{
-              background: `linear-gradient(135deg, ${C.orange}, ${C.orangeDark})`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>Es operación.</span>
+            <span style={{ color: C.white, fontFamily: font, fontWeight: 900, fontSize: 34 }}>Z</span>
+          </div>
+          <div>
+            <div style={{ fontFamily: font, fontWeight: 900, fontSize: 44, color: C.darkGray, letterSpacing: -1 }}>ZUBA</div>
+            <div style={{ fontFamily: font, fontWeight: 400, fontSize: 22, color: C.gray, letterSpacing: 0.5 }}>Consultoría de operación</div>
           </div>
         </div>
 
-        {/* Steps */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {STEPS.map((step, i) => {
-            const style = fadeLeft(f, 25 + i * 16, fps);
-            const isHighlight = i === 0;
+        {/* Big statement */}
+        <div style={{
+          opacity: ease(f, 15, 45),
+          transform: `translateY(${interpolate(ease(f, 15, 45), [0, 1], [28, 0])}px)`,
+        }}>
+          <div style={{ fontFamily: font, fontWeight: 900, fontSize: 80, color: C.darkGray, lineHeight: 1.0, letterSpacing: -3 }}>
+            No es marketing.
+          </div>
+          <div style={{
+            fontFamily: font, fontWeight: 900, fontSize: 80, lineHeight: 1.0, letterSpacing: -3,
+            background: `linear-gradient(135deg, ${C.orange}, #FF3D00)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}>
+            Es operación.
+          </div>
+        </div>
+
+        {/* 5 steps horizontal pills */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {STEPS.map((s, i) => {
+            const op = ease(f, 40 + i * 13, 65 + i * 13);
             return (
-              <div key={step.n} style={{
-                ...style,
-                display: "flex", alignItems: "center", gap: 20,
-                background: isHighlight
-                  ? `linear-gradient(135deg, ${C.orange}18, ${C.orange}08)`
-                  : C.white,
-                border: `1.5px solid ${isHighlight ? C.orange + "40" : "rgba(0,0,0,0.07)"}`,
-                borderRadius: 24, padding: "18px 24px",
-                boxShadow: isHighlight ? `0 4px 24px ${C.orange}18` : "none",
+              <div key={s.n} style={{
+                opacity: op,
+                transform: `translateX(${interpolate(op, [0, 1], [-32, 0])}px)`,
+                display: "flex", alignItems: "center", gap: 18,
+                background: i === 0 ? `${C.orange}12` : C.white,
+                border: `1.5px solid ${i === 0 ? C.orange + "30" : "rgba(0,0,0,0.06)"}`,
+                borderRadius: 20, padding: "16px 24px",
               }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: 18,
-                  background: `${C.orange}14`,
-                  border: `1.5px solid ${C.orange}30`,
-                  display: "flex", alignItems: "center",
-                  justifyContent: "center", fontSize: 26, flexShrink: 0,
-                }}>{step.icon}</div>
-                <div style={{ flex: 1 }}>
+                <span style={{
+                  fontFamily: font, fontWeight: 900, fontSize: 22,
+                  color: C.orange, minWidth: 36,
+                }}>{s.n}</span>
+                <span style={{
+                  fontFamily: font, fontWeight: 600, fontSize: 32,
+                  color: C.darkGray, letterSpacing: -0.3,
+                }}>{s.label}</span>
+                {i === 0 && (
                   <div style={{
-                    fontFamily: font, fontWeight: 800,
-                    fontSize: 32, color: C.black, letterSpacing: -0.5,
-                  }}>{step.title}</div>
-                  <div style={{
-                    fontFamily: font, fontWeight: 400,
-                    fontSize: 24, color: "rgba(10,10,10,0.45)", marginTop: 2,
-                  }}>{step.desc}</div>
-                </div>
-                <div style={{
-                  fontFamily: font, fontWeight: 900,
-                  fontSize: 28, color: `${C.orange}60`,
-                }}>{step.n}</div>
+                    marginLeft: "auto",
+                    background: C.orange,
+                    borderRadius: 100,
+                    padding: "4px 16px",
+                    fontFamily: font, fontWeight: 700, fontSize: 20,
+                    color: C.white,
+                  }}>Paso 1</div>
+                )}
               </div>
             );
           })}
@@ -385,109 +467,114 @@ const SceneSolution: React.FC<{ frame: number; fps: number }> = ({ frame, fps })
   );
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// SCENE 4 — CTA  (420–600f · 14–20s)
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENE 4 — CTA  (450–600f · 5s)
+// ─────────────────────────────────────────────────────────────────────────────
 const SceneCTA: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
-  const f = frame - 420;
-  const pulse = interpolate(Math.sin(f * 0.1), [-1, 1], [0.85, 1.0]);
+  const f = frame - 450;
+  const pulse = interpolate(Math.sin(f * 0.12), [-1, 1], [0.94, 1.0]);
 
   return (
     <AbsoluteFill style={{ background: C.black, overflow: "hidden" }}>
-      <Orb x={540} y={400} size={900} color={`${C.orange}20`} opacity={0.9} />
-      <Orb x={100} y={1700} size={400} color={`${C.orangeDark}25`} opacity={0.6} />
+      {/* Center glow */}
+      <div style={{
+        position: "absolute", top: "35%", left: "50%",
+        transform: "translate(-50%,-50%)",
+        width: 1000, height: 800,
+        background: `radial-gradient(ellipse, ${C.orange}18 0%, transparent 65%)`,
+      }} />
 
       <div style={{
-        position: "absolute", inset: 0, display: "flex",
-        flexDirection: "column", justifyContent: "center",
-        alignItems: "center", padding: "0 64px", gap: 0,
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column",
+        justifyContent: "center", alignItems: "center",
+        padding: "140px 64px 260px",
+        gap: 0,
       }}>
-        {/* Logo */}
-        <div style={{ ...fadeUp(f, 0, fps, 40), marginBottom: 52 }}>
-          <Logo size="md" />
-        </div>
-
-        {/* Guarantee */}
-        <div style={{ ...fadeUp(f, 18, fps, 50), textAlign: "center", marginBottom: 32 }}>
+        {/* Guarantee — Apple-style big text */}
+        <div style={{
+          opacity: ease(f, 0, 30),
+          transform: `translateY(${interpolate(ease(f, 0, 30), [0, 1], [40, 0])}px)`,
+          textAlign: "center",
+          marginBottom: 48,
+        }}>
           <div style={{
-            fontFamily: font, fontWeight: 900,
-            fontSize: 92, color: C.white,
-            lineHeight: 1.0, letterSpacing: -3.5,
+            fontFamily: font, fontWeight: 900, fontSize: 104,
+            color: C.offWhite, lineHeight: 0.95, letterSpacing: -4,
           }}>Si no creces,</div>
           <div style={{
-            fontFamily: font, fontWeight: 900,
-            fontSize: 92, lineHeight: 1.0, letterSpacing: -3.5,
-            background: `linear-gradient(135deg, ${C.orange}, ${C.orangeDark})`,
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            fontFamily: font, fontWeight: 900, fontSize: 104,
+            lineHeight: 0.95, letterSpacing: -4,
+            background: `linear-gradient(135deg, ${C.orange} 0%, #FF3D00 100%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
           }}>no cobramos.</div>
         </div>
 
-        {/* Sub */}
+        {/* Sub copy */}
         <div style={{
-          ...fadeUp(f, 30, fps, 35),
-          fontFamily: font, fontWeight: 300, fontSize: 32,
-          color: C.muted, textAlign: "center",
-          lineHeight: 1.6, maxWidth: 780, marginBottom: 72,
+          opacity: ease(f, 18, 45),
+          fontFamily: font, fontWeight: 300, fontSize: 30,
+          color: C.gray, textAlign: "center", lineHeight: 1.6,
+          maxWidth: 720, marginBottom: 60,
         }}>
-          Operación técnica completa en{" "}
-          <span style={{ color: C.white, fontWeight: 600 }}>Uber Eats, Rappi y DiDi.</span>
-          {"\n"}Sin gastar en publicidad externa.
+          Operación técnica en{" "}
+          <span style={{ color: C.offWhite, fontWeight: 500 }}>
+            Uber Eats, Rappi y DiDi.
+          </span>
         </div>
 
         {/* WhatsApp CTA */}
         <div style={{
-          ...fadeUp(f, 50, fps, 40),
+          opacity: ease(f, 30, 55),
+          transform: `scale(${pulse}) translateY(${interpolate(ease(f, 30, 55), [0, 1], [30, 0])}px)`,
           width: "100%",
-          transform: `${fadeUp(f, 50, fps, 40).transform} scale(${pulse})`,
           background: C.green,
-          borderRadius: 32, padding: "42px 48px",
+          borderRadius: 28, padding: "38px 48px",
           display: "flex", alignItems: "center",
           justifyContent: "center", gap: 18,
-          boxShadow: `0 24px 64px ${C.green}55`,
-          marginBottom: 28,
+          boxShadow: `0 20px 60px ${C.green}55`,
+          marginBottom: 24,
         }}>
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="white">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
           </svg>
           <span style={{
             fontFamily: font, fontWeight: 800,
-            fontSize: 48, color: C.white, letterSpacing: -0.5,
+            fontSize: 44, color: C.white, letterSpacing: -0.5,
           }}>Auditoría gratis →</span>
         </div>
 
         {/* Domain */}
         <div style={{
-          ...fadeUp(f, 70, fps, 20),
-          fontFamily: font, fontWeight: 400,
-          fontSize: 26, color: "rgba(255,255,255,0.28)",
-          letterSpacing: 4, textTransform: "uppercase",
+          opacity: ease(f, 50, 75),
+          fontFamily: font, fontWeight: 300,
+          fontSize: 24, color: "rgba(255,255,255,0.22)",
+          letterSpacing: 5, textTransform: "uppercase",
         }}>
-          zubamx.vercel.app · Sin compromiso
+          zubamx.vercel.app
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export const ZubaAd: React.FC<Props> = ({ hook }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const s1 = sceneBlend(frame, 0, 58);
-  const s2 = sceneBlend(frame, 63, 195);
-  const s3 = sceneBlend(frame, 200, 402);
-  const s4 = sceneBlend(frame, 408, 660);
+  const s1 = blend(frame, 0, 100);
+  const s2 = blend(frame, 108, 250);
+  const s3 = blend(frame, 258, 432);
+  const s4 = blend(frame, 438, 680);
 
-  // Volume: fade in first 30f, fade out last 30f
-  const musicVol = interpolate(frame, [0, 30, 570, 600], [0, 0.18, 0.18, 0], {
+  const musicVol = interpolate(frame, [0, 40, 560, 600], [0, 0.14, 0.14, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
 
   return (
-    <AbsoluteFill style={{ background: C.black, overflow: "hidden" }}>
-      {/* Background music — place bg-music.mp3 in public/ */}
-      {/* Voiceover — place vo-pain.mp3 / vo-mecanismo.mp3 / vo-riesgo.mp3 in public/ */}
+    <AbsoluteFill style={{ background: C.black }}>
       <Audio src={staticFile("bg-music.mp3")} volume={musicVol} loop />
       <Audio src={staticFile(`vo-${hook}.mp3`)} volume={1} />
 
@@ -496,16 +583,19 @@ export const ZubaAd: React.FC<Props> = ({ hook }) => {
       </AbsoluteFill>
 
       <AbsoluteFill style={{ opacity: s2 }}>
-        <SceneProblem frame={frame} fps={fps} />
+        <SceneAlgo frame={frame} fps={fps} />
       </AbsoluteFill>
 
       <AbsoluteFill style={{ opacity: s3 }}>
-        <SceneSolution frame={frame} fps={fps} />
+        <SceneZuba frame={frame} fps={fps} />
       </AbsoluteFill>
 
       <AbsoluteFill style={{ opacity: s4 }}>
         <SceneCTA frame={frame} fps={fps} />
       </AbsoluteFill>
+
+      {/* Caption overlay — always on top */}
+      <CaptionBar hook={hook} frame={frame} />
     </AbsoluteFill>
   );
 };
