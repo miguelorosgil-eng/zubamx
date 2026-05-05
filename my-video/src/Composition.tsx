@@ -488,8 +488,8 @@ export const ZubaAd: React.FC<Props> = ({ hook }) => {
     <AbsoluteFill style={{ background: C.black, overflow: "hidden" }}>
       {/* Background music — place bg-music.mp3 in public/ */}
       {/* Voiceover — place vo-pain.mp3 / vo-mecanismo.mp3 / vo-riesgo.mp3 in public/ */}
-      <Audio src={staticFile("bg-music.wav")} volume={musicVol} loop />
-      <Audio src={staticFile(`vo-${hook}.wav`)} volume={1} />
+      <Audio src={staticFile("bg-music.mp3")} volume={musicVol} loop />
+      <Audio src={staticFile(`vo-${hook}.mp3`)} volume={1} />
 
       <AbsoluteFill style={{ opacity: s1 }}>
         <SceneHook hook={hook} frame={frame} fps={fps} />
