@@ -7,8 +7,8 @@ export const RemotionRoot: React.FC = () => {
     <Composition
       id="ZubaAd"
       component={ZubaAd}
-      durationInFrames={450}
-      fps={30}
+      durationInFrames={900}
+      fps={60}
       width={1080}
       height={1920}
       schema={ZubaAdSchema}
