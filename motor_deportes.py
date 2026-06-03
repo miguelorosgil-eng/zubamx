@@ -191,9 +191,11 @@ class SportsEngine:
               f"Anotación liga μ≈{self.league_avg:.2f}/equipo.")
         return self
 
-    def expected_scores(self, home: str, away: str):
+    def expected_scores(self, home: str, away: str,
+                        era_home_sp: float = None, era_away_sp: float = None):
         """
-        Anotación esperada (μ) de cada equipo, modelo multiplicativo tipo Pythagorean:
+        Anotación esperada (μ) de cada equipo, modelo multiplicativo tipo Pythagorean.
+        Para MLB acepta ERA de los pitchers abridores para ajustar las carreras esperadas.
           μ_local  = prom_local_liga · (ataque_local/μ_liga) · (defensa_visita/μ_liga)
         Devuelve (mu_home, mu_away). Útil para O/U, spread, BTTS, team totals.
         """
@@ -209,6 +211,18 @@ class SportsEngine:
         damp = 0.85
         mu_home = self.league_home_avg * (off(home) / la) ** damp * (deff(away) / la) ** damp
         mu_away = self.league_away_avg * (off(away) / la) ** damp * (deff(home) / la) ** damp
+
+        # Ajuste por ERA del pitcher abridor (solo MLB):
+        # ERA 4.50 = liga promedio → factor 1.0. ERA 3.00 = -33% carreras permitidas.
+        if self.sport.lower() == "mlb":
+            league_era = 4.50
+            if era_away_sp and era_away_sp > 0:
+                # ERA del pitcher visitante afecta las carreras del equipo LOCAL
+                mu_home *= (era_away_sp / league_era) ** 0.5
+            if era_home_sp and era_home_sp > 0:
+                # ERA del pitcher local afecta las carreras del equipo VISITANTE
+                mu_away *= (era_home_sp / league_era) ** 0.5
+
         # clamp a rangos razonables
         return max(mu_home, 0.05), max(mu_away, 0.05)
 

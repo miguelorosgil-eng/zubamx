@@ -21,6 +21,30 @@ from motor_deportes import SportsEngine
 from mercados import evaluate_markets, prob_nrfi, evaluate_two_way, evaluate_three_way
 from portfolio import compute_portfolio, print_portfolio_report
 
+try:
+    from injuries import get_injuries, injury_summary
+    _HAS_INJURIES = True
+except ImportError:
+    _HAS_INJURIES = False
+
+try:
+    from weather import get_weather_adjustment
+    _HAS_WEATHER = True
+except ImportError:
+    _HAS_WEATHER = False
+
+try:
+    from tracker import save_picks, print_stats, update_results
+    _HAS_TRACKER = True
+except ImportError:
+    _HAS_TRACKER = False
+
+try:
+    from props_mlb import get_today_pitcher_props, print_pitcher_props
+    _HAS_PROPS = True
+except ImportError:
+    _HAS_PROPS = False
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -66,13 +90,17 @@ def _find(home, away, events, label=""):
 
 
 def _load_training(code, refrescar=False):
-    """Carga datos de entrenamiento con caché en disco (parquet)."""
+    """Carga datos de entrenamiento con caché en disco.
+    Auto-reentrenamiento: refresca si el caché tiene >24h (diario automático).
+    """
     cfg = SPORT_CONFIG[code]
     cache_file = os.path.join(CACHE_DIR, f"{code}_train.csv")
     if os.path.exists(cache_file) and not refrescar:
         age_h = (datetime.datetime.now().timestamp() - os.path.getmtime(cache_file)) / 3600
-        if age_h < 24:  # caché válido 24h
+        if age_h < 24:  # caché válido 24h — reentrenamiento diario automático
             return pd.read_csv(cache_file, parse_dates=["date"])
+        else:
+            print(f"  ♻️  Caché de {code} expirado ({age_h:.0f}h) — reentrenando...")
 
     if code == "MLB":
         from conector_mlb import build_mlb_training
@@ -137,6 +165,14 @@ def analizar_deporte(code, today, filtros, banco_info):
         except Exception as e:
             print(f"  (NRFI no disponible: {e})")
 
+    # Lesiones en tiempo real
+    injuries = {}
+    if _HAS_INJURIES:
+        try:
+            injuries = get_injuries(SPORT_CONFIG[code]["sport"], today)
+        except Exception:
+            pass
+
     value_bets = []
     rechazados = 0
     for r in upcoming.itertuples():
@@ -146,6 +182,27 @@ def analizar_deporte(code, today, filtros, banco_info):
                 print(f"    SKIP (not in training): {missing}")
             continue
         match_bets = []
+
+        # Buscar pitcher data para este juego
+        nr = None
+        era_home_sp, era_away_sp = None, None
+        if code == "MLB" and nrfi_data:
+            nr = _find(r.home, r.away, nrfi_data)
+            if nr:
+                era_home_sp = nr.get("era_home_sp")
+                era_away_sp = nr.get("era_away_sp")
+
+        # Ajuste climático (solo MLB estadios abiertos)
+        weather_info = ""
+        if code == "MLB" and _HAS_WEATHER:
+            try:
+                w = get_weather_adjustment(r.home)
+                if w.get("summary"):
+                    weather_info = w["summary"]
+                if w.get("rain_risk"):
+                    print(f"    ⚠️ RIESGO LLUVIA {r.home} vs {r.away} — partido puede posponerse")
+            except Exception:
+                pass
 
         # Moneyline
         e_ml = _find(r.home, r.away, ml, "ML")
@@ -169,28 +226,36 @@ def analizar_deporte(code, today, filtros, banco_info):
                 match_bets.append((b["market"], b["label"], b["odds_offered"],
                                    b["model_p"], b["edge"], b["kelly_frac"]))
             if "totals" in lines:
-                mh, ma = eng.expected_scores(r.home, r.away)
+                mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
                 ln = lines["totals"]["line"]
                 if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                     rechazados += 1
 
         # NRFI (solo MLB, informativo + value si hubiera odds)
         nrfi_info = ""
-        if code == "MLB" and nrfi_data:
-            nr = _find(r.home, r.away, nrfi_data)
-            if nr and nr.get("era_home_sp") and nr.get("era_away_sp"):
-                p_nrfi, p_yrfi = prob_nrfi(nr["era_home_sp"], nr["era_away_sp"])
-                if p_nrfi is not None:
-                    nrfi_info = (f"NRFI {p_nrfi:.0%} (SP {nr['home_sp']} {nr['era_home_sp']:.2f} / "
-                                 f"{nr['away_sp']} {nr['era_away_sp']:.2f})")
+        if code == "MLB" and nr and era_home_sp and era_away_sp:
+            p_nrfi, p_yrfi = prob_nrfi(era_home_sp, era_away_sp)
+            if p_nrfi is not None:
+                nrfi_info = (f"NRFI {p_nrfi:.0%} (SP {nr['home_sp']} {era_home_sp:.2f} / "
+                             f"{nr['away_sp']} {era_away_sp:.2f})")
 
         if match_bets or nrfi_info:
-            mh, ma = eng.expected_scores(r.home, r.away)
+            mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
+            inj_h = injury_summary(r.home, injuries) if _HAS_INJURIES else ""
+            inj_a = injury_summary(r.away, injuries) if _HAS_INJURIES else ""
             print(f"  {r.home} vs {r.away}  (μ {mh:.1f}-{ma:.1f}, total {mh+ma:.1f})")
+            if weather_info:
+                print(f"     [Weather] {weather_info}")
+            if inj_h:
+                print(f"     {inj_h}")
+            if inj_a:
+                print(f"     {inj_a}")
             for mkt, lbl, od, p, ed, k in match_bets:
                 print(f"     [{mkt:>7}] {lbl:<26} @{od:.2f}  p={p:.0%}  edge {ed:.1%}  kelly {k:.1%}")
                 value_bets.append({
                     "label": f"{code} {r.home[:10]} {mkt}:{lbl[:14]}",
+                    "sport": code, "home": r.home, "away": r.away,
+                    "pick_team": lbl, "pick_side": mkt,
                     "market": mkt, "model_p": p, "odds_offered": od,
                     "edge": ed, "kelly_frac": k,
                 })
@@ -312,12 +377,27 @@ def main():
     p.add_argument("--max-div", type=float, default=0.20)
     p.add_argument("--refrescar", action="store_true")
     p.add_argument("--debug", action="store_true")
+    p.add_argument("--actualizar", action="store_true",
+                   help="Actualizar resultados de ayer y mostrar ROI acumulado")
+    p.add_argument("--props", action="store_true",
+                   help="Mostrar props de strikeouts para pitchers de hoy (MLB)")
     a = p.parse_args()
 
     global _DEBUG
     _DEBUG = a.debug
 
     today = datetime.date.today().isoformat()
+
+    # Actualizar resultados pendientes y mostrar historial si se pide
+    if _HAS_TRACKER:
+        try:
+            update_results()  # actualiza ayer automáticamente
+        except Exception:
+            pass
+        if a.actualizar:
+            print_stats()
+            return
+
     filtros = {
         "edge_threshold": a.edge,
         "confidence_floor": a.confianza,
@@ -348,6 +428,17 @@ def main():
         except Exception as e:
             print(f"\n  ERROR en fútbol {code}: {e}")
 
+    # Props de strikeouts MLB
+    if a.props and _HAS_PROPS and "MLB" in a.deportes:
+        try:
+            from conector_mlb import fetch_probable_pitchers
+            pitchers = fetch_probable_pitchers(today)
+            if pitchers:
+                props = get_today_pitcher_props(pitchers, season=int(today[:4]))
+                print_pitcher_props(props)
+        except Exception as e:
+            print(f"  (Props MLB no disponibles: {e})")
+
     print(f"\n{'#'*80}")
     print(f"#  PORTAFOLIO DEL DÍA — ${a.banco:,.0f}")
     print(f"{'#'*80}")
@@ -356,9 +447,24 @@ def main():
         result = compute_portfolio(top, bankroll=a.banco,
                                    target_return=a.target, min_winners=a.min_ganadores)
         print_portfolio_report(result, bankroll=a.banco)
+
+        # Guardar picks del día en tracker
+        if _HAS_TRACKER:
+            try:
+                stake = a.banco * 0.02  # 2% del banco por pick por defecto
+                save_picks(top, today, stake_per_pick=stake)
+            except Exception:
+                pass
     else:
         print("\n  Hoy NINGUNA apuesta pasa el estándar de calidad.")
         print("  La decisión disciplinada es NO apostar. Esto protege la banca.")
+
+    # Mostrar estadísticas históricas al final
+    if _HAS_TRACKER:
+        try:
+            print_stats()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

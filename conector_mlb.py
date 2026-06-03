@@ -41,8 +41,8 @@ def _pitcher_era(pitcher_id, season):
 def fetch_probable_pitchers(target_date=None, season=None):
     """
     Pitchers abridores probables + su ERA para los juegos de una fecha.
-    Devuelve lista: [{home, away, home_sp, away_sp, era_home_sp, era_away_sp}].
-    Usado para el mercado NRFI (No-Run First Inning).
+    Devuelve lista: [{home, away, home_sp, away_sp, era_home_sp, era_away_sp,
+                      home_sp_id, away_sp_id, home_team_id, away_team_id}].
     """
     d = target_date or date.today().isoformat()
     season = season or int(d[:4])
@@ -65,6 +65,10 @@ def fetch_probable_pitchers(target_date=None, season=None):
                 "away_sp": ap.get("fullName"),
                 "era_home_sp": era_h,
                 "era_away_sp": era_a,
+                "home_sp_id": hp.get("id"),
+                "away_sp_id": ap.get("id"),
+                "home_team_id": home_t["team"].get("id"),
+                "away_team_id": away_t["team"].get("id"),
             })
     return rows
 
