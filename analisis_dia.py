@@ -88,6 +88,21 @@ except ImportError:
     _HAS_STATCAST = False
 
 try:
+    from calibracion_platt import get_calibrator as get_platt
+    _HAS_PLATT = True
+except ImportError:
+    _HAS_PLATT = False
+
+# Cargar calibradores Platt al inicio (una sola vez)
+_PLATT = {}
+if _HAS_PLATT:
+    for _s in ["MLB", "NBA", "NHL"]:
+        try:
+            _PLATT[_s] = get_platt(_s)
+        except Exception:
+            pass
+
+try:
     from historical_odds import get_line_movement_signal
     _HAS_HIST_ODDS = True
 except ImportError:
@@ -347,6 +362,18 @@ def analizar_deporte(code, today, filtros, banco_info):
             pred = eng.predict(r.home, r.away,
                                market_odds={"home": e_ml["odds"]["home"],
                                             "away": e_ml["odds"]["away"]})
+            # Aplicar calibración Platt (corrige sobreconfianza)
+            if code in _PLATT and _PLATT[code]._fitted:
+                platt = _PLATT[code]
+                p_h_raw = pred.get("p_home", 0.5)
+                p_h_cal = platt.transform(p_h_raw)
+                pred["p_home"] = p_h_cal
+                pred["p_away"] = 1 - p_h_cal
+                # Recalcular value_bets con p calibrada
+                if "value_bets" in pred:
+                    for vb in pred["value_bets"]:
+                        vb["model_p"] = p_h_cal if "home" in vb.get("label","").lower() else 1-p_h_cal
+                        vb["edge"] = vb["model_p"] - (1 / vb["odds_offered"])
             # Enriquecer con stats avanzados (PDO, Net Rating, bullpen ERA)
             if _HAS_ADV_STATS:
                 try:
