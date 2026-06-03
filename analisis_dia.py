@@ -57,6 +57,30 @@ try:
 except ImportError:
     _HAS_MUNDIAL = False
 
+try:
+    from line_movement import get_line_movement, save_opening_lines, format_movement_summary
+    _HAS_LM = True
+except ImportError:
+    _HAS_LM = False
+
+try:
+    from lineup_nba import fetch_nba_lineup_status, get_lineup_adjusted_prob
+    _HAS_LINEUP = True
+except ImportError:
+    _HAS_LINEUP = False
+
+try:
+    from motivacion_wc import analyze_group_motivation, adjust_wc_probabilities
+    _HAS_MOTIVACION = True
+except ImportError:
+    _HAS_MOTIVACION = False
+
+try:
+    from calibracion import get_calibration_adjustment, print_calibration_report
+    _HAS_CALIBRACION = True
+except ImportError:
+    _HAS_CALIBRACION = False
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -174,6 +198,25 @@ def analizar_deporte(code, today, filtros, banco_info):
     ml = fetch_odds(code, region="us")
     mk = fetch_market_odds(code, region="us")
 
+    # Guardar opening lines y calcular movimiento sharp
+    if _HAS_LM:
+        try:
+            save_opening_lines(code, ml, today)
+            _line_moves = {(m["home"], m["away"]): m
+                          for m in get_line_movement(code, ml, today)}
+        except Exception:
+            _line_moves = {}
+    else:
+        _line_moves = {}
+
+    # Lineup NBA confirmado
+    _lineup_status = {}
+    if code == "NBA" and _HAS_LINEUP:
+        try:
+            _lineup_status = fetch_nba_lineup_status(today)
+        except Exception:
+            pass
+
     nrfi_data = []
     if code == "MLB":
         try:
@@ -218,6 +261,24 @@ def analizar_deporte(code, today, filtros, banco_info):
                     weather_info = w["summary"]
                 if w.get("rain_risk"):
                     print(f"    ⚠️ RIESGO LLUVIA {r.home} vs {r.away} — partido puede posponerse")
+            except Exception:
+                pass
+
+        # Movimiento de línea sharp
+        lm = _line_moves.get((r.home, r.away)) or _line_moves.get((r.home, r.away))
+        if lm and lm.get("sharp_side"):
+            print(f"     {format_movement_summary(lm)}")
+
+        # Lineup NBA — ajustar probabilidades por bajas
+        lineup_warnings = []
+        if code == "NBA" and _lineup_status:
+            try:
+                p_h_raw = eng.predict(r.home, r.away).get("p_home", 0.5)
+                p_a_raw = 1 - p_h_raw
+                p_h_adj, p_a_adj, lineup_warnings = get_lineup_adjusted_prob(
+                    r.home, r.away, p_h_raw, p_a_raw, _lineup_status)
+                for w in lineup_warnings:
+                    print(f"     {w}")
             except Exception:
                 pass
 
@@ -479,6 +540,17 @@ def analizar_mundial(today, filtros):
                     filtros["confidence_floor"], filtros["edge_threshold"]):
                 match_bets.append(b)
 
+        # Motivación fase de grupos
+        if _HAS_MOTIVACION:
+            try:
+                mot = analyze_group_motivation(r.home, r.away)
+                p_home, p_draw, p_away = adjust_wc_probabilities(
+                    p_home, p_draw, p_away, mot)
+                for w in mot.get("warnings", []):
+                    print(f"     {w}")
+            except Exception:
+                pass
+
         print(f"  {r.home} (#{rank_h}) vs {r.away} (#{rank_a})")
         print(f"     p={p_home:.0%}/{p_draw:.0%}/{p_away:.0%}  "
               f"(H/D/A)  ranking_diff={rank_diff:+d}")
@@ -589,14 +661,34 @@ def main():
     print(f"{'#'*80}")
     if all_value:
         top = sorted(all_value, key=lambda x: -x["edge"])[:10]
+
+        # Aplicar ajuste de calibración histórica si hay suficiente historial
+        if _HAS_CALIBRACION:
+            try:
+                for bet in top:
+                    adj = get_calibration_adjustment(bet["model_p"],
+                                                     bet.get("sport", ""))
+                    if adj != bet["model_p"]:
+                        bet["model_p_cal"] = round(adj, 4)
+            except Exception:
+                pass
+
         result = compute_portfolio(top, bankroll=a.banco,
                                    target_return=a.target, min_winners=a.min_ganadores)
         print_portfolio_report(result, bankroll=a.banco)
 
+        # Monte Carlo — simulación de escenarios a 30 días
+        try:
+            from portfolio import monte_carlo_portfolio, print_monte_carlo_report
+            mc = monte_carlo_portfolio(top, bankroll=a.banco, n_sims=5000, days=30)
+            print_monte_carlo_report(mc, bankroll=a.banco)
+        except Exception:
+            pass
+
         # Guardar picks del día en tracker
         if _HAS_TRACKER:
             try:
-                stake = a.banco * 0.02  # 2% del banco por pick por defecto
+                stake = a.banco * 0.02
                 save_picks(top, today, stake_per_pick=stake)
             except Exception:
                 pass
@@ -604,7 +696,14 @@ def main():
         print("\n  Hoy NINGUNA apuesta pasa el estándar de calidad.")
         print("  La decisión disciplinada es NO apostar. Esto protege la banca.")
 
-    # Mostrar estadísticas históricas al final
+    # Calibración del modelo (si hay historial suficiente)
+    if _HAS_CALIBRACION:
+        try:
+            print_calibration_report()
+        except Exception:
+            pass
+
+    # Historial y ROI acumulado
     if _HAS_TRACKER:
         try:
             print_stats()

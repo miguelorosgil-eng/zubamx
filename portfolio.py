@@ -278,6 +278,140 @@ def print_portfolio_report(portfolio_result: Dict, bankroll: float) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Monte Carlo simulation
+# ---------------------------------------------------------------------------
+
+def monte_carlo_portfolio(
+    picks: List[Dict],
+    bankroll: float,
+    n_sims: int = 10_000,
+    days: int = 30,
+) -> Dict:
+    """
+    Simula n_sims trayectorias del banco durante `days` días.
+
+    picks: lista de dicts con model_p, odds_offered, kelly_frac
+    bankroll: banco inicial
+    n_sims: número de simulaciones
+    days: horizonte temporal en días
+
+    Asume que el sistema genera ~len(picks) picks por día en promedio.
+    stake = bankroll_actual * kelly_frac * 0.25 (quarter-Kelly)
+
+    Returns dict con métricas de riesgo/retorno.
+    """
+    if not picks:
+        return {"error": "No hay picks para simular."}
+
+    valid_picks = [p for p in picks if p.get("odds_offered", 1) > 1 and p.get("kelly_frac", 0) > 0]
+    if not valid_picks:
+        return {"error": "Ningún pick tiene kelly_frac > 0 y odds válidas."}
+
+    picks_per_day = len(valid_picks)
+    ruin_threshold = bankroll * 0.10
+    double_threshold = bankroll * 2.0
+
+    rng = np.random.default_rng(42)
+
+    final_bankrolls = np.zeros(n_sims)
+    n_ruin = 0
+    n_double = 0
+
+    for sim in range(n_sims):
+        bank = bankroll
+        ruined = False
+        doubled = False
+
+        for _day in range(days):
+            if bank <= 0:
+                ruined = True
+                break
+            # Cada día: simular picks_per_day apuestas
+            for pick in valid_picks:
+                if bank <= 0:
+                    break
+                stake = bank * pick["kelly_frac"] * 0.25
+                stake = min(stake, bank)  # no apostar más de lo que hay
+                if stake <= 0:
+                    continue
+                win_prob = pick["model_p"]
+                if rng.random() < win_prob:
+                    bank += stake * (pick["odds_offered"] - 1)
+                else:
+                    bank -= stake
+
+            if bank < ruin_threshold and not ruined:
+                ruined = True
+            if bank > double_threshold and not doubled:
+                doubled = True
+
+        final_bankrolls[sim] = max(0.0, bank)
+        if ruined:
+            n_ruin += 1
+        if doubled:
+            n_double += 1
+
+    final_bankrolls.sort()
+    median_bank = float(np.median(final_bankrolls))
+    p10_bank = float(final_bankrolls[int(n_sims * 0.10)])
+    p90_bank = float(final_bankrolls[int(n_sims * 0.90)])
+
+    p_ruin = n_ruin / n_sims
+    p_double = n_double / n_sims
+
+    return {
+        "n_sims": n_sims,
+        "days": days,
+        "bankroll_inicial": bankroll,
+        "banco_mediano": round(median_bank, 2),
+        "banco_p10": round(p10_bank, 2),
+        "banco_p90": round(p90_bank, 2),
+        "p_ruin": round(p_ruin, 4),
+        "p_double": round(p_double, 4),
+        "ruin_threshold": round(ruin_threshold, 2),
+        "double_threshold": round(double_threshold, 2),
+    }
+
+
+def print_monte_carlo_report(result: Dict, bankroll: float) -> None:
+    """Imprime resumen de la simulación Monte Carlo."""
+    if "error" in result:
+        print(f"[Monte Carlo] ERROR: {result['error']}")
+        return
+
+    sep = "═" * 55
+    n_sims = result["n_sims"]
+    days = result["days"]
+
+    print(f"\n{sep}")
+    print(f"  SIMULACIÓN MONTE CARLO ({n_sims:,} escenarios, {days} días)")
+    print(sep)
+
+    banco_inicial = result["bankroll_inicial"]
+    banco_med = result["banco_mediano"]
+    banco_p10 = result["banco_p10"]
+    banco_p90 = result["banco_p90"]
+
+    def pct_chg(val):
+        chg = (val - banco_inicial) / banco_inicial * 100
+        sign = "+" if chg >= 0 else ""
+        return f"{sign}{chg:.1f}%"
+
+    ruin_pct = result["p_ruin"] * 100
+    double_pct = result["p_double"] * 100
+    ruin_thresh = result["ruin_threshold"]
+    double_thresh = result["double_threshold"]
+
+    print(f"  Banco inicial:    ${banco_inicial:>8,.0f}")
+    print(f"  Banco mediano:    ${banco_med:>8,.0f}  ({pct_chg(banco_med)})")
+    print(f"  Escenario malo:   ${banco_p10:>8,.0f}  ({pct_chg(banco_p10)}) [P10]")
+    print(f"  Escenario bueno:  ${banco_p90:>8,.0f}  ({pct_chg(banco_p90)}) [P90]")
+    print(f"  P(ruina <${ruin_thresh:,.0f}):   {ruin_pct:>5.1f}%")
+    print(f"  P(doblar >${double_thresh:,.0f}): {double_pct:>5.1f}%")
+    print(f"{sep}\n")
+
+
+# ---------------------------------------------------------------------------
 # Demo
 # ---------------------------------------------------------------------------
 

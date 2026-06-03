@@ -147,6 +147,50 @@ def fetch_market_odds(league_code, region="us"):
     return events
 
 
+def fetch_opening_odds(league_code, region="eu", date_str=None):
+    """
+    Igual que fetch_odds pero garantiza que la primera corrida del día
+    guarda las odds como opening lines en caché.
+
+    Si ya hay caché de apertura, lo carga en lugar de consumir un crédito API.
+    Esto asegura que la opening line se preserva para tracking de line movement.
+    """
+    import json
+    import os
+    from datetime import date as _date
+
+    if date_str is None:
+        date_str = str(_date.today())
+
+    cache_dir = "_cache"
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, f"opening_lines_{league_code}_{date_str}.json")
+
+    # Si ya hay opening lines guardadas, devolvemos los eventos del caché
+    if os.path.exists(cache_path):
+        with open(cache_path) as f:
+            data = json.load(f)
+        events = []
+        for key, ev in data.items():
+            events.append({
+                "home": ev["home"],
+                "away": ev["away"],
+                "commence": date_str,
+                "odds": ev["odds"],
+                "book": "cached_opening",
+            })
+        return events
+
+    # Primera corrida del día: obtener odds de la API y guardar como opening
+    events = fetch_odds(league_code, region)
+
+    if events:
+        from line_movement import save_opening_lines
+        save_opening_lines(league_code, events, date_str)
+
+    return events
+
+
 def fetch_odds_multi(league_codes, region="eu"):
     """Descarga odds para varias ligas de golpe, ahorrando créditos."""
     all_events = {}
