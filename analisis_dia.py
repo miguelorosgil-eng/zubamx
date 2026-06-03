@@ -45,6 +45,18 @@ try:
 except ImportError:
     _HAS_PROPS = False
 
+try:
+    from stats_avanzados import enrich_prediction
+    _HAS_ADV_STATS = True
+except ImportError:
+    _HAS_ADV_STATS = False
+
+try:
+    from conector_mundial import fetch_wc_upcoming, build_wc_training, FIFA_RANKINGS
+    _HAS_MUNDIAL = True
+except ImportError:
+    _HAS_MUNDIAL = False
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -65,6 +77,9 @@ SOCCER_LEAGUES = {
     "CL":  {"seasons": [2024, 2025], "name": "Champions League"},
     "WC":  {"seasons": [2024],       "name": "Mundial 2026"},
 }
+
+# El Mundial usa su propio conector y motor dedicado
+WC_ACTIVE = True  # activar cuando empiece el torneo (11 jun 2026)
 
 
 def _sim(a, b):
@@ -133,7 +148,9 @@ def _fetch_upcoming_today(code, today):
         return pd.DataFrame()
     if up.empty:
         return up
-    return up[up["date"].astype(str).str.startswith(today)].reset_index(drop=True)
+    tomorrow = (datetime.date.fromisoformat(today) + datetime.timedelta(days=1)).isoformat()
+    mask = up["date"].astype(str).str.startswith(today) | up["date"].astype(str).str.startswith(tomorrow)
+    return up[mask].reset_index(drop=True)
 
 
 def analizar_deporte(code, today, filtros, banco_info):
@@ -210,6 +227,16 @@ def analizar_deporte(code, today, filtros, banco_info):
             pred = eng.predict(r.home, r.away,
                                market_odds={"home": e_ml["odds"]["home"],
                                             "away": e_ml["odds"]["away"]})
+            # Enriquecer con stats avanzados (PDO, Net Rating, bullpen ERA)
+            if _HAS_ADV_STATS:
+                try:
+                    season = SPORT_CONFIG[code]["seasons"][-1]
+                    pred = enrich_prediction(SPORT_CONFIG[code]["sport"],
+                                            r.home, r.away, pred, season)
+                    for w in pred.get("adv_warnings", []):
+                        print(f"     {w}")
+                except Exception:
+                    pass
             for b in pred.get("value_bets", []):
                 match_bets.append(("ML", b["label"], b["odds_offered"], b["model_p"],
                                    b["edge"], b["kelly_frac"]))
@@ -363,6 +390,115 @@ def analizar_futbol(code, today, filtros):
     return value_bets
 
 
+def _load_wc_training(refrescar=False):
+    cache_file = os.path.join(CACHE_DIR, "WC_train.csv")
+    if os.path.exists(cache_file) and not refrescar:
+        age_h = (datetime.datetime.now().timestamp() - os.path.getmtime(cache_file)) / 3600
+        if age_h < 48:
+            return pd.read_csv(cache_file, parse_dates=["date"])
+        print("  ♻️  Caché WC expirado — reentrenando con datos frescos...")
+    if not _HAS_MUNDIAL:
+        return pd.DataFrame()
+    df = build_wc_training()
+    if not df.empty:
+        df.to_csv(cache_file, index=False)
+    return df
+
+
+def analizar_mundial(today, filtros):
+    """Análisis dedicado al Mundial FIFA 2026 con motor de fútbol."""
+    print(f"\n{'='*80}\n  🌍 MUNDIAL FIFA 2026 — {today}\n{'='*80}")
+
+    if not _HAS_MUNDIAL:
+        print("  conector_mundial no disponible."); return []
+
+    from motor_futbol_v1 import FootballEngine
+    from features_futbol import _get_fifa_rank
+
+    # Partidos del día
+    upcoming = fetch_wc_upcoming(days=2)
+    if upcoming.empty:
+        print("  Sin partidos del Mundial hoy/mañana.")
+        return []
+    tomorrow = (datetime.date.fromisoformat(today) + datetime.timedelta(days=1)).isoformat()
+    mask = (upcoming["date"].astype(str).str.startswith(today) |
+            upcoming["date"].astype(str).str.startswith(tomorrow))
+    up_hoy = upcoming[mask].reset_index(drop=True)
+    if up_hoy.empty:
+        print(f"  {len(upcoming)} partidos próximos, pero ninguno hoy/mañana."); return []
+    print(f"  {len(up_hoy)} partido(s) del Mundial hoy/mañana.")
+
+    # Entrenar con datos históricos de selecciones
+    df = _load_wc_training()
+    if df.empty:
+        print("  Sin datos históricos de selecciones — usando solo rankings FIFA.");
+
+    value_bets = []
+    ml = fetch_odds("WC", region="eu")
+
+    for r in up_hoy.itertuples():
+        rank_h = _get_fifa_rank(r.home)
+        rank_a = _get_fifa_rank(r.away)
+        rank_diff = rank_a - rank_h  # positivo = local mejor rankeado
+
+        # Probabilidad base desde ranking FIFA (modelo Elo-like simple)
+        elo_h = 2000 - rank_h * 30
+        elo_a = 2000 - rank_a * 30
+        p_home_raw = 1 / (1 + 10 ** ((elo_a - elo_h) / 400))
+        # Ajuste por ventaja local (en Fase de Grupos no hay local puro → reducir)
+        p_home = p_home_raw * 0.95 + 0.05
+        p_draw = 0.25  # en fútbol ~25% de empates
+        p_home = p_home * (1 - p_draw)
+        p_away = (1 - p_draw) * (1 - p_home_raw * 0.95)
+        total = p_home + p_draw + p_away
+        p_home /= total; p_draw /= total; p_away /= total
+
+        # Si hay motor entrenado, usar sus predicciones
+        if not df.empty:
+            try:
+                eng = FootballEngine(edge_threshold=filtros["edge_threshold"],
+                                     confidence_floor=filtros["confidence_floor"],
+                                     market_trust=filtros["market_trust"])
+                eng.fit(df[["home", "away", "hg", "ag", "date"]], league_code="WC")
+                if r.home in eng._teams_seen and r.away in eng._teams_seen:
+                    pred_eng = eng.predict(r.home, r.away)
+                    p_home = pred_eng["p_home"]
+                    p_draw = pred_eng.get("p_draw", p_draw)
+                    p_away = pred_eng["p_away"]
+            except Exception:
+                pass
+
+        e_ml = _find(r.home, r.away, ml)
+        match_bets = []
+        if e_ml and e_ml["odds"].get("draw"):
+            from mercados import evaluate_three_way
+            for b in evaluate_three_way(
+                    p_home, p_draw, p_away,
+                    e_ml["odds"]["home"], e_ml["odds"]["draw"], e_ml["odds"]["away"],
+                    r.home, r.away, filtros["market_trust"],
+                    filtros["confidence_floor"], filtros["edge_threshold"]):
+                match_bets.append(b)
+
+        print(f"  {r.home} (#{rank_h}) vs {r.away} (#{rank_a})")
+        print(f"     p={p_home:.0%}/{p_draw:.0%}/{p_away:.0%}  "
+              f"(H/D/A)  ranking_diff={rank_diff:+d}")
+        for b in match_bets:
+            print(f"     [{b['market']:>7}] {b['label']:<26} @{b['odds_offered']:.2f}  "
+                  f"p={b['model_p']:.0%}  edge {b['edge']:.1%}")
+            value_bets.append({
+                "label": f"WC {r.home[:12]} {b['market']}:{b['label'][:12]}",
+                "sport": "WC", "home": r.home, "away": r.away,
+                "pick_team": b["label"], "pick_side": b["market"],
+                "market": b["market"], "model_p": b["model_p"],
+                "odds_offered": b["odds_offered"], "edge": b["edge"],
+                "kelly_frac": b["kelly_frac"],
+            })
+        if not match_bets:
+            print(f"     Sin value bets (no hay momios disponibles aún o no hay edge)")
+
+    return value_bets
+
+
 def main():
     p = argparse.ArgumentParser(description="Análisis del día multi-deporte")
     p.add_argument("--deportes", nargs="*", default=["MLB", "NBA", "NHL"])
@@ -381,6 +517,8 @@ def main():
                    help="Actualizar resultados de ayer y mostrar ROI acumulado")
     p.add_argument("--props", action="store_true",
                    help="Mostrar props de strikeouts para pitchers de hoy (MLB)")
+    p.add_argument("--mundial", action="store_true",
+                   help="Incluir análisis del Mundial FIFA 2026")
     a = p.parse_args()
 
     global _DEBUG
@@ -427,6 +565,13 @@ def main():
             all_value += analizar_futbol(code, today, filtros)
         except Exception as e:
             print(f"\n  ERROR en fútbol {code}: {e}")
+
+    # Mundial FIFA 2026 — siempre activo cuando hay partidos (a partir del 11 jun)
+    if a.mundial or WC_ACTIVE:
+        try:
+            all_value += analizar_mundial(today, filtros)
+        except Exception as e:
+            print(f"\n  ERROR en Mundial: {e}")
 
     # Props de strikeouts MLB
     if a.props and _HAS_PROPS and "MLB" in a.deportes:

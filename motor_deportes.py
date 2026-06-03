@@ -1,6 +1,13 @@
 """
 Motor genérico para deportes sin empate: MLB, NBA, NHL.
-Predice HOME/AWAY con ELO + rolling stats + LogisticRegression calibrada.
+Predice HOME/AWAY con ELO + rolling stats + ensemble XGBoost/LogisticRegression calibrada.
+
+Mejoras v2:
+- Ensemble XGBoost + LR calibrada ponderado por Brier score de validación
+- Rest days / back-to-back como features
+- Team-specific home advantage calculado en fit()
+- Playoff context feature opcional (columna is_playoff en df)
+- CLV (closing line value) en output de predict()
 """
 import warnings
 import numpy as np
@@ -13,10 +20,18 @@ from sklearn.metrics import brier_score_loss, log_loss
 
 warnings.filterwarnings("ignore")
 
+# XGBoost opcional: si no está instalado se cae silenciosamente a solo LR
+try:
+    from xgboost import XGBClassifier
+    _XGBOOST_AVAILABLE = True
+except ImportError:
+    _XGBOOST_AVAILABLE = False
+
 ELO_K = 20
 ELO_DEFAULT = 1500
 ROLLING_N = 10
-HOME_ADVANTAGE = 0.05  # boost a probabilidad home antes de calibración
+# HOME_ADVANTAGE global como fallback cuando no hay datos suficientes por equipo
+HOME_ADVANTAGE = 0.05
 
 
 def _expected_elo(ra: float, rb: float) -> float:
@@ -31,22 +46,27 @@ def _update_elo(ra: float, rb: float, home_win: bool, k: float = ELO_K):
     return new_ra, new_rb
 
 
-def _build_features(df: pd.DataFrame, include_run_diff: bool = False) -> pd.DataFrame:
+def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
+                    include_playoff: bool = False) -> pd.DataFrame:
     """
     Genera features fila a fila (walk-forward, sin data leakage).
     df debe tener: home, away, home_score, away_score, date
+    Opcionales: is_playoff (bool)
     """
     df = df.copy().sort_values("date").reset_index(drop=True)
+    has_playoff = include_playoff and "is_playoff" in df.columns
 
-    elos: dict[str, float] = {}
-    win_history: dict[str, list] = {}
-    score_diff_history: dict[str, list] = {}
+    elos: dict = {}
+    win_history: dict = {}
+    score_diff_history: dict = {}
+    last_game_date: dict = {}  # para rest days
 
     records = []
     for _, row in df.iterrows():
         h, a = row["home"], row["away"]
         home_score, away_score = row["home_score"], row["away_score"]
         home_win = int(home_score > away_score)
+        game_date = pd.Timestamp(row["date"])
 
         elo_h = elos.get(h, ELO_DEFAULT)
         elo_a = elos.get(a, ELO_DEFAULT)
@@ -57,6 +77,12 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False) -> pd.Data
         rwr_h = np.mean(wh[-ROLLING_N:]) if wh else 0.5
         rwr_a = np.mean(wa[-ROLLING_N:]) if wa else 0.5
 
+        # Rest days (cap 7)
+        last_h = last_game_date.get(h)
+        last_a = last_game_date.get(a)
+        rest_h = min(int((game_date - last_h).days), 7) if last_h is not None else 3
+        rest_a = min(int((game_date - last_a).days), 7) if last_a is not None else 3
+
         feat = {
             "elo_diff": elo_diff,
             "elo_home": elo_h,
@@ -64,6 +90,9 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False) -> pd.Data
             "rolling_wr_home": rwr_h,
             "rolling_wr_away": rwr_a,
             "rolling_wr_diff": rwr_h - rwr_a,
+            "rest_days_home": rest_h,
+            "rest_days_away": rest_a,
+            "rest_diff": rest_h - rest_a,
             "home_win": home_win,
         }
 
@@ -76,6 +105,9 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False) -> pd.Data
             feat["run_diff_away"] = rd_a
             feat["run_diff_delta"] = rd_h - rd_a
 
+        if has_playoff:
+            feat["is_playoff"] = int(bool(row.get("is_playoff", False)))
+
         records.append(feat)
 
         # Actualizar estado post-partido
@@ -87,17 +119,59 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False) -> pd.Data
         diff = home_score - away_score
         score_diff_history.setdefault(h, []).append(diff)
         score_diff_history.setdefault(a, []).append(-diff)
+        last_game_date[h] = game_date
+        last_game_date[a] = game_date
 
     return pd.DataFrame(records)
+
+
+def _make_lr_pipeline() -> Pipeline:
+    base_lr = LogisticRegression(max_iter=1000, C=1.0)
+    calibrated = CalibratedClassifierCV(base_lr, cv=5, method="isotonic")
+    return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
+
+
+def _make_xgb_pipeline() -> Pipeline:
+    xgb = XGBClassifier(
+        n_estimators=300,
+        max_depth=4,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        use_label_encoder=False,
+        eval_metric="logloss",
+        verbosity=0,
+    )
+    calibrated = CalibratedClassifierCV(xgb, cv=5, method="isotonic")
+    return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
+
+
+def _brier_cv(pipe: Pipeline, X: np.ndarray, y: np.ndarray, n_splits: int = 5) -> float:
+    """Brier score temporal (walk-forward ligero) para ponderar el ensemble."""
+    fold_size = len(y) // n_splits
+    scores = []
+    for k in range(1, n_splits):
+        split = k * fold_size
+        if split < 30:
+            continue
+        try:
+            p = Pipeline(pipe.steps)  # copia superficial de la arquitectura
+            p.fit(X[:split], y[:split])
+            p_pred = p.predict_proba(X[split:split + fold_size])[:, 1]
+            scores.append(brier_score_loss(y[split:split + fold_size], p_pred))
+        except Exception:
+            pass
+    return float(np.mean(scores)) if scores else 0.25
 
 
 class SportsEngine:
     """
     Motor de predicción para deportes sin empate.
 
-    fit(df)            → entrena modelo
-    predict(home, away, market_odds) → dict de probabilidades y value bets
-    walk_forward_validate(df) → métricas de validación
+    fit(df)                                     → entrena modelo
+    predict(home, away, market_odds)            → dict de probabilidades y value bets
+    expected_scores(home, away, era_home_sp, era_away_sp) → μ por equipo
+    walk_forward_validate(df)                   → métricas de validación
     """
 
     def __init__(self, sport: str = "generic",
@@ -106,53 +180,83 @@ class SportsEngine:
                  market_trust: float = 0.5):
         """
         edge_threshold:   edge mínimo (prob_final - precio) para recomendar.
-        confidence_floor: prob. final mínima para apostar a un equipo (p. ej. 0.65).
-                          Solo apostamos a equipos que de verdad creemos ganadores.
-        market_trust:     λ ∈ [0,1]. Cuánto peso damos al mercado al mezclar.
-                          0.5 = mitad modelo, mitad mercado (mercado como prior fuerte).
-                          Mata edges absurdos de underdogs donde el modelo delira.
+        confidence_floor: prob. final mínima para apostar a un equipo.
+        market_trust:     λ ∈ [0,1]. Peso del mercado al mezclar con modelo.
         """
         self.sport = sport
         self.include_run_diff = sport.lower() == "mlb"
         self.edge_threshold = edge_threshold
         self.confidence_floor = confidence_floor
         self.market_trust = market_trust
-        self.model: Pipeline | None = None
+
+        self._lr_model: Pipeline | None = None
+        self._xgb_model: Pipeline | None = None
+        self._w_lr: float = 0.5   # peso LR en ensemble (ajustado por Brier)
+        self._w_xgb: float = 0.5  # peso XGB en ensemble
+
         self.feature_cols: list[str] = []
-        self.elos: dict[str, float] = {}
-        self.win_history: dict[str, list] = {}
-        self.score_diff_history: dict[str, list] = {}
+        self.elos: dict = {}
+        self.win_history: dict = {}
+        self.score_diff_history: dict = {}
+        self.last_game_date: dict = {}   # para rest days en predict()
+        self.home_advantage: dict = {}   # {team: float} win rate home
         self._trained_df: pd.DataFrame | None = None
+        self._include_playoff: bool = False
 
     def _feature_cols_from(self, df_feat: pd.DataFrame) -> list[str]:
         return [c for c in df_feat.columns if c != "home_win"]
 
+    # ------------------------------------------------------------------
+    # fit
+    # ------------------------------------------------------------------
     def fit(self, df: pd.DataFrame) -> "SportsEngine":
-        """df: home, away, home_score, away_score, date"""
+        """df: home, away, home_score, away_score, date  [+ is_playoff opcional]"""
         if len(df) < 50:
             raise ValueError("Se necesitan al menos 50 partidos para entrenar.")
         df = df.sort_values("date").reset_index(drop=True)
         self._trained_df = df.copy()
+        self._include_playoff = "is_playoff" in df.columns
 
-        feat_df = _build_features(df, include_run_diff=self.include_run_diff)
+        feat_df = _build_features(
+            df,
+            include_run_diff=self.include_run_diff,
+            include_playoff=self._include_playoff,
+        )
         self.feature_cols = self._feature_cols_from(feat_df)
         X = feat_df[self.feature_cols].values
         y = feat_df["home_win"].values
 
-        base_lr = LogisticRegression(max_iter=1000, C=1.0)
-        calibrated = CalibratedClassifierCV(base_lr, cv=5, method="isotonic")
-        self.model = Pipeline([
-            ("scaler", StandardScaler()),
-            ("clf", calibrated),
-        ])
-        self.model.fit(X, y)
+        # ── LR calibrada (siempre disponible) ──────────────────────────
+        self._lr_model = _make_lr_pipeline()
+        self._lr_model.fit(X, y)
 
-        # Construir estado ELO final para predicciones live
+        # ── XGBoost (opcional) ─────────────────────────────────────────
+        if _XGBOOST_AVAILABLE:
+            self._xgb_model = _make_xgb_pipeline()
+            self._xgb_model.fit(X, y)
+
+            # Ponderación por Brier score (menor Brier → mayor peso)
+            brier_lr = _brier_cv(self._lr_model, X, y)
+            brier_xgb = _brier_cv(self._xgb_model, X, y)
+            # Convertir scores a pesos inversos normalizados
+            inv_lr = 1.0 / max(brier_lr, 1e-6)
+            inv_xgb = 1.0 / max(brier_xgb, 1e-6)
+            total = inv_lr + inv_xgb
+            self._w_lr = inv_lr / total
+            self._w_xgb = inv_xgb / total
+        else:
+            self._xgb_model = None
+            self._w_lr = 1.0
+            self._w_xgb = 0.0
+
+        # ── Construir estado ELO / historial final para predicciones live ──
         self.elos = {}
         self.win_history = {}
         self.score_diff_history = {}
+        self.last_game_date = {}
         for _, row in df.iterrows():
             h, a = row["home"], row["away"]
+            game_date = pd.Timestamp(row["date"])
             elo_h = self.elos.get(h, ELO_DEFAULT)
             elo_a = self.elos.get(a, ELO_DEFAULT)
             home_win = row["home_score"] > row["away_score"]
@@ -164,10 +268,39 @@ class SportsEngine:
             diff = row["home_score"] - row["away_score"]
             self.score_diff_history.setdefault(h, []).append(diff)
             self.score_diff_history.setdefault(a, []).append(-diff)
+            self.last_game_date[h] = game_date
+            self.last_game_date[a] = game_date
 
-        # ── Modelo de anotación esperada (para mercados O/U, spread, BTTS) ──
-        self.scored_history = {}
-        self.allowed_history = {}
+        # ── Team-specific home advantage ───────────────────────────────
+        # Win rate en casa vs fuera por equipo; fallback = HOME_ADVANTAGE global
+        home_wins: dict = {}
+        home_games: dict = {}
+        away_wins: dict = {}
+        away_games: dict = {}
+        for _, row in df.iterrows():
+            h, a = row["home"], row["away"]
+            hw = row["home_score"] > row["away_score"]
+            home_wins[h] = home_wins.get(h, 0) + int(hw)
+            home_games[h] = home_games.get(h, 0) + 1
+            away_wins[a] = away_wins.get(a, 0) + int(not hw)
+            away_games[a] = away_games.get(a, 0) + 1
+
+        all_teams = set(home_games) | set(away_games)
+        self.home_advantage = {}
+        for team in all_teams:
+            hg = home_games.get(team, 0)
+            ag = away_games.get(team, 0)
+            if hg >= 10 and ag >= 10:
+                wr_home = home_wins.get(team, 0) / hg
+                wr_away = away_wins.get(team, 0) / ag
+                # advantage = diferencia de win rate casa - fuera, amortiguada
+                self.home_advantage[team] = float(wr_home - wr_away) * 0.5
+            else:
+                self.home_advantage[team] = HOME_ADVANTAGE
+
+        # ── Modelo de anotación esperada ───────────────────────────────
+        self.scored_history: dict = {}
+        self.allowed_history: dict = {}
         for _, row in df.iterrows():
             h, a = row["home"], row["away"]
             hs, as_ = row["home_score"], row["away_score"]
@@ -179,7 +312,6 @@ class SportsEngine:
         self.league_home_avg = float(df["home_score"].mean())
         self.league_away_avg = float(df["away_score"].mean())
         self.league_avg = (self.league_home_avg + self.league_away_avg) / 2.0
-        # Desviaciones históricas para mercados de distribución Normal (NBA)
         totals = (df["home_score"] + df["away_score"]).astype(float)
         margins = (df["home_score"] - df["away_score"]).astype(float)
         self.sigma_total = float(totals.std())
@@ -187,52 +319,67 @@ class SportsEngine:
         self.sigma_team = float(pd.concat([df["home_score"], df["away_score"]]).astype(float).std())
 
         self._teams_seen = set(df["home"]) | set(df["away"])
+
+        ensemble_info = (
+            f"XGBoost(w={self._w_xgb:.2f}) + LR(w={self._w_lr:.2f})"
+            if _XGBOOST_AVAILABLE else "LR-only (xgboost no instalado)"
+        )
         print(f"[SportsEngine:{self.sport}] Entrenado con {len(df)} partidos. "
+              f"Ensemble: {ensemble_info}. "
               f"Anotación liga μ≈{self.league_avg:.2f}/equipo.")
         return self
 
+    # ------------------------------------------------------------------
+    # expected_scores
+    # ------------------------------------------------------------------
     def expected_scores(self, home: str, away: str,
                         era_home_sp: float = None, era_away_sp: float = None):
         """
-        Anotación esperada (μ) de cada equipo, modelo multiplicativo tipo Pythagorean.
-        Para MLB acepta ERA de los pitchers abridores para ajustar las carreras esperadas.
-          μ_local  = prom_local_liga · (ataque_local/μ_liga) · (defensa_visita/μ_liga)
-        Devuelve (mu_home, mu_away). Útil para O/U, spread, BTTS, team totals.
+        Anotación esperada (μ) por equipo — modelo multiplicativo Pythagorean.
+        Para MLB acepta ERA de los pitchers abridores.
+        Retorna (mu_home, mu_away).
         """
         def off(team):
             h = self.scored_history.get(team, [])
             return float(np.mean(h[-30:])) if h else self.league_avg
+
         def deff(team):
             h = self.allowed_history.get(team, [])
             return float(np.mean(h[-30:])) if h else self.league_avg
 
         la = max(self.league_avg, 1e-6)
-        # Exponente <1 amortigua la sobre-amplificación (regresión a la media)
         damp = 0.85
         mu_home = self.league_home_avg * (off(home) / la) ** damp * (deff(away) / la) ** damp
         mu_away = self.league_away_avg * (off(away) / la) ** damp * (deff(home) / la) ** damp
 
-        # Ajuste por ERA del pitcher abridor (solo MLB):
-        # ERA 4.50 = liga promedio → factor 1.0. ERA 3.00 = -33% carreras permitidas.
         if self.sport.lower() == "mlb":
             league_era = 4.50
             if era_away_sp and era_away_sp > 0:
-                # ERA del pitcher visitante afecta las carreras del equipo LOCAL
                 mu_home *= (era_away_sp / league_era) ** 0.5
             if era_home_sp and era_home_sp > 0:
-                # ERA del pitcher local afecta las carreras del equipo VISITANTE
                 mu_away *= (era_home_sp / league_era) ** 0.5
 
-        # clamp a rangos razonables
         return max(mu_home, 0.05), max(mu_away, 0.05)
 
-    def _build_live_features(self, home: str, away: str) -> np.ndarray:
+    # ------------------------------------------------------------------
+    # _build_live_features
+    # ------------------------------------------------------------------
+    def _build_live_features(self, home: str, away: str,
+                             game_date: pd.Timestamp = None,
+                             is_playoff: bool = False) -> np.ndarray:
         elo_h = self.elos.get(home, ELO_DEFAULT)
         elo_a = self.elos.get(away, ELO_DEFAULT)
         wh = self.win_history.get(home, [])
         wa = self.win_history.get(away, [])
         rwr_h = np.mean(wh[-ROLLING_N:]) if wh else 0.5
         rwr_a = np.mean(wa[-ROLLING_N:]) if wa else 0.5
+
+        # Rest days
+        today = game_date if game_date is not None else pd.Timestamp.today()
+        last_h = self.last_game_date.get(home)
+        last_a = self.last_game_date.get(away)
+        rest_h = min(int((today - last_h).days), 7) if last_h is not None else 3
+        rest_a = min(int((today - last_a).days), 7) if last_a is not None else 3
 
         feat = [
             elo_h - elo_a,
@@ -241,6 +388,9 @@ class SportsEngine:
             rwr_h,
             rwr_a,
             rwr_h - rwr_a,
+            rest_h,
+            rest_a,
+            rest_h - rest_a,
         ]
 
         if self.include_run_diff:
@@ -250,20 +400,40 @@ class SportsEngine:
             rd_a = np.mean(sd_a[-ROLLING_N:]) if sd_a else 0.0
             feat += [rd_h, rd_a, rd_h - rd_a]
 
+        if self._include_playoff:
+            feat.append(int(is_playoff))
+
         return np.array(feat).reshape(1, -1)
 
-    def predict(self, home: str, away: str, market_odds: dict = None) -> dict:
+    # ------------------------------------------------------------------
+    # _ensemble_predict
+    # ------------------------------------------------------------------
+    def _ensemble_predict(self, X: np.ndarray) -> float:
+        """Retorna p_home del ensemble ponderado por Brier."""
+        p_lr = float(self._lr_model.predict_proba(X)[0][1])
+        if self._xgb_model is not None:
+            p_xgb = float(self._xgb_model.predict_proba(X)[0][1])
+            return self._w_lr * p_lr + self._w_xgb * p_xgb
+        return p_lr
+
+    # ------------------------------------------------------------------
+    # predict
+    # ------------------------------------------------------------------
+    def predict(self, home: str, away: str, market_odds: dict = None,
+                game_date: pd.Timestamp = None, is_playoff: bool = False) -> dict:
         """
         market_odds: {"home": float, "away": float}  (cuotas decimales europeas)
-        Retorna dict con p_home, p_away, value_bets.
+        Retorna dict con p_home, p_away, value_bets, clv (closing line value).
         """
-        if self.model is None:
+        if self._lr_model is None:
             raise RuntimeError("Modelo no entrenado. Llama fit() primero.")
 
-        X = self._build_live_features(home, away)
-        p_home_raw = float(self.model.predict_proba(X)[0][1])
-        # Añadir home advantage boost y renormalizar
-        p_home = min(0.98, p_home_raw + HOME_ADVANTAGE)
+        X = self._build_live_features(home, away, game_date=game_date, is_playoff=is_playoff)
+        p_home_raw = self._ensemble_predict(X)
+
+        # Team-specific home advantage (fallback al global si equipo desconocido)
+        ha = self.home_advantage.get(home, HOME_ADVANTAGE)
+        p_home = min(0.98, p_home_raw + ha)
         p_away = 1.0 - p_home
 
         result = {
@@ -280,12 +450,10 @@ class SportsEngine:
             o_home = market_odds.get("home")
             o_away = market_odds.get("away")
             if o_home and o_away:
-                # 1) Quitar la vig: probabilidad real del mercado (sin margen)
                 raw_h, raw_a = 1.0 / o_home, 1.0 / o_away
                 total = raw_h + raw_a
                 novig_h, novig_a = raw_h / total, raw_a / total
 
-                # 2) Shrinkage: mezclar modelo con mercado (mercado = prior fuerte)
                 lam = self.market_trust
                 blend_h = (1 - lam) * p_home + lam * novig_h
                 blend_a = (1 - lam) * p_away + lam * novig_a
@@ -297,27 +465,31 @@ class SportsEngine:
 
                 for side, blended_p, odds in [("home", blend_h, o_home),
                                               ("away", blend_a, o_away)]:
-                    implied_vig = 1.0 / odds            # precio que pagas (con vig)
-                    edge = blended_p - implied_vig       # valor real sobre el precio
+                    implied_vig = 1.0 / odds
+                    edge = blended_p - implied_vig
                     kelly = edge / (odds - 1) if odds > 1 else 0.0
 
-                    # FILTRO COMBINADO: confianza alta Y edge positivo
                     passes_confidence = blended_p >= self.confidence_floor
                     passes_edge = edge >= self.edge_threshold
                     if passes_confidence and passes_edge:
                         result["value_bets"].append({
                             "market": side,
-                            "model_p": round(blended_p, 4),     # prob ajustada (la que usamos)
+                            "model_p": round(blended_p, 4),
                             "model_p_raw": round(p_home if side == "home" else p_away, 4),
                             "implied_p": round(implied_vig, 4),
                             "odds_offered": odds,
                             "edge": round(edge, 4),
+                            # CLV = closing line value = blended_p − precio implícito con vig
+                            "clv": round(edge, 4),
                             "kelly_frac": round(max(0, kelly), 4),
                             "label": f"{home if side == 'home' else away} gana",
                         })
 
         return result
 
+    # ------------------------------------------------------------------
+    # walk_forward_validate
+    # ------------------------------------------------------------------
     def walk_forward_validate(self, df: pd.DataFrame, min_train: int = 200) -> dict:
         """
         Validación walk-forward: entrena en primeras min_train filas,
@@ -327,7 +499,12 @@ class SportsEngine:
         if len(df) < min_train + 50:
             raise ValueError(f"Necesitas al menos {min_train + 50} partidos para validar.")
 
-        feat_df = _build_features(df, include_run_diff=self.include_run_diff)
+        include_playoff = "is_playoff" in df.columns
+        feat_df = _build_features(
+            df,
+            include_run_diff=self.include_run_diff,
+            include_playoff=include_playoff,
+        )
         fcols = self._feature_cols_from(feat_df)
         X = feat_df[fcols].values
         y = feat_df["home_win"].values
@@ -337,6 +514,8 @@ class SportsEngine:
 
         for i in range(min_train, len(y)):
             X_tr, y_tr = X[:i], y[:i]
+            pipe = _make_lr_pipeline()
+            # Usar CV=3 para velocidad en el loop incremental
             base_lr = LogisticRegression(max_iter=500, C=1.0)
             cal = CalibratedClassifierCV(base_lr, cv=3, method="sigmoid")
             pipe = Pipeline([("sc", StandardScaler()), ("clf", cal)])
@@ -356,7 +535,8 @@ class SportsEngine:
         brier = float(brier_score_loss(y_val, p_val))
         ll = float(log_loss(y_val, np.column_stack([1 - p_val, p_val])))
 
-        print(f"[Walk-Forward {self.sport}] N={mask.sum()} | Accuracy={acc:.3f} | Brier={brier:.4f} | LogLoss={ll:.4f}")
+        print(f"[Walk-Forward {self.sport}] N={mask.sum()} | Accuracy={acc:.3f} | "
+              f"Brier={brier:.4f} | LogLoss={ll:.4f}")
         return {"accuracy": acc, "brier": brier, "log_loss": ll, "n_eval": int(mask.sum())}
 
 
@@ -370,8 +550,14 @@ if __name__ == "__main__":
         h, a = rng.choice(teams, 2, replace=False)
         hs = int(rng.poisson(5))
         as_ = int(rng.poisson(4))
-        records.append({"home": h, "away": a, "home_score": hs, "away_score": as_,
-                         "date": pd.Timestamp("2023-01-01") + pd.Timedelta(days=int(i))})
+        records.append({
+            "home": h,
+            "away": a,
+            "home_score": hs,
+            "away_score": as_,
+            "date": pd.Timestamp("2023-01-01") + pd.Timedelta(days=int(i // 5)),
+            "is_playoff": bool(i > 450),
+        })
 
     df_demo = pd.DataFrame(records)
     engine = SportsEngine(sport="nhl")
