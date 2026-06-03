@@ -81,6 +81,36 @@ try:
 except ImportError:
     _HAS_CALIBRACION = False
 
+try:
+    from statcast import get_statcast_game_score
+    _HAS_STATCAST = True
+except ImportError:
+    _HAS_STATCAST = False
+
+try:
+    from historical_odds import get_line_movement_signal
+    _HAS_HIST_ODDS = True
+except ImportError:
+    _HAS_HIST_ODDS = False
+
+try:
+    from series_model import get_series_adjustment, fetch_nba_series_status, fetch_nhl_series_status
+    _HAS_SERIES = True
+except ImportError:
+    _HAS_SERIES = False
+
+try:
+    from backtesting import run_all_backtests, print_backtest_report
+    _HAS_BACKTEST = True
+except ImportError:
+    _HAS_BACKTEST = False
+
+try:
+    from alertas import send_daily_picks, send_steam_alert
+    _HAS_ALERTAS = True
+except ImportError:
+    _HAS_ALERTAS = False
+
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -209,6 +239,17 @@ def analizar_deporte(code, today, filtros, banco_info):
     else:
         _line_moves = {}
 
+    # Series playoffs NBA/NHL — contexto Best-of-7
+    _series_status = {}
+    if _HAS_SERIES:
+        try:
+            if code == "NBA":
+                _series_status = fetch_nba_series_status()
+            elif code == "NHL":
+                _series_status = fetch_nhl_series_status()
+        except Exception:
+            pass
+
     # Lineup NBA confirmado
     _lineup_status = {}
     if code == "NBA" and _HAS_LINEUP:
@@ -264,10 +305,28 @@ def analizar_deporte(code, today, filtros, banco_info):
             except Exception:
                 pass
 
-        # Movimiento de línea sharp
-        lm = _line_moves.get((r.home, r.away)) or _line_moves.get((r.home, r.away))
+        # Movimiento de línea sharp + señal histórica
+        lm = _line_moves.get((r.home, r.away))
         if lm and lm.get("sharp_side"):
             print(f"     {format_movement_summary(lm)}")
+        if _HAS_HIST_ODDS:
+            try:
+                hist_signal = get_line_movement_signal(SPORT_CONFIG[code]["sport"], r.home, r.away)
+                if hist_signal and hist_signal.get("sharp_win_rate", 0.5) > 0.55:
+                    print(f"     [HistOdds] Sharp side win rate histórico: {hist_signal['sharp_win_rate']:.0%}")
+            except Exception:
+                pass
+
+        # Contexto de series playoffs (NBA/NHL)
+        if _HAS_SERIES and _series_status:
+            try:
+                adj_h, adj_a, series_summary = get_series_adjustment(r.home, r.away, _series_status)
+                if series_summary:
+                    print(f"     [Series] {series_summary}")
+            except Exception:
+                adj_h, adj_a = 1.0, 1.0
+        else:
+            adj_h, adj_a = 1.0, 1.0
 
         # Lineup NBA — ajustar probabilidades por bajas
         lineup_warnings = []
@@ -319,6 +378,23 @@ def analizar_deporte(code, today, filtros, banco_info):
                 if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                     rechazados += 1
 
+        # Statcast — enriquecer totales MLB con xFIP / hard-hit
+        statcast_info = ""
+        if code == "MLB" and _HAS_STATCAST and nr:
+            try:
+                sc = get_statcast_game_score(
+                    nr.get("home_sp"), nr.get("away_sp"),
+                    r.home, r.away,
+                    season=int(today[:4]),
+                    home_sp_id=nr.get("home_sp_id"),
+                    away_sp_id=nr.get("away_sp_id"),
+                )
+                if sc.get("total_adj", 0) != 0:
+                    statcast_info = (f"Statcast adj {sc['total_adj']:+.1f} runs "
+                                     f"(nrfi_boost={sc.get('nrfi_boost',0):+.2f})")
+            except Exception:
+                pass
+
         # NRFI (solo MLB, informativo + value si hubiera odds)
         nrfi_info = ""
         if code == "MLB" and nr and era_home_sp and era_away_sp:
@@ -334,6 +410,8 @@ def analizar_deporte(code, today, filtros, banco_info):
             print(f"  {r.home} vs {r.away}  (μ {mh:.1f}-{ma:.1f}, total {mh+ma:.1f})")
             if weather_info:
                 print(f"     [Weather] {weather_info}")
+            if statcast_info:
+                print(f"     [Statcast] {statcast_info}")
             if inj_h:
                 print(f"     {inj_h}")
             if inj_a:
@@ -591,6 +669,10 @@ def main():
                    help="Mostrar props de strikeouts para pitchers de hoy (MLB)")
     p.add_argument("--mundial", action="store_true",
                    help="Incluir análisis del Mundial FIFA 2026")
+    p.add_argument("--backtest", action="store_true",
+                   help="Ejecutar backtesting histórico y mostrar ROI por bucket")
+    p.add_argument("--telegram", action="store_true",
+                   help="Enviar picks del día por Telegram")
     a = p.parse_args()
 
     global _DEBUG
@@ -709,6 +791,25 @@ def main():
             print_stats()
         except Exception:
             pass
+
+    # Backtesting histórico completo
+    if a.backtest and _HAS_BACKTEST:
+        try:
+            print(f"\n{'#'*80}")
+            print("#  BACKTESTING HISTÓRICO")
+            print(f"{'#'*80}")
+            results = run_all_backtests()
+            for sport_key, bt_result in results.items():
+                print_backtest_report(bt_result, sport_key)
+        except Exception as e:
+            print(f"  (Backtesting no disponible: {e})")
+
+    # Enviar picks por Telegram
+    if _HAS_ALERTAS and (a.telegram or os.environ.get("TELEGRAM_AUTO")):
+        try:
+            send_daily_picks(all_value, today, a.banco)
+        except Exception as e:
+            print(f"  (Telegram no enviado: {e})")
 
 
 if __name__ == "__main__":

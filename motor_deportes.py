@@ -46,6 +46,24 @@ def _update_elo(ra: float, rb: float, home_win: bool, k: float = ELO_K):
     return new_ra, new_rb
 
 
+def _bayesian_elo_prior(team: str, df: pd.DataFrame) -> float:
+    """
+    Prior informado: equipos que históricamente ganan más empiezan con ELO más alto.
+    Antes del primer partido del equipo en el dataset.
+    """
+    games = df[(df["home"] == team) | (df["away"] == team)]
+    if len(games) < 5:
+        return ELO_DEFAULT
+    wins = sum(
+        1 for _, r in games.iterrows()
+        if (r["home"] == team and r["home_score"] > r["away_score"]) or
+           (r["away"] == team and r["away_score"] > r["home_score"])
+    )
+    wr = wins / len(games)
+    # Mapear win rate al rango [1400, 1600]
+    return 1400 + wr * 200
+
+
 def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
                     include_playoff: bool = False) -> pd.DataFrame:
     """
@@ -55,6 +73,10 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
     """
     df = df.copy().sort_values("date").reset_index(drop=True)
     has_playoff = include_playoff and "is_playoff" in df.columns
+
+    # Pre-calcular priors bayesianos para cada equipo
+    all_teams = set(df["home"]) | set(df["away"])
+    bayesian_priors = {team: _bayesian_elo_prior(team, df) for team in all_teams}
 
     elos: dict = {}
     win_history: dict = {}
@@ -68,8 +90,8 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
         home_win = int(home_score > away_score)
         game_date = pd.Timestamp(row["date"])
 
-        elo_h = elos.get(h, ELO_DEFAULT)
-        elo_a = elos.get(a, ELO_DEFAULT)
+        elo_h = elos.get(h, bayesian_priors.get(h, ELO_DEFAULT))
+        elo_a = elos.get(a, bayesian_priors.get(a, ELO_DEFAULT))
         elo_diff = elo_h - elo_a
 
         wh = win_history.get(h, [])
@@ -96,6 +118,10 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
             "home_win": home_win,
         }
 
+        # Features de interacción
+        feat["elo_x_rest"] = elo_diff * (rest_h - rest_a)
+        feat["wr_x_rest"]  = (rwr_h - rwr_a) * (rest_h - rest_a)
+
         if include_run_diff:
             sd_h = score_diff_history.get(h, [])
             sd_a = score_diff_history.get(a, [])
@@ -104,6 +130,7 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
             feat["run_diff_home"] = rd_h
             feat["run_diff_away"] = rd_a
             feat["run_diff_delta"] = rd_h - rd_a
+            feat["run_x_elo"] = feat["run_diff_delta"] * elo_diff / 100
 
         if has_playoff:
             feat["is_playoff"] = int(bool(row.get("is_playoff", False)))
@@ -226,14 +253,20 @@ class SportsEngine:
         X = feat_df[self.feature_cols].values
         y = feat_df["home_win"].values
 
+        # Pesos temporales: partidos recientes pesan más (exponential decay)
+        n = len(feat_df)
+        decay = 0.97  # partidos de hace 100 días pesan 0.97^100 ≈ 4.8% del actual
+        sample_weights = np.array([decay ** (n - 1 - i) for i in range(n)])
+        sample_weights /= sample_weights.sum() * len(sample_weights)  # normalizar
+
         # ── LR calibrada (siempre disponible) ──────────────────────────
         self._lr_model = _make_lr_pipeline()
-        self._lr_model.fit(X, y)
+        self._lr_model.fit(X, y, clf__sample_weight=sample_weights)
 
         # ── XGBoost (opcional) ─────────────────────────────────────────
         if _XGBOOST_AVAILABLE:
             self._xgb_model = _make_xgb_pipeline()
-            self._xgb_model.fit(X, y)
+            self._xgb_model.fit(X, y, clf__sample_weight=sample_weights)
 
             # Ponderación por Brier score (menor Brier → mayor peso)
             brier_lr = _brier_cv(self._lr_model, X, y)
@@ -250,6 +283,10 @@ class SportsEngine:
             self._w_xgb = 0.0
 
         # ── Construir estado ELO / historial final para predicciones live ──
+        # Pre-calcular priors bayesianos para ELO inicial
+        _live_priors = {t: _bayesian_elo_prior(t, df)
+                        for t in set(df["home"]) | set(df["away"])}
+
         self.elos = {}
         self.win_history = {}
         self.score_diff_history = {}
@@ -257,8 +294,8 @@ class SportsEngine:
         for _, row in df.iterrows():
             h, a = row["home"], row["away"]
             game_date = pd.Timestamp(row["date"])
-            elo_h = self.elos.get(h, ELO_DEFAULT)
-            elo_a = self.elos.get(a, ELO_DEFAULT)
+            elo_h = self.elos.get(h, _live_priors.get(h, ELO_DEFAULT))
+            elo_a = self.elos.get(a, _live_priors.get(a, ELO_DEFAULT))
             home_win = row["home_score"] > row["away_score"]
             new_h, new_a = _update_elo(elo_h, elo_a, home_win)
             self.elos[h] = new_h
@@ -381,16 +418,22 @@ class SportsEngine:
         rest_h = min(int((today - last_h).days), 7) if last_h is not None else 3
         rest_a = min(int((today - last_a).days), 7) if last_a is not None else 3
 
+        elo_diff = elo_h - elo_a
+        rest_diff = rest_h - rest_a
+        rwr_diff = rwr_h - rwr_a
+
         feat = [
-            elo_h - elo_a,
+            elo_diff,
             elo_h,
             elo_a,
             rwr_h,
             rwr_a,
-            rwr_h - rwr_a,
+            rwr_diff,
             rest_h,
             rest_a,
-            rest_h - rest_a,
+            rest_diff,
+            elo_diff * rest_diff,   # elo_x_rest
+            rwr_diff * rest_diff,   # wr_x_rest
         ]
 
         if self.include_run_diff:
@@ -398,7 +441,8 @@ class SportsEngine:
             sd_a = self.score_diff_history.get(away, [])
             rd_h = np.mean(sd_h[-ROLLING_N:]) if sd_h else 0.0
             rd_a = np.mean(sd_a[-ROLLING_N:]) if sd_a else 0.0
-            feat += [rd_h, rd_a, rd_h - rd_a]
+            run_diff_delta = rd_h - rd_a
+            feat += [rd_h, rd_a, run_diff_delta, run_diff_delta * elo_diff / 100]
 
         if self._include_playoff:
             feat.append(int(is_playoff))
