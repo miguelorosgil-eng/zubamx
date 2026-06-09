@@ -178,7 +178,8 @@ def prob_team_total(mu_team, line, sport, sigma_team=None):
 
 
 # ───────────────────────── Evaluador de alto nivel ─────────────────────────
-def evaluate_markets(engine, home, away, market_lines, filters=None):
+def evaluate_markets(engine, home, away, market_lines, filters=None,
+                     ou_confidence_floor=None):
     """
     engine: SportsEngine ya entrenado (expone expected_scores y sigmas).
     market_lines: dict con las líneas+cuotas disponibles del mercado, p.ej.:
@@ -205,6 +206,10 @@ def evaluate_markets(engine, home, away, market_lines, filters=None):
     sigma_margin = getattr(engine, "sigma_margin", None)
     sigma_team = getattr(engine, "sigma_team", None)
 
+    # Umbral específico para O/U — el modelo Poisson/Normal tiene más ruido
+    # que el moneyline, así que exigimos mayor confianza para evitar falsos edge
+    cf_ou = ou_confidence_floor if ou_confidence_floor is not None else min(cf + 0.06, 0.72)
+
     all_bets = []
 
     # Over / Under
@@ -222,7 +227,7 @@ def evaluate_markets(engine, home, away, market_lines, filters=None):
             all_bets += evaluate_two_way(
                 p_over, p_under, m.get("over_odds"), m.get("under_odds"),
                 f"OVER {line}", f"UNDER {line}", "O/U",
-                mt, cf, et)
+                mt, cf_ou, et)
         # si divergencia > max_div: se omite (modelo fuera de distribución)
 
     # Hándicap / Spread
