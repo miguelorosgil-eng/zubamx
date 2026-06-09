@@ -88,6 +88,33 @@ except ImportError:
     _HAS_STATCAST = False
 
 try:
+    from features_mlb_avanzados import enrich_mlb_training, get_game_features
+    _HAS_MLB_FEATURES = True
+except ImportError:
+    _HAS_MLB_FEATURES = False
+
+try:
+    from modelo_secuencial import SequenceModel, apply_sequence_adjustment
+    _HAS_SEQUENCE = True
+except ImportError:
+    _HAS_SEQUENCE = False
+
+try:
+    from motor_contextual import ContextualEngine
+    _HAS_CONTEXTUAL = True
+except ImportError:
+    _HAS_CONTEXTUAL = False
+
+try:
+    from clv_tracker import record_pick, update_closing_lines, print_clv_report, is_positive_ev
+    _HAS_CLV = True
+except ImportError:
+    _HAS_CLV = False
+
+# Modelos secuenciales por deporte (se cargan una vez)
+_SEQ_MODELS = {}
+
+try:
     from calibracion_platt import get_calibrator as get_platt
     _HAS_PLATT = True
 except ImportError:
@@ -199,6 +226,12 @@ def _load_training(code, refrescar=False):
         return pd.DataFrame()
 
     if not df.empty:
+        # Enriquecer MLB con features avanzados antes de guardar
+        if code == "MLB" and _HAS_MLB_FEATURES:
+            try:
+                df = enrich_mlb_training(df)
+            except Exception:
+                pass
         df.to_csv(cache_file, index=False)
     return df
 
@@ -229,11 +262,36 @@ def analizar_deporte(code, today, filtros, banco_info):
     df = _load_training(code)
     if df.empty:
         print("  Sin datos de entrenamiento disponibles."); return []
-    eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
-                       edge_threshold=filtros["edge_threshold"],
-                       confidence_floor=filtros["confidence_floor"],
-                       market_trust=filtros["market_trust"])
-    eng.fit(df)
+
+    # Usar ContextualEngine si disponible (sub-modelos por contexto)
+    if _HAS_CONTEXTUAL:
+        try:
+            eng = ContextualEngine(sport=SPORT_CONFIG[code]["sport"],
+                                   edge_threshold=filtros["edge_threshold"],
+                                   confidence_floor=filtros["confidence_floor"],
+                                   market_trust=filtros["market_trust"])
+            eng.fit(df)
+        except Exception:
+            eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
+                               edge_threshold=filtros["edge_threshold"],
+                               confidence_floor=filtros["confidence_floor"],
+                               market_trust=filtros["market_trust"])
+            eng.fit(df)
+    else:
+        eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
+                           edge_threshold=filtros["edge_threshold"],
+                           confidence_floor=filtros["confidence_floor"],
+                           market_trust=filtros["market_trust"])
+        eng.fit(df)
+
+    # Modelo secuencial (momentum, rachas, H2H) — se entrena una vez por deporte
+    if _HAS_SEQUENCE and code not in _SEQ_MODELS:
+        try:
+            seq = SequenceModel(window=10, decay=0.85)
+            seq.fit(df)
+            _SEQ_MODELS[code] = seq
+        except Exception:
+            pass
 
     upcoming = _fetch_upcoming_today(code, today)
     if upcoming.empty:
@@ -369,11 +427,37 @@ def analizar_deporte(code, today, filtros, banco_info):
                 p_h_cal = platt.transform(p_h_raw)
                 pred["p_home"] = p_h_cal
                 pred["p_away"] = 1 - p_h_cal
-                # Recalcular value_bets con p calibrada
                 if "value_bets" in pred:
                     for vb in pred["value_bets"]:
                         vb["model_p"] = p_h_cal if "home" in vb.get("label","").lower() else 1-p_h_cal
                         vb["edge"] = vb["model_p"] - (1 / vb["odds_offered"])
+
+            # Ajuste secuencial (momentum, rachas, H2H reciente)
+            seq_model = _SEQ_MODELS.get(code)
+            if seq_model:
+                try:
+                    seq_adj = seq_model.predict_adjustment(r.home, r.away, today)
+                    pred = apply_sequence_adjustment(pred, seq_adj)
+                    for w in seq_adj.get("warnings", []):
+                        print(f"     [Seq] {w}")
+                    streak_h = seq_adj.get("home_streak", 0)
+                    streak_a = seq_adj.get("away_streak", 0)
+                    if abs(streak_h) >= 4 or abs(streak_a) >= 4:
+                        sh = f"+{streak_h}" if streak_h > 0 else str(streak_h)
+                        sa = f"+{streak_a}" if streak_a > 0 else str(streak_a)
+                        print(f"     [Racha] {r.home} {sh} | {r.away} {sa}")
+                except Exception:
+                    pass
+
+            # Verificar +EV vs Pinnacle si disponible
+            if _HAS_CLV and e_ml:
+                try:
+                    ev_ok, edge_pct, rec = is_positive_ev(
+                        pred.get("p_home", 0.5), e_ml["odds"]["home"])
+                    if ev_ok:
+                        print(f"     [CLV] +EV detectado vs Pinnacle: {edge_pct:+.1f}%  {rec}")
+                except Exception:
+                    pass
             # Enriquecer con stats avanzados (PDO, Net Rating, bullpen ERA)
             if _HAS_ADV_STATS:
                 try:
@@ -801,6 +885,22 @@ def main():
                 save_picks(top, today, stake_per_pick=stake)
             except Exception:
                 pass
+
+        # Registrar picks en CLV tracker (para medir Closing Line Value)
+        if _HAS_CLV:
+            try:
+                for bet in top:
+                    record_pick(
+                        sport=bet.get("sport", ""),
+                        home=bet.get("home", ""),
+                        away=bet.get("away", ""),
+                        pick_team=bet.get("pick_team", bet.get("label", "")),
+                        pick_side=bet.get("pick_side", ""),
+                        odds_taken=bet.get("odds_offered", 0),
+                        source_book="market",
+                    )
+            except Exception:
+                pass
     else:
         print("\n  Hoy NINGUNA apuesta pasa el estándar de calidad.")
         print("  La decisión disciplinada es NO apostar. Esto protege la banca.")
@@ -816,6 +916,14 @@ def main():
     if _HAS_TRACKER:
         try:
             print_stats()
+        except Exception:
+            pass
+
+    # CLV report — actualiza líneas de cierre de ayer y muestra reporte
+    if _HAS_CLV:
+        try:
+            update_closing_lines()   # actualiza ayer automáticamente
+            print_clv_report()
         except Exception:
             pass
 
