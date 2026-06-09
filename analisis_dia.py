@@ -216,6 +216,12 @@ def _load_training(code, refrescar=False):
     if code == "MLB":
         from conector_mlb import build_mlb_training
         df = build_mlb_training(cfg["seasons"])
+        # Si la temporada activa tiene muy pocos partidos, usar solo la completa
+        if not df.empty and "season" in df.columns:
+            counts = df.groupby("season").size()
+            valid = counts[counts >= 500].index.tolist()
+            if valid and len(valid) < len(counts):
+                df = df[df["season"].isin(valid)].copy()
     elif code == "NBA":
         from conector_nba import build_nba_training
         df = build_nba_training(cfg["seasons"])

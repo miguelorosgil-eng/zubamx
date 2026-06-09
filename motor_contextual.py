@@ -238,6 +238,9 @@ class ContextualEngine:
                 print(f"  → insuficiente (mín {self.min_games}), usará default")
 
         self._trained = True
+        # Exponer _teams_seen y _sport del motor default para compatibilidad
+        self._teams_seen = self._default._teams_seen
+        self._sport = self._default._sport
         print(f"\n[ContextualEngine:{self.sport}] Listo. "
               f"Sub-modelos: {list(self._engines.keys()) or ['ninguno (todo al default)']}")
         return self

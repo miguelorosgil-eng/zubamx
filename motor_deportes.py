@@ -154,7 +154,7 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
 
 def _make_lr_pipeline() -> Pipeline:
     base_lr = LogisticRegression(max_iter=1000, C=1.0)
-    calibrated = CalibratedClassifierCV(base_lr, cv=5, method="isotonic")
+    calibrated = CalibratedClassifierCV(base_lr, cv=3, method="sigmoid")
     return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
 
 
@@ -169,7 +169,7 @@ def _make_xgb_pipeline() -> Pipeline:
         eval_metric="logloss",
         verbosity=0,
     )
-    calibrated = CalibratedClassifierCV(xgb, cv=5, method="isotonic")
+    calibrated = CalibratedClassifierCV(xgb, cv=3, method="sigmoid")
     return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
 
 
