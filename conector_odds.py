@@ -191,6 +191,217 @@ def fetch_opening_odds(league_code, region="eu", date_str=None):
     return events
 
 
+def _outcome_price(outcomes, name):
+    """Precio de un outcome por nombre exacto; fuzzy si no coincide."""
+    for o in outcomes:
+        if o["name"] == name:
+            return o["price"]
+    best, score = None, 0.0
+    for o in outcomes:
+        s = SequenceMatcher(None, _norm(name), _norm(o["name"])).ratio()
+        if s > score:
+            best, score = o["price"], s
+    return best if score > 0.55 else None
+
+
+def fetch_alt_market_odds(league_code, region="us"):
+    """
+    Descarga mercados principales + alternativos en una sola llamada API.
+
+    MLB  → totals, spreads (run line), h2h_h1 (F5 ML), totals_h1 (F5 OU),
+            alternate_totals, team_totals
+    NBA  → totals, spreads, h2h_h1, spreads_h1, totals_h1, h2h_q1, totals_q1,
+            alternate_spreads, team_totals
+    NHL  → totals, spreads (puck line), alternate_spreads, alternate_totals, team_totals
+    Soccer → totals, spreads, btts, double_chance, h2h_h1, totals_h1, team_totals
+
+    Devuelve lista compatible con fetch_market_odds() pero enriquecida con
+    claves f5/{h1/q1/puck_line/btts/double_chance/alt_spreads/alt_totals/team_total_*
+    que extract_alt_odds() espera.
+    """
+    sport = SPORT_KEYS.get(league_code)
+    if not sport:
+        return []
+
+    is_mlb    = sport == "baseball_mlb"
+    is_nba    = sport == "basketball_nba"
+    is_nhl    = sport == "icehockey_nhl"
+    is_soccer = sport.startswith("soccer_")
+
+    markets = ["totals", "spreads"]
+    if is_mlb:
+        markets += ["h2h_h1", "totals_h1", "alternate_totals", "team_totals"]
+    elif is_nba:
+        markets += ["h2h_h1", "spreads_h1", "totals_h1",
+                    "h2h_q1", "totals_q1", "alternate_spreads", "team_totals"]
+    elif is_nhl:
+        markets += ["alternate_spreads", "alternate_totals", "team_totals"]
+    elif is_soccer:
+        markets += ["btts", "double_chance", "h2h_h1", "totals_h1", "team_totals"]
+
+    url = f"{ODDS_BASE}/sports/{sport}/odds"
+    params = {
+        "apiKey": ODDS_API_KEY,
+        "regions": region,
+        "markets": ",".join(markets),
+        "oddsFormat": "decimal",
+    }
+    try:
+        resp = requests.get(url, params=params, timeout=30)
+        resp.raise_for_status()
+    except Exception:
+        return []
+
+    events = []
+    for ev in resp.json():
+        home, away = ev["home_team"], ev["away_team"]
+        book = _pick_book(ev["bookmakers"])
+        if not book:
+            continue
+        entry = {"home": home, "away": away,
+                 "commence": ev["commence_time"][:10], "book": book["title"]}
+
+        for m in book.get("markets", []):
+            key = m["key"]
+            oc  = m["outcomes"]
+
+            if key == "totals":
+                pair = _main_line_pair(oc, "Over", "Under")
+                if pair:
+                    ov, un = pair
+                    entry["totals"] = {"line": ov["point"],
+                                       "over_odds": ov["price"],
+                                       "under_odds": un["price"]}
+
+            elif key == "spreads":
+                pair = _main_line_pair(oc, home, away)
+                if pair:
+                    oh, oa = pair
+                    entry["spread"] = {"line": oh["point"],
+                                       "home_odds": oh["price"],
+                                       "away_odds": oa["price"]}
+                    if is_nhl:  # spreads en NHL = puck line
+                        entry["puck_line"] = {"home_odds": oh["price"],
+                                              "away_odds": oa["price"]}
+
+            elif key == "h2h_h1":
+                h_p = _outcome_price(oc, home)
+                a_p = _outcome_price(oc, away)
+                d_p = _outcome_price(oc, "Draw")
+                if h_p and a_p:
+                    blk = {"home_odds": h_p, "away_odds": a_p}
+                    if d_p:
+                        blk["draw_odds"] = d_p
+                    # MLB: primer turno/5 innings → f5; NBA/Soccer: primera mitad → h1
+                    target = "f5" if is_mlb else "h1"
+                    entry[target] = {**entry.get(target, {}), **blk}
+
+            elif key == "totals_h1":
+                pair = _main_line_pair(oc, "Over", "Under")
+                if pair:
+                    ov, un = pair
+                    target = "f5" if is_mlb else "h1"
+                    entry[target] = {**entry.get(target, {}),
+                                     "total_line": ov["point"],
+                                     "over_odds":  ov["price"],
+                                     "under_odds": un["price"]}
+
+            elif key == "spreads_h1" and is_nba:
+                pair = _main_line_pair(oc, home, away)
+                if pair:
+                    oh, oa = pair
+                    entry["h1"] = {**entry.get("h1", {}),
+                                   "spread_line":       oh["point"],
+                                   "spread_home_odds":  oh["price"],
+                                   "spread_away_odds":  oa["price"]}
+
+            elif key == "h2h_q1" and is_nba:
+                h_p = _outcome_price(oc, home)
+                a_p = _outcome_price(oc, away)
+                if h_p and a_p:
+                    entry["q1"] = {**entry.get("q1", {}),
+                                   "home_odds": h_p, "away_odds": a_p}
+
+            elif key == "totals_q1" and is_nba:
+                pair = _main_line_pair(oc, "Over", "Under")
+                if pair:
+                    ov, un = pair
+                    entry["q1"] = {**entry.get("q1", {}),
+                                   "total_line": ov["point"],
+                                   "over_odds":  ov["price"],
+                                   "under_odds": un["price"]}
+
+            elif key == "alternate_spreads":
+                by_pt = {}
+                for o in oc:
+                    pt = o.get("point")
+                    if pt is None:
+                        continue
+                    by_pt.setdefault(pt, {})[o["name"]] = o["price"]
+                alts = [{"line": pt, "home_odds": sides[home], "away_odds": sides[away]}
+                        for pt, sides in by_pt.items()
+                        if home in sides and away in sides]
+                if alts:
+                    entry["alt_puck_lines" if is_nhl else "alt_spreads"] = alts
+
+            elif key == "alternate_totals":
+                by_pt = {}
+                for o in oc:
+                    pt = o.get("point")
+                    if pt is None:
+                        continue
+                    by_pt.setdefault(pt, {})[o["name"]] = o["price"]
+                alts = [{"line": pt,
+                         "over_odds":  sides.get("Over"),
+                         "under_odds": sides.get("Under")}
+                        for pt, sides in by_pt.items()
+                        if sides.get("Over") and sides.get("Under")]
+                if alts:
+                    entry["alt_totals"] = alts
+
+            elif key == "team_totals":
+                by_team = {}
+                for o in oc:
+                    team = o.get("description") or ""
+                    nm   = o.get("name", "")
+                    pt   = o.get("point")
+                    if pt is None:
+                        continue
+                    by_team.setdefault(team, {})[nm] = (pt, o["price"])
+                for team, sides in by_team.items():
+                    ov = sides.get("Over"); un = sides.get("Under")
+                    if not ov or not un:
+                        continue
+                    sh = SequenceMatcher(None, _norm(team), _norm(home)).ratio()
+                    sa = SequenceMatcher(None, _norm(team), _norm(away)).ratio()
+                    if sh > sa and sh > 0.40:
+                        entry["team_total_home"] = {"line": ov[0],
+                                                    "over_odds": ov[1],
+                                                    "under_odds": un[1]}
+                    elif sa > sh and sa > 0.40:
+                        entry["team_total_away"] = {"line": ov[0],
+                                                    "over_odds": ov[1],
+                                                    "under_odds": un[1]}
+
+            elif key == "btts" and is_soccer:
+                yes_p = _outcome_price(oc, "Yes")
+                no_p  = _outcome_price(oc, "No")
+                if yes_p and no_p:
+                    entry["btts"] = {"yes_odds": yes_p, "no_odds": no_p}
+
+            elif key == "double_chance" and is_soccer:
+                dc = {o["name"]: o["price"] for o in oc}
+                if dc:
+                    entry["double_chance"] = dc
+
+        _valid = {"totals", "spread", "f5", "h1", "q1", "btts", "double_chance",
+                  "puck_line", "team_total_home", "team_total_away",
+                  "alt_spreads", "alt_puck_lines", "alt_totals"}
+        if _valid & entry.keys():
+            events.append(entry)
+    return events
+
+
 def fetch_odds_multi(league_codes, region="eu"):
     """Descarga odds para varias ligas de golpe, ahorrando créditos."""
     all_events = {}

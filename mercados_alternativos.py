@@ -71,7 +71,8 @@ def prob_run_line(mu_home, mu_away, line, sport="mlb"):
     return prob_spread(mu_home, mu_away, line, sport)
 
 
-def mlb_alt_markets(engine, home, away, odds_data, filters):
+def mlb_alt_markets(engine, home, away, odds_data, filters,
+                    mu_override_home=None, mu_override_away=None):
     """
     Evalúa todos los mercados alternativos de MLB:
       - F5 moneyline (si hay odds)
@@ -79,23 +80,15 @@ def mlb_alt_markets(engine, home, away, odds_data, filters):
       - Run line -1.5/+1.5
       - Run line alternativo -0.5/+0.5 y -2.5/+2.5
       - Team totals
-
-    odds_data: dict con claves opcionales:
-      f5_home_odds, f5_away_odds,
-      f5_total_line, f5_over_odds, f5_under_odds,
-      rl_home_odds (run line -1.5), rl_away_odds (+1.5),
-      rl_alt05_home, rl_alt05_away, rl_alt25_home, rl_alt25_away,
-      tt_home_line, tt_home_over, tt_home_under,
-      tt_away_line, tt_away_over, tt_away_under,
-
-    Devuelve lista de value_bets.
     """
     cf = _alt_floor(filters["confidence_floor"])
     et = _alt_edge(filters["edge_threshold"])
     mt = filters["market_trust"]
     bets = []
 
-    mu_h, mu_a = engine.expected_scores(home, away)
+    _mu_h, _mu_a = engine.expected_scores(home, away)
+    mu_h = mu_override_home if mu_override_home is not None else _mu_h
+    mu_a = mu_override_away if mu_override_away is not None else _mu_a
 
     # F5 moneyline
     if odds_data.get("f5_home_odds") and odds_data.get("f5_away_odds"):
@@ -195,29 +188,22 @@ def prob_nba_alt_spread(mu_home, mu_away, line_alt, sigma_margin=13.0):
     return prob_spread(mu_home, mu_away, line_alt, "nba", sigma_margin)
 
 
-def nba_alt_markets(engine, home, away, odds_data, filters):
+def nba_alt_markets(engine, home, away, odds_data, filters,
+                    mu_override_home=None, mu_override_away=None):
     """
     Mercados alternativos NBA:
       - Primera mitad: moneyline, total, spread
       - Primer cuarto: total
       - Spreads alternativos (línea principal ±2)
-
-    odds_data keys (todos opcionales):
-      h1_home_odds, h1_away_odds,
-      h1_total_line, h1_over_odds, h1_under_odds,
-      h1_spread_line, h1_spread_home, h1_spread_away,
-      q1_total_line, q1_over_odds, q1_under_odds,
-      alt_spread_lo, alt_spread_lo_home, alt_spread_lo_away,   (línea menor, el favorito da menos)
-      alt_spread_hi, alt_spread_hi_home, alt_spread_hi_away,   (línea mayor, el favorito da más)
-      tt_home_line, tt_home_over, tt_home_under,
-      tt_away_line, tt_away_over, tt_away_under,
     """
     cf = _alt_floor(filters["confidence_floor"])
     et = _alt_edge(filters["edge_threshold"])
     mt = filters["market_trust"]
     bets = []
 
-    mu_h, mu_a = engine.expected_scores(home, away)
+    _mu_h, _mu_a = engine.expected_scores(home, away)
+    mu_h = mu_override_home if mu_override_home is not None else _mu_h
+    mu_a = mu_override_away if mu_override_away is not None else _mu_a
     sig_t = getattr(engine, "sigma_total", 18.0) or 18.0
     sig_m = getattr(engine, "sigma_margin", 13.0) or 13.0
 
@@ -328,7 +314,8 @@ def prob_puck_line(mu_home, mu_away, line=-1.5, sport="nhl"):
     return prob_spread(mu_home, mu_away, line, sport)
 
 
-def nhl_alt_markets(engine, home, away, odds_data, filters):
+def nhl_alt_markets(engine, home, away, odds_data, filters,
+                    mu_override_home=None, mu_override_away=None):
     """
     Mercados alternativos NHL:
       - Primer período: moneyline + total
@@ -352,7 +339,9 @@ def nhl_alt_markets(engine, home, away, odds_data, filters):
     mt = filters["market_trust"]
     bets = []
 
-    mu_h, mu_a = engine.expected_scores(home, away)
+    _mu_h, _mu_a = engine.expected_scores(home, away)
+    mu_h = mu_override_home if mu_override_home is not None else _mu_h
+    mu_a = mu_override_away if mu_override_away is not None else _mu_a
 
     # Primer período moneyline
     if odds_data.get("p1_home_odds") and odds_data.get("p1_away_odds"):
@@ -710,11 +699,15 @@ def extract_alt_odds(raw_event, sport):
 # ─────────────────────────────────────────────────────────────────────
 
 def evaluate_alt_markets(sport_code, engine, home, away, raw_event, filters,
-                         p_home=None, p_draw=None, p_away=None):
+                         p_home=None, p_draw=None, p_away=None,
+                         mu_override_home=None, mu_override_away=None):
     """
     Punto de entrada único. sport_code: "MLB", "NBA", "NHL", "PL", "PD", etc.
     Extrae odds alternativas y evalúa todos los mercados correspondientes.
     Devuelve lista de value_bets en el mismo formato que analizar_deporte().
+
+    mu_override_home/away: sobreescribe los mu del engine (útil cuando se han
+    aplicado ajustes externos como lineup NBA o clima MLB).
     """
     odds_data = extract_alt_odds(raw_event, sport_code)
     if not odds_data:
@@ -722,11 +715,17 @@ def evaluate_alt_markets(sport_code, engine, home, away, raw_event, filters,
 
     sport = sport_code.upper()
     if sport == "MLB":
-        return mlb_alt_markets(engine, home, away, odds_data, filters)
+        return mlb_alt_markets(engine, home, away, odds_data, filters,
+                               mu_override_home=mu_override_home,
+                               mu_override_away=mu_override_away)
     elif sport == "NBA":
-        return nba_alt_markets(engine, home, away, odds_data, filters)
+        return nba_alt_markets(engine, home, away, odds_data, filters,
+                               mu_override_home=mu_override_home,
+                               mu_override_away=mu_override_away)
     elif sport == "NHL":
-        return nhl_alt_markets(engine, home, away, odds_data, filters)
+        return nhl_alt_markets(engine, home, away, odds_data, filters,
+                               mu_override_home=mu_override_home,
+                               mu_override_away=mu_override_away)
     elif sport in ("PL", "PD", "SA", "BL1", "FL1", "CL", "WC"):
         return soccer_alt_markets(engine, home, away, odds_data, filters,
                                   p_home=p_home, p_draw=p_draw, p_away=p_away)

@@ -16,7 +16,7 @@ from difflib import SequenceMatcher
 
 import pandas as pd
 
-from conector_odds import fetch_odds, fetch_market_odds
+from conector_odds import fetch_odds, fetch_market_odds, fetch_alt_market_odds
 from motor_deportes import SportsEngine
 from mercados import evaluate_markets, prob_nrfi, evaluate_two_way, evaluate_three_way
 from portfolio import compute_portfolio, print_portfolio_report
@@ -311,7 +311,10 @@ def analizar_deporte(code, today, filtros, banco_info):
     print(f"  {len(upcoming)} juego(s) hoy.")
 
     ml = fetch_odds(code, region="us")
-    mk = fetch_market_odds(code, region="us")
+    try:
+        mk = fetch_alt_market_odds(code, region="us")
+    except Exception:
+        mk = fetch_market_odds(code, region="us")
 
     # Guardar opening lines y calcular movimiento sharp
     if _HAS_LM:
@@ -380,6 +383,7 @@ def analizar_deporte(code, today, filtros, banco_info):
 
         # Ajuste climático (solo MLB estadios abiertos)
         weather_info = ""
+        _weather_total_adj = 0.0
         if code == "MLB" and _HAS_WEATHER:
             try:
                 w = get_weather_adjustment(r.home)
@@ -387,6 +391,7 @@ def analizar_deporte(code, today, filtros, banco_info):
                     weather_info = w["summary"]
                 if w.get("rain_risk"):
                     print(f"    ⚠️ RIESGO LLUVIA {r.home} vs {r.away} — partido puede posponerse")
+                _weather_total_adj = w.get("total_adj", 0.0)
             except Exception:
                 pass
 
@@ -489,7 +494,14 @@ def analizar_deporte(code, today, filtros, banco_info):
         if e_mk:
             lines = {}
             if "totals" in e_mk:
-                lines["totals"] = e_mk["totals"]
+                # Aplicar ajuste climático al total de línea de referencia para
+                # que el modelo lo compare con el total esperado corregido
+                if _weather_total_adj != 0.0:
+                    adj_line = dict(e_mk["totals"])
+                    adj_line["line"] = adj_line["line"] - _weather_total_adj
+                    lines["totals"] = adj_line
+                else:
+                    lines["totals"] = e_mk["totals"]
             if "spread" in e_mk:
                 lines["spread"] = e_mk["spread"]
             for b in evaluate_markets(eng, r.home, r.away, lines, filters=filtros):
@@ -497,14 +509,28 @@ def analizar_deporte(code, today, filtros, banco_info):
                                    b["model_p"], b["edge"], b["kelly_frac"]))
             if "totals" in lines:
                 mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
-                ln = lines["totals"]["line"]
-                if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
+                # Ajustar mu esperado con clima antes de la guardia de divergencia
+                mh_adj = mh + _weather_total_adj / 2.0
+                ma_adj = ma + _weather_total_adj / 2.0
+                ln = e_mk["totals"]["line"]
+                if abs((mh_adj + ma_adj) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                     rechazados += 1
 
             # Mercados alternativos (F5, run line, primera mitad, puck line, BTTS, etc.)
             if _HAS_ALT_MARKETS:
                 try:
-                    for b in evaluate_alt_markets(code, eng, r.home, r.away, e_mk, filtros):
+                    # NBA: pasar mu ajustado por lineup si disponible
+                    _alt_kwargs = {}
+                    if code == "NBA" and lineup_warnings:
+                        try:
+                            _mu_h, _mu_a = eng.expected_scores(r.home, r.away)
+                            _p_h = p_h_adj if "p_h_adj" in dir() else eng.predict(r.home, r.away).get("p_home", 0.5)
+                            _ratio = _p_h / max(eng.predict(r.home, r.away).get("p_home", 0.5), 1e-6)
+                            _alt_kwargs["mu_override_home"] = _mu_h * _ratio
+                            _alt_kwargs["mu_override_away"] = _mu_a * (1 - _p_h) / max(1 - eng.predict(r.home, r.away).get("p_home", 0.5), 1e-6)
+                        except Exception:
+                            pass
+                    for b in evaluate_alt_markets(code, eng, r.home, r.away, e_mk, filtros, **_alt_kwargs):
                         match_bets.append((b["market"], b["label"], b["odds_offered"],
                                            b["model_p"], b["edge"], b["kelly_frac"]))
                 except Exception:
@@ -625,8 +651,11 @@ def analizar_futbol(code, today, filtros):
         print(f"  {len(upcoming)} partidos próximos, pero ninguno HOY."); return []
     print(f"  {len(up_hoy)} partido(s) hoy.")
 
-    ml = fetch_odds(code, region="eu")          # 1X2 (con empate)
-    mk = fetch_market_odds(code, region="eu")   # totals + spreads (hándicap)
+    ml = fetch_odds(code, region="eu")           # 1X2 (con empate)
+    try:
+        mk = fetch_alt_market_odds(code, region="eu")  # totals + spreads + BTTS + DC + H1
+    except Exception:
+        mk = fetch_market_odds(code, region="eu")
 
     value_bets, rechazados = [], 0
     for r in up_hoy.itertuples():
@@ -893,16 +922,43 @@ def main():
         except Exception as e:
             print(f"\n  ERROR en Mundial: {e}")
 
-    # Props de strikeouts MLB
-    if a.props and _HAS_PROPS and "MLB" in a.deportes:
+    # Props de strikeouts MLB — siempre evaluadas, entran al portfolio si hay edge
+    if _HAS_PROPS and "MLB" in a.deportes:
         try:
             from conector_mlb import fetch_probable_pitchers
             pitchers = fetch_probable_pitchers(today)
             if pitchers:
                 props = get_today_pitcher_props(pitchers, season=int(today[:4]))
-                print_pitcher_props(props)
+                if a.props:
+                    print_pitcher_props(props)
+                # Línea de mercado típica para props de K: ~1.87 (−115 americano)
+                _PROP_ODDS = 1.87
+                _PROP_IMPLIED = 1.0 / _PROP_ODDS
+                for prop in props:
+                    for direction, p_val in [("OVER", prop.get("p_over", 0)),
+                                              ("UNDER", prop.get("p_under", 0))]:
+                        edge = p_val - _PROP_IMPLIED
+                        if p_val >= filtros["confidence_floor"] and edge >= filtros["edge_min"]:
+                            kelly = max(0.0, (p_val * _PROP_ODDS - 1) / (_PROP_ODDS - 1)) * 0.25
+                            pitcher = prop.get("pitcher", "?")[:14]
+                            team    = prop.get("team", "")[:8]
+                            line    = prop.get("line", 5.5)
+                            all_value.append({
+                                "label":        f"MLB {team} K{direction}:{pitcher}",
+                                "sport":        "MLB",
+                                "home":         prop.get("team", ""),
+                                "away":         prop.get("opponent", ""),
+                                "pick_team":    f"{pitcher} K {direction} {line}",
+                                "pick_side":    direction,
+                                "market":       "PROP-K",
+                                "model_p":      round(p_val, 4),
+                                "odds_offered": _PROP_ODDS,
+                                "edge":         round(edge, 4),
+                                "kelly_frac":   round(kelly, 4),
+                            })
         except Exception as e:
-            print(f"  (Props MLB no disponibles: {e})")
+            if a.props:
+                print(f"  (Props MLB no disponibles: {e})")
 
     print(f"\n{'#'*80}")
     print(f"#  PORTAFOLIO DEL DÍA — ${a.banco:,.0f}")
