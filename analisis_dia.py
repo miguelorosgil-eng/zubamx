@@ -908,7 +908,14 @@ def main():
     print(f"#  PORTAFOLIO DEL DÍA — ${a.banco:,.0f}")
     print(f"{'#'*80}")
     if all_value:
-        top = sorted(all_value, key=lambda x: -x["edge"])[:10]
+        # Deduplicar por label (mismo mercado puede aparecer dos veces si hay duplicado en fixtures)
+        seen_labels = set()
+        unique_value = []
+        for v in all_value:
+            if v["label"] not in seen_labels:
+                seen_labels.add(v["label"])
+                unique_value.append(v)
+        top = sorted(unique_value, key=lambda x: -x["edge"])[:10]
 
         # Aplicar ajuste de calibración histórica si hay suficiente historial
         if _HAS_CALIBRACION:

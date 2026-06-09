@@ -240,7 +240,7 @@ class ContextualEngine:
         self._trained = True
         # Exponer _teams_seen y _sport del motor default para compatibilidad
         self._teams_seen = self._default._teams_seen
-        self._sport = self._default._sport
+        self._sport = self._default.sport
         print(f"\n[ContextualEngine:{self.sport}] Listo. "
               f"Sub-modelos: {list(self._engines.keys()) or ['ninguno (todo al default)']}")
         return self
@@ -351,6 +351,7 @@ class ContextualEngine:
     # expected_scores
     # ------------------------------------------------------------------
     def expected_scores(self, home: str, away: str,
+                        era_home_sp: float = None, era_away_sp: float = None,
                         context: Optional[str] = None,
                         **kwargs):
         """
@@ -361,7 +362,7 @@ class ContextualEngine:
             raise RuntimeError("Modelo no entrenado. Llama fit() primero.")
 
         engine = self._engines.get(context, self._default) if context else self._default
-        return engine.expected_scores(home, away, **kwargs)
+        return engine.expected_scores(home, away, era_home_sp, era_away_sp, **kwargs)
 
     # ------------------------------------------------------------------
     # walk_forward_validate (delegado al default)
