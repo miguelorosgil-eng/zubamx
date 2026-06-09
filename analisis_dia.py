@@ -495,32 +495,52 @@ def analizar_deporte(code, today, filtros, banco_info):
                 if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                     rechazados += 1
 
-        # Statcast — enriquecer totales MLB con xFIP / hard-hit
+        # Statcast — enriquecer totales MLB con xFIP / hard-hit (guardamos sc para NRFI)
         statcast_info = ""
+        _sc_cache = {}
         if code == "MLB" and _HAS_STATCAST and nr:
             try:
-                sc = get_statcast_game_score(
+                _sc_cache = get_statcast_game_score(
                     nr.get("home_sp"), nr.get("away_sp"),
                     r.home, r.away,
                     season=int(today[:4]),
                     home_sp_id=nr.get("home_sp_id"),
                     away_sp_id=nr.get("away_sp_id"),
                 )
-                if sc.get("total_adj", 0) != 0:
-                    statcast_info = (f"Statcast adj {sc['total_adj']:+.1f} runs "
-                                     f"(nrfi_boost={sc.get('nrfi_boost',0):+.2f})")
+                if _sc_cache.get("total_adj", 0) != 0:
+                    statcast_info = (f"Statcast adj {_sc_cache['total_adj']:+.1f} runs "
+                                     f"(nrfi_boost={_sc_cache.get('nrfi_boost',0):+.2f})")
             except Exception:
                 pass
 
-        # NRFI (solo MLB, informativo + value si hubiera odds)
-        nrfi_info = ""
+        # NRFI — calcula probabilidad, edge vs cuota de mercado típica y entra al portfolio
+        nrfi_bets = []
         if code == "MLB" and nr and era_home_sp and era_away_sp:
             p_nrfi, p_yrfi = prob_nrfi(era_home_sp, era_away_sp)
             if p_nrfi is not None:
-                nrfi_info = (f"NRFI {p_nrfi:.0%} (SP {nr['home_sp']} {era_home_sp:.2f} / "
-                             f"{nr['away_sp']} {era_away_sp:.2f})")
+                # Boost de statcast reutilizando el resultado ya calculado
+                nrfi_boost = _sc_cache.get("nrfi_boost", 0.0)
+                p_nrfi = min(0.97, p_nrfi + nrfi_boost * 0.02)
 
-        if match_bets or nrfi_info:
+                # Cuota de mercado típica para NRFI: casas ofrecen ~1.80-1.90 (≈52-55%)
+                # Usamos 1.85 como referencia conservadora
+                nrfi_market_odds = 1.85
+                nrfi_implied = 1.0 / nrfi_market_odds
+                nrfi_edge = p_nrfi - nrfi_implied
+
+                sp_line = (f"SP {nr.get('home_sp','?')} {era_home_sp:.2f} ERA / "
+                           f"{nr.get('away_sp','?')} {era_away_sp:.2f} ERA")
+
+                if p_nrfi >= filtros["nrfi_floor"] and nrfi_edge >= filtros["edge_min"]:
+                    kelly_nrfi = max(0.0, (p_nrfi * nrfi_market_odds - 1) / (nrfi_market_odds - 1)) * 0.25
+                    label_nrfi = f"NRFI {r.home[:8]}/{r.away[:8]}"
+                    nrfi_bets.append(("NRFI", label_nrfi, nrfi_market_odds, p_nrfi, nrfi_edge, kelly_nrfi))
+                else:
+                    # Mostrar informativo aunque no pase el filtro
+                    flag = "⚠️ " if p_nrfi >= 0.52 else ""
+                    print(f"  {flag}[NRFI info] {r.home} vs {r.away}  p={p_nrfi:.0%}  edge {nrfi_edge:.1%}  ({sp_line})")
+
+        if match_bets or nrfi_bets:
             mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
             inj_h = injury_summary(r.home, injuries) if _HAS_INJURIES else ""
             inj_a = injury_summary(r.away, injuries) if _HAS_INJURIES else ""
@@ -533,7 +553,7 @@ def analizar_deporte(code, today, filtros, banco_info):
                 print(f"     {inj_h}")
             if inj_a:
                 print(f"     {inj_a}")
-            for mkt, lbl, od, p, ed, k in match_bets:
+            for mkt, lbl, od, p, ed, k in match_bets + nrfi_bets:
                 print(f"     [{mkt:>7}] {lbl:<26} @{od:.2f}  p={p:.0%}  edge {ed:.1%}  kelly {k:.1%}")
                 value_bets.append({
                     "label": f"{code} {r.home[:10]} {mkt}:{lbl[:14]}",
@@ -542,8 +562,6 @@ def analizar_deporte(code, today, filtros, banco_info):
                     "market": mkt, "model_p": p, "odds_offered": od,
                     "edge": ed, "kelly_frac": k,
                 })
-            if nrfi_info:
-                print(f"     [   NRFI] {nrfi_info}")
 
     if rechazados:
         print(f"  >> {rechazados} mercado(s) de totales rechazados por divergencia "
@@ -809,7 +827,9 @@ def main():
 
     filtros = {
         "edge_threshold": a.edge,
+        "edge_min": a.edge,
         "confidence_floor": a.confianza,
+        "nrfi_floor": max(0.55, a.confianza - 0.08),  # NRFI mercado más ineficiente → umbral menor
         "market_trust": a.market_trust,
         "anchor_weight": 0.5,
         "max_divergence": a.max_div,
