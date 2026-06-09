@@ -22,6 +22,12 @@ from mercados import evaluate_markets, prob_nrfi, evaluate_two_way, evaluate_thr
 from portfolio import compute_portfolio, print_portfolio_report
 
 try:
+    from mercados_alternativos import evaluate_alt_markets
+    _HAS_ALT_MARKETS = True
+except ImportError:
+    _HAS_ALT_MARKETS = False
+
+try:
     from injuries import get_injuries, injury_summary
     _HAS_INJURIES = True
 except ImportError:
@@ -495,6 +501,15 @@ def analizar_deporte(code, today, filtros, banco_info):
                 if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                     rechazados += 1
 
+            # Mercados alternativos (F5, run line, primera mitad, puck line, BTTS, etc.)
+            if _HAS_ALT_MARKETS:
+                try:
+                    for b in evaluate_alt_markets(code, eng, r.home, r.away, e_mk, filtros):
+                        match_bets.append((b["market"], b["label"], b["odds_offered"],
+                                           b["model_p"], b["edge"], b["kelly_frac"]))
+                except Exception:
+                    pass
+
         # Statcast — enriquecer totales MLB con xFIP / hard-hit (guardamos sc para NRFI)
         statcast_info = ""
         _sc_cache = {}
@@ -647,6 +662,20 @@ def analizar_futbol(code, today, filtros):
             ln = lines["totals"]["line"]
             if abs((mh + ma) - ln) / max(ln, 1e-6) > filtros["max_divergence"]:
                 rechazados += 1
+
+        # Mercados alternativos de fútbol (BTTS, doble oportunidad, primera mitad, totales alt.)
+        if _HAS_ALT_MARKETS and e_mk:
+            try:
+                _pred_soc = eng.predict(r.home, r.away)
+                for b in evaluate_alt_markets(
+                        code, eng, r.home, r.away, e_mk, filtros,
+                        p_home=_pred_soc.get("p_home"),
+                        p_draw=_pred_soc.get("p_draw"),
+                        p_away=_pred_soc.get("p_away")):
+                    match_bets.append((b["market"], b["label"], b["odds_offered"],
+                                       b["model_p"], b["edge"], b["kelly_frac"]))
+            except Exception:
+                pass
 
         if match_bets:
             print(f"  {r.home} vs {r.away}  (xG {mh:.1f}-{ma:.1f})")
