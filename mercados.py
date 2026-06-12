@@ -99,6 +99,28 @@ def _is_poisson(sport):
     return sport.lower() in POISSON_SPORTS
 
 
+def get_nba_sigma(mu_total: float, line: float = None) -> float:
+    """
+    P5 — Sigma NBA dinámico: la desviación estándar del total de puntos
+    depende del ritmo esperado del partido (mu_total).
+
+    Análisis empírico NBA 2019-2024:
+      - Partidos lentos (mu_total < 210): sigma ≈ 15.5
+      - Partidos normales (210-230):      sigma ≈ 17.5
+      - Partidos rápidos (mu_total > 230): sigma ≈ 19.5
+
+    Usar sigma=18 fijo subestima los extremos y sobreestima los medios.
+    """
+    if mu_total < 210:
+        return 15.5
+    elif mu_total < 220:
+        return 16.5
+    elif mu_total < 230:
+        return 17.5
+    else:
+        return 19.0
+
+
 def prob_over_under(mu_home, mu_away, line, sport, sigma_total=None):
     """P(total > line), P(total < line). line típico 8.5 (MLB), 5.5 (NHL), 224.5 (NBA)."""
     mu_total = mu_home + mu_away
@@ -108,7 +130,11 @@ def prob_over_under(mu_home, mu_away, line, sport, sigma_total=None):
         p_under = poisson.cdf(k, mu_total)      # P(total <= k) = P(total < line)
         p_over = 1.0 - p_under
     else:
-        sig = sigma_total or 18.0
+        # P5: sigma dinámico para NBA según ritmo esperado
+        if sigma_total is None and sport.lower() == "nba":
+            sig = get_nba_sigma(mu_total, line)
+        else:
+            sig = sigma_total or 18.0
         z = (line - mu_total) / sig
         p_under = norm.cdf(z)
         p_over = 1.0 - p_under

@@ -1,13 +1,15 @@
 """
-Calibración Platt Scaling para corregir sobreconfianza del modelo.
+Calibración de probabilidades: Platt Scaling + Isotonic Regression.
 
 El problema diagnosticado:
   - NBA: predice 75-80% → acierto real 60-62%
   - NHL: predice 70-75% → acierto real 60%
   - MLB: predice 65-70% → acierto real 55%
 
-Solución: LogisticRegression sobre (p_model → resultado real)
-entrenada en datos históricos → genera probabilidades calibradas.
+P5: Isotonic Regression añadida como alternativa a Platt.
+    - Platt: buena para datos pocos (<200), suaviza bien
+    - Isotónica: mejor para datos muchos (>500), no hace supuesto lineal en logit
+    - Selección automática: isotónica si n≥500 y sklearn disponible, Platt si no
 
 Uso:
     cal = PlattCalibrator(sport='nba')
@@ -32,10 +34,12 @@ class PlattCalibrator:
 
     def __init__(self, sport: str):
         self.sport = sport.upper()
-        self._a = 1.0   # coef multiplicativo (logit space)
-        self._b = 0.0   # intercepto
+        self._a = 1.0   # coef multiplicativo (logit space) — Platt
+        self._b = 0.0   # intercepto — Platt
         self._fitted = False
         self._n_samples = 0
+        self._method = "platt"  # "platt" | "isotonic"
+        self._isotonic = None   # sklearn IsotonicRegression si disponible
 
     # ── Fit ─────────────────────────────────────────────────────────────────
 
@@ -66,8 +70,22 @@ class PlattCalibrator:
 
         self._a = float(a)
         self._b = float(b)
-        self._fitted = True
         self._n_samples = len(df)
+
+        # P5: isotonic regression si hay suficientes datos y sklearn disponible
+        if len(df) >= 500:
+            try:
+                from sklearn.isotonic import IsotonicRegression
+                iso = IsotonicRegression(out_of_bounds="clip")
+                iso.fit(ps, ys)
+                self._isotonic = iso
+                self._method = "isotonic"
+            except ImportError:
+                self._method = "platt"
+        else:
+            self._method = "platt"
+
+        self._fitted = True
         return self
 
     def fit_from_backtest(self, sport: str):
@@ -93,10 +111,19 @@ class PlattCalibrator:
     # ── Transform ────────────────────────────────────────────────────────────
 
     def transform(self, p: float) -> float:
-        """Convierte p_model en p_calibrada. Sin datos: devuelve p sin cambio."""
+        """
+        Convierte p_model en p_calibrada.
+        Usa isotónica si n≥500, Platt en caso contrario.
+        Sin datos: devuelve p sin cambio.
+        """
         if not self._fitted or self._n_samples < 50:
             return p
         p = float(np.clip(p, 1e-6, 1 - 1e-6))
+        if self._method == "isotonic" and self._isotonic is not None:
+            try:
+                return float(np.clip(self._isotonic.predict([p])[0], 1e-6, 1 - 1e-6))
+            except Exception:
+                pass  # fallback a Platt
         logit = np.log(p / (1 - p))
         z = self._a * logit + self._b
         return float(1 / (1 + np.exp(-z)))
@@ -110,7 +137,17 @@ class PlattCalibrator:
         path = os.path.join(CACHE_DIR, f"platt_{self.sport.lower()}.json")
         with open(path, "w") as f:
             json.dump({"a": self._a, "b": self._b,
-                       "fitted": self._fitted, "n": self._n_samples}, f)
+                       "fitted": self._fitted, "n": self._n_samples,
+                       "method": self._method}, f)
+        # Persistir isotónica por separado si aplica
+        if self._isotonic is not None:
+            try:
+                import pickle
+                pkl = os.path.join(CACHE_DIR, f"isotonic_{self.sport.lower()}.pkl")
+                with open(pkl, "wb") as f:
+                    pickle.dump(self._isotonic, f)
+            except Exception:
+                pass
 
     def load(self):
         path = os.path.join(CACHE_DIR, f"platt_{self.sport.lower()}.json")
@@ -120,16 +157,26 @@ class PlattCalibrator:
             d = json.load(f)
         self._a = d["a"]; self._b = d["b"]
         self._fitted = d["fitted"]; self._n_samples = d["n"]
+        self._method = d.get("method", "platt")
+        # Intentar cargar isotónica
+        if self._method == "isotonic":
+            try:
+                import pickle
+                pkl = os.path.join(CACHE_DIR, f"isotonic_{self.sport.lower()}.pkl")
+                if os.path.exists(pkl):
+                    with open(pkl, "rb") as f:
+                        self._isotonic = pickle.load(f)
+            except Exception:
+                self._method = "platt"
         return self
 
     # ── Report ───────────────────────────────────────────────────────────────
 
     def report(self) -> str:
         if not self._fitted:
-            return f"[Platt-{self.sport}] Sin calibrar (necesita ≥50 muestras)"
-        direction = "sobreconfiado" if self._a < 1 else "subestima"
-        return (f"[Platt-{self.sport}] a={self._a:.3f} b={self._b:.3f} "
-                f"n={self._n_samples}  ({direction})")
+            return f"[Calib-{self.sport}] Sin calibrar (necesita ≥50 muestras)"
+        method_tag = f"isotonic" if self._method == "isotonic" else f"Platt a={self._a:.3f} b={self._b:.3f}"
+        return (f"[Calib-{self.sport}] {method_tag}  n={self._n_samples}")
 
 
 def get_calibrator(sport: str, auto_fit: bool = True) -> PlattCalibrator:
