@@ -131,6 +131,12 @@ try:
 except ImportError:
     _HAS_SPORT_CFG = False
 
+try:
+    from circuit_breaker import get_circuit_breaker
+    _HAS_CB = True
+except ImportError:
+    _HAS_CB = False
+
 # Modelos secuenciales por deporte (se cargan una vez)
 _SEQ_MODELS = {}
 
@@ -448,9 +454,12 @@ def analizar_deporte(code, today, filtros, banco_info):
         # Moneyline
         e_ml = _find(r.home, r.away, ml, "ML")
         if e_ml:
+            _odds_h = e_ml["odds"]["home"]
+            _odds_a = e_ml["odds"]["away"]
+            _raw_h = 1.0 / _odds_h; _raw_a = 1.0 / _odds_a; _tot = _raw_h + _raw_a
+            _novig_h = _raw_h / _tot; _novig_a = _raw_a / _tot
             pred = eng.predict(r.home, r.away,
-                               market_odds={"home": e_ml["odds"]["home"],
-                                            "away": e_ml["odds"]["away"]})
+                               market_odds={"home": _odds_h, "away": _odds_a})
             # Aplicar calibración Platt (corrige sobreconfianza)
             if code in _PLATT and _PLATT[code]._fitted:
                 platt = _PLATT[code]
@@ -499,6 +508,44 @@ def analizar_deporte(code, today, filtros, banco_info):
                         print(f"     {w}")
                 except Exception:
                     pass
+            _p_h_final = pred.get("p_home", 0.5)
+            _p_a_final = 1 - _p_h_final
+            _edge_h = _p_h_final - (1.0 / _odds_h)
+            _edge_a = _p_a_final - (1.0 / _odds_a)
+
+            # P7: loggear TODAS las evaluaciones ML (aceptadas y rechazadas)
+            if _HAS_DLOG:
+                try:
+                    _cf = filtros.get("confidence_floor", 0.65)
+                    _et = filtros.get("edge_threshold", 0.02)
+                    for _side, _p, _odds, _novig, _edge, _lbl in [
+                        ("home", _p_h_final, _odds_h, _novig_h, _edge_h, f"{r.home} ML"),
+                        ("away", _p_a_final, _odds_a, _novig_a, _edge_a, f"{r.away} ML"),
+                    ]:
+                        _accepted = _p >= _cf and _edge >= _et
+                        _motivo = None
+                        if not _accepted:
+                            if _p < _cf:
+                                _motivo = f"cf_insuf ({_p:.2f}<{_cf:.2f})"
+                            else:
+                                _motivo = f"edge_insuf ({_edge:.3f}<{_et:.3f})"
+                        log_decision(
+                            fecha=today, partido=f"{r.home} vs {r.away}",
+                            mercado="ML", home=r.home, away=r.away,
+                            p_raw=pred.get("p_home", 0.5) if _side == "home" else 1 - pred.get("p_home", 0.5),
+                            p_calibrada=_p,
+                            p_novig_mercado=_novig,
+                            p_blended=_p,
+                            edge=_edge,
+                            odds_tomadas=_odds,
+                            stake=0.0,
+                            aceptado=_accepted,
+                            filtro_que_rechazo=_motivo,
+                            sport=code,
+                        )
+                except Exception:
+                    pass
+
             for b in pred.get("value_bets", []):
                 match_bets.append(("ML", b["label"], b["odds_offered"], b["model_p"],
                                    b["edge"], b["kelly_frac"]))
@@ -1050,6 +1097,16 @@ def main():
 
         result = compute_portfolio(top, bankroll=a.banco,
                                    target_return=a.target, min_winners=a.min_ganadores)
+
+        # P6: aplicar circuit breaker (drawdown → reducir/pausar stakes)
+        if _HAS_CB:
+            try:
+                cb = get_circuit_breaker(a.banco)
+                cb.print_status()
+                result["stakes"] = cb.apply_portfolio(result["stakes"])
+            except Exception:
+                pass
+
         print_portfolio_report(result, bankroll=a.banco)
 
         # Monte Carlo — simulación de escenarios a 30 días
