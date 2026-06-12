@@ -112,10 +112,24 @@ except ImportError:
     _HAS_CONTEXTUAL = False
 
 try:
-    from clv_tracker import record_pick, update_closing_lines, print_clv_report, is_positive_ev
+    from clv_tracker import (record_pick, update_closing_lines, print_clv_report,
+                              is_positive_ev, get_clv_rolling, print_clv_dashboard,
+                              check_clv_kill_switch)
     _HAS_CLV = True
 except ImportError:
     _HAS_CLV = False
+
+try:
+    from decision_log import log_decision, print_decision_summary
+    _HAS_DLOG = True
+except ImportError:
+    _HAS_DLOG = False
+
+try:
+    from config_deportes import get_sport_config, is_market_enabled
+    _HAS_SPORT_CFG = True
+except ImportError:
+    _HAS_SPORT_CFG = False
 
 # Modelos secuenciales por deporte (se cargan una vez)
 _SEQ_MODELS = {}
@@ -765,6 +779,14 @@ def analizar_mundial(today, filtros):
     if df.empty:
         print("  Sin datos históricos de selecciones — usando solo rankings FIFA.");
 
+    # P2.6 — Mundial modo conservador: market_trust alto, Kelly 1/10
+    _wc_filtros = dict(filtros)
+    _wc_filtros["market_trust"] = 0.70     # mercado del WC es muy eficiente
+    _wc_filtros["confidence_floor"] = max(filtros.get("confidence_floor", 0.65), 0.64)
+    _wc_filtros["edge_threshold"] = max(filtros.get("edge_threshold", 0.02), 0.03)
+    _wc_filtros["edge_min"] = _wc_filtros["edge_threshold"]
+    print("  [WC] Modo conservador: market_trust=0.70, Kelly=1/10, edge_min=3%")
+
     value_bets = []
     ml = fetch_odds("WC", region="eu")
 
@@ -802,13 +824,19 @@ def analizar_mundial(today, filtros):
 
         e_ml = _find(r.home, r.away, ml)
         match_bets = []
+        # P2.6: en WC no apostar 1X2 de favoritos grandes (odds < 1.35)
+        if e_ml and e_ml["odds"].get("draw"):
+            _min_odds_wc = min(e_ml["odds"]["home"], e_ml["odds"]["away"])
+            if _min_odds_wc < 1.35:
+                print(f"     [WC] Partido de favorito grande ({_min_odds_wc:.2f}) — omitido (cero edge)")
+                e_ml = None
         if e_ml and e_ml["odds"].get("draw"):
             from mercados import evaluate_three_way
             for b in evaluate_three_way(
                     p_home, p_draw, p_away,
                     e_ml["odds"]["home"], e_ml["odds"]["draw"], e_ml["odds"]["away"],
-                    r.home, r.away, filtros["market_trust"],
-                    filtros["confidence_floor"], filtros["edge_threshold"]):
+                    r.home, r.away, _wc_filtros["market_trust"],
+                    _wc_filtros["confidence_floor"], _wc_filtros["edge_threshold"]):
                 match_bets.append(b)
 
         # Motivación fase de grupos
@@ -826,15 +854,17 @@ def analizar_mundial(today, filtros):
         print(f"     p={p_home:.0%}/{p_draw:.0%}/{p_away:.0%}  "
               f"(H/D/A)  ranking_diff={rank_diff:+d}")
         for b in match_bets:
+            # P2.6: aplicar 1/10-Kelly al Mundial
+            kelly_wc = b["kelly_frac"] * 0.10 / 0.25 if b["kelly_frac"] > 0 else 0
             print(f"     [{b['market']:>7}] {b['label']:<26} @{b['odds_offered']:.2f}  "
-                  f"p={b['model_p']:.0%}  edge {b['edge']:.1%}")
+                  f"p={b['model_p']:.0%}  edge {b['edge']:.1%}  kelly(1/10)={kelly_wc:.2%}")
             value_bets.append({
                 "label": f"WC {r.home[:12]} {b['market']}:{b['label'][:12]}",
                 "sport": "WC", "home": r.home, "away": r.away,
                 "pick_team": b["label"], "pick_side": b["market"],
                 "market": b["market"], "model_p": b["model_p"],
                 "odds_offered": b["odds_offered"], "edge": b["edge"],
-                "kelly_frac": b["kelly_frac"],
+                "kelly_frac": kelly_wc,
             })
         if not match_bets:
             print(f"     Sin value bets (no hay momios disponibles aún o no hay edge)")
@@ -887,11 +917,24 @@ def main():
         "edge_threshold": a.edge,
         "edge_min": a.edge,
         "confidence_floor": a.confianza,
-        "nrfi_floor": max(0.55, a.confianza - 0.08),  # NRFI mercado más ineficiente → umbral menor
+        "nrfi_floor": max(0.55, a.confianza - 0.08),
         "market_trust": a.market_trust,
         "anchor_weight": 0.5,
         "max_divergence": a.max_div,
     }
+
+    # P0.4: sobrescribir filtros por deporte si hay config
+    _SPORT_FILTROS_OVERRIDE = {}
+    if _HAS_SPORT_CFG:
+        for _sport in (a.deportes or []):
+            _cfg = get_sport_config(_sport)
+            _SPORT_FILTROS_OVERRIDE[_sport] = {
+                "confidence_floor": _cfg["cf_floor"],
+                "edge_threshold":   _cfg["edge_min"],
+                "edge_min":         _cfg["edge_min"],
+                "market_trust":     _cfg["market_trust"],
+                "max_picks_per_game": _cfg["max_picks_per_game"],
+            }
 
     deportes_str = ", ".join(a.deportes + (a.futbol or []))
     print(f"\n{'#'*80}")
@@ -902,8 +945,29 @@ def main():
     for code in a.deportes:
         if code not in SPORT_CONFIG:
             print(f"\n  Deporte desconocido: {code}"); continue
+
+        # P0.4: usar filtros por deporte si están disponibles
+        _filtros_sport = dict(filtros)
+        if _HAS_SPORT_CFG and code in _SPORT_FILTROS_OVERRIDE:
+            _filtros_sport.update(_SPORT_FILTROS_OVERRIDE[code])
+
+        # P1.3: CLV kill switch — desactivar deportes con CLV rolling < -1%
+        if _HAS_CLV and _HAS_SPORT_CFG:
+            try:
+                cfg = get_sport_config(code)
+                clv_roll, n_clv = get_clv_rolling(code, window=50)
+                if check_clv_kill_switch(code, "ML", clv_roll, n_clv,
+                                          threshold=cfg["clv_kill_threshold"],
+                                          min_picks=cfg["clv_min_picks"]):
+                    print(f"\n  ⛔ [{code}] CLV KILL SWITCH activado — "
+                          f"CLV rolling={clv_roll:+.2%} con n={n_clv} picks. "
+                          f"Deporte desactivado automáticamente.")
+                    continue
+            except Exception:
+                pass
+
         try:
-            all_value += analizar_deporte(code, today, filtros, a.banco)
+            all_value += analizar_deporte(code, today, _filtros_sport, a.banco)
         except Exception as e:
             print(f"\n  ERROR en {code}: {e}")
 
@@ -1042,6 +1106,14 @@ def main():
         try:
             update_closing_lines()   # actualiza ayer automáticamente
             print_clv_report()
+            print_clv_dashboard()    # P1.3: dashboard de salud por mercado
+        except Exception:
+            pass
+
+    # P3.3: resumen de decisiones del día
+    if _HAS_DLOG:
+        try:
+            print_decision_summary(today)
         except Exception:
             pass
 

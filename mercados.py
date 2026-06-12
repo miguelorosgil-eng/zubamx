@@ -206,6 +206,14 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
     sigma_margin = getattr(engine, "sigma_margin", None)
     sigma_team = getattr(engine, "sigma_team", None)
 
+    # P2.5 — gate de divergencia más estricto para deportes líquidos (MLB/NBA ML).
+    # Si el modelo difiere >12% del mercado en un deporte líquido, la causa más
+    # probable es un error del modelo o información que no tenemos (lesión, lineup).
+    # Mercados ilíquidos (P1 NHL, Q1 NBA, alt totals) mantienen el 20%.
+    _LIQUID_SPORTS = {"mlb", "nba"}
+    _sport_lower = sport.lower() if hasattr(sport, "lower") else ""
+    max_div = min(max_div, 0.12) if _sport_lower in _LIQUID_SPORTS else max_div
+
     # Umbral específico para O/U — el modelo Poisson/Normal tiene más ruido
     # que el moneyline, así que exigimos mayor confianza para evitar falsos edge
     cf_ou = ou_confidence_floor if ou_confidence_floor is not None else min(cf + 0.06, 0.72)

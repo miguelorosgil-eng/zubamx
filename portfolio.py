@@ -113,21 +113,74 @@ def _coverage_stakes_k2(bets: List[Dict], bankroll: float, target_return: float)
     return list(raw_stakes)
 
 
+def get_kelly_fraction(sport: str, market: str, clv_history_n: int = 0) -> float:
+    """
+    P1.2 — Kelly fraccional dinámico por confianza en el modelo:
+      - Mercado con CLV histórico positivo + ≥100 picks → quarter-Kelly (0.25)
+      - Mercado nuevo o <100 picks → 1/8-Kelly (0.125)
+      - Mundial 2026 → 1/10-Kelly fijo
+    """
+    sport_up = sport.upper() if sport else ""
+    if sport_up == "WC":
+        return 0.10
+    if clv_history_n >= 100:
+        return 0.25
+    return 0.125
+
+
 def _kelly_stake(bet: Dict, bankroll: float, fraction: float = 0.25) -> float:
     """Kelly fraccionado. fraction=0.25 = quarter-Kelly."""
     k = bet.get("kelly_frac", 0.0)
-    return max(0.0, k * fraction * bankroll)
+    sport = bet.get("sport", "")
+    market = bet.get("market", "")
+    # Aplicar fracción dinámica si hay información de CLV
+    clv_n = bet.get("clv_history_n", 0)
+    dyn_fraction = get_kelly_fraction(sport, market, clv_n)
+    return max(0.0, k * dyn_fraction * bankroll)
+
+
+def check_clv_kill_switch(sport: str, market: str,
+                           clv_rolling: float, n_picks: int,
+                           threshold: float = -0.01, min_picks: int = 50) -> bool:
+    """
+    P1.3 — Kill switch automático por CLV rolling.
+    Returns True si el mercado debe desactivarse.
+    """
+    if n_picks < min_picks:
+        return False
+    return clv_rolling < threshold
 
 
 # ---------------------------------------------------------------------------
 # Función principal
 # ---------------------------------------------------------------------------
 
+def _dedup_by_game(bets: List[Dict]) -> List[Dict]:
+    """
+    P1.1 — máximo 1 pick por partido (home+away), elige el de mayor edge.
+    Picks sin home/away (props, etc.) no se filtran.
+    """
+    game_best: dict = {}
+    no_game = []
+    for b in bets:
+        home = b.get("home", "")
+        away = b.get("away", "")
+        if not home or not away:
+            no_game.append(b)
+            continue
+        key = (home.lower()[:20], away.lower()[:20])
+        if key not in game_best or b.get("edge", 0) > game_best[key].get("edge", 0):
+            game_best[key] = b
+    return list(game_best.values()) + no_game
+
+
 def compute_portfolio(
     bets: List[Dict[str, Any]],
     bankroll: float,
     target_return: float = 1.0,
     min_winners: int = 1,
+    max_exposure_pct: float = 0.15,
+    one_pick_per_game: bool = True,
 ) -> Dict[str, Any]:
     """
     bets: lista de dicts {market, model_p, odds_offered, edge, kelly_frac, label}
@@ -146,6 +199,10 @@ def compute_portfolio(
     """
     if not bets:
         return {"error": "No hay apuestas para evaluar.", "stakes": []}
+
+    # P1.1: máximo 1 pick por partido
+    if one_pick_per_game:
+        bets = _dedup_by_game(bets)
 
     # Filtrar apuestas con edge positivo y cuotas válidas
     valid = [b for b in bets if b.get("edge", 0) > 0 and b.get("odds_offered", 1) > 1]
@@ -166,9 +223,13 @@ def compute_portfolio(
     # Elegir el menor (más conservador)
     chosen_stakes = [min(c, k) if k > 0 else c for c, k in zip(cov_stakes, kelly_stakes)]
 
-    # Escalar si la suma de chosen_stakes supera el bankroll
+    # P1.1: cap global — exposición total ≤ max_exposure_pct del bankroll
+    exposure_cap = bankroll * max_exposure_pct
     total_chosen = sum(chosen_stakes)
-    if total_chosen > bankroll:
+    if total_chosen > exposure_cap:
+        scale = exposure_cap / total_chosen
+        chosen_stakes = [s * scale for s in chosen_stakes]
+    elif total_chosen > bankroll:
         scale = bankroll / total_chosen
         chosen_stakes = [s * scale for s in chosen_stakes]
 

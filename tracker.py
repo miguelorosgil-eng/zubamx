@@ -52,27 +52,58 @@ def save_picks(picks: list, date_str: str, stake_per_pick: float = 100.0):
     print(f"  📝 Guardados {len(rows)} picks en historial.")
 
 
-def _fetch_mlb_results(date_str: str) -> dict:
-    """Descarga resultados MLB de una fecha. Devuelve {(home,away): (home_score, away_score)}."""
+def _fetch_mlb_results(date_str: str, retries: int = 3) -> dict:
+    """
+    P3.4 — Descarga resultados MLB con reintentos y manejo de partidos pospuestos.
+    Devuelve {game_id: {home, away, home_score, away_score, status}}.
+    game_id = MLB statsapi gamePk (evita falsos positivos por nombre).
+    """
     url = "https://statsapi.mlb.com/api/v1/schedule"
-    try:
-        r = requests.get(url, params={"sportId": 1, "date": date_str, "hydrate": "linescore"}, timeout=20)
-        results = {}
-        for day in r.json().get("dates", []):
-            for g in day.get("games", []):
-                if g.get("status", {}).get("abstractGameState") != "Final":
-                    continue
-                ls = g.get("linescore", {})
-                hs = ls.get("teams", {}).get("home", {}).get("runs")
-                as_ = ls.get("teams", {}).get("away", {}).get("runs")
-                if hs is None:
-                    continue
-                home = g["teams"]["home"]["team"]["name"]
-                away = g["teams"]["away"]["team"]["name"]
-                results[(home, away)] = (int(hs), int(as_))
-        return results
-    except Exception:
-        return {}
+    for attempt in range(retries):
+        try:
+            r = requests.get(
+                url,
+                params={"sportId": 1, "date": date_str, "hydrate": "linescore"},
+                timeout=20,
+            )
+            r.raise_for_status()
+            results = {}
+            for day in r.json().get("dates", []):
+                for g in day.get("games", []):
+                    status = g.get("status", {}).get("abstractGameState", "")
+                    game_pk = g.get("gamePk")
+                    home_team = g["teams"]["home"]["team"]["name"]
+                    away_team = g["teams"]["away"]["team"]["name"]
+
+                    if status == "Postponed":
+                        # P3.4: partido pospuesto → void (no win/loss)
+                        results[game_pk] = {
+                            "home": home_team, "away": away_team,
+                            "status": "postponed",
+                            "home_score": None, "away_score": None,
+                        }
+                        continue
+
+                    if status != "Final":
+                        continue
+
+                    ls = g.get("linescore", {})
+                    hs = ls.get("teams", {}).get("home", {}).get("runs")
+                    as_ = ls.get("teams", {}).get("away", {}).get("runs")
+                    if hs is None:
+                        continue
+                    results[game_pk] = {
+                        "home": home_team, "away": away_team,
+                        "status": "final",
+                        "home_score": int(hs), "away_score": int(as_),
+                    }
+            return results
+        except Exception as e:
+            if attempt < retries - 1:
+                import time; time.sleep(2 ** attempt)
+            else:
+                print(f"  ⚠️ MLB results fetch falló tras {retries} intentos: {e}")
+    return {}
 
 
 def update_results(date_str: str = None):
@@ -92,6 +123,20 @@ def update_results(date_str: str = None):
     results_mlb = _fetch_mlb_results(date_str)
 
     updated = 0
+    voided = 0
+    from difflib import SequenceMatcher
+
+    def _match_game(home, away, results_by_pk):
+        """P3.4: empareja por ID (gamePk) via fuzzy del nombre."""
+        best_pk, best_score = None, 0.0
+        for pk, g in results_by_pk.items():
+            sh = SequenceMatcher(None, home.lower(), g["home"].lower()).ratio()
+            sa = SequenceMatcher(None, away.lower(), g["away"].lower()).ratio()
+            score = (sh + sa) / 2
+            if score > best_score:
+                best_pk, best_score = pk, score
+        return (best_pk, results_by_pk[best_pk]) if best_pk and best_score > 0.55 else (None, None)
+
     for idx, row in pending.iterrows():
         sport = str(row.get("sport", "")).upper()
         home, away = str(row["home"]), str(row["away"])
@@ -99,23 +144,31 @@ def update_results(date_str: str = None):
         odds = float(row["odds"])
         stake = float(row["stake"])
 
-        winner = None
-        if sport == "MLB" and (home, away) in results_mlb:
-            hs, as_ = results_mlb[(home, away)]
-            winner = home if hs > as_ else away
+        if sport == "MLB":
+            game_pk, game = _match_game(home, away, results_mlb)
+            if game is None:
+                continue
 
-        if winner is None:
-            continue
+            # P3.4: partido pospuesto → void (no win/loss, stake devuelto)
+            if game["status"] == "postponed":
+                df.at[idx, "result"] = "void"
+                df.at[idx, "profit"] = 0.0
+                voided += 1
+                continue
 
-        # Moneyline: ganó si el pick coincide con el ganador
-        if row["market"] == "ML":
-            won = (pick == winner or pick in winner or winner in pick)
-            profit = round(stake * (odds - 1) if won else -stake, 2)
-            df.at[idx, "result"] = "win" if won else "loss"
-            df.at[idx, "profit"] = profit
-            updated += 1
+            hs, as_ = game["home_score"], game["away_score"]
+            winner = game["home"] if hs > as_ else game["away"]
+
+            if row["market"] == "ML":
+                won = (pick == winner or pick in winner or winner in pick)
+                profit = round(stake * (odds - 1) if won else -stake, 2)
+                df.at[idx, "result"] = "win" if won else "loss"
+                df.at[idx, "profit"] = profit
+                updated += 1
 
     df.to_csv(TRACKER_FILE, index=False)
+    if voided:
+        print(f"  🔄 {voided} picks marcados como VOID (pospuestos) para {date_str}")
     print(f"  ✅ Actualizados {updated} picks para {date_str}")
 
 
@@ -123,17 +176,20 @@ def get_stats() -> dict:
     """Devuelve estadísticas acumuladas de todos los picks resueltos."""
     _ensure_file()
     df = pd.read_csv(TRACKER_FILE)
-    resolved = df[df["result"].isin(["win", "loss"])]
+    resolved = df[df["result"].isin(["win", "loss", "void"])]
     if resolved.empty:
         return {"total": 0}
 
-    wins = (resolved["result"] == "win").sum()
-    total = len(resolved)
-    invested = resolved["stake"].sum()
-    profit = resolved["profit"].sum()
+    # Excluir voids del cálculo de ROI (no son pérdidas reales)
+    active = resolved[resolved["result"].isin(["win", "loss"])]
+    n_void = int((resolved["result"] == "void").sum())
+    wins = int((active["result"] == "win").sum())
+    total = len(active)
+    invested = active["stake"].sum()
+    profit = active["profit"].sum()
 
     by_sport = {}
-    for sport, grp in resolved.groupby("sport"):
+    for sport, grp in active.groupby("sport"):
         w = (grp["result"] == "win").sum()
         inv = grp["stake"].sum()
         prf = grp["profit"].sum()
@@ -144,8 +200,9 @@ def get_stats() -> dict:
         }
 
     return {
-        "total": int(total),
-        "wins": int(wins),
+        "total": total,
+        "void": n_void,
+        "wins": wins,
         "pct": round(wins / total * 100, 1),
         "invested": round(float(invested), 2),
         "profit": round(float(profit), 2),

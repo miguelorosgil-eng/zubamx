@@ -478,6 +478,67 @@ def print_clv_report():
 # Verificación de +EV
 # ---------------------------------------------------------------------------
 
+def get_clv_rolling(sport: str, market: str = None, window: int = 50) -> tuple[float, int]:
+    """
+    P1.3 — CLV rolling por (deporte, mercado) con ventana de `window` picks.
+    Devuelve (clv_promedio, n_picks_en_ventana).
+    """
+    rows = _read_rows()
+    valid = [r for r in rows
+             if r.get("clv") and r["clv"] != ""
+             and r.get("sport", "").upper() == sport.upper()
+             and (market is None or r.get("pick_side", "").upper() == market.upper())]
+    if not valid:
+        return 0.0, 0
+    recent = valid[-window:]
+    clvs = [float(r["clv"]) for r in recent]
+    return float(sum(clvs) / len(clvs)), len(clvs)
+
+
+def get_clv_dashboard() -> dict:
+    """
+    P1.3 — Dashboard de salud: tabla deporte × mercado × CLV × n × estado.
+    """
+    from portfolio import check_clv_kill_switch
+    rows = _read_rows()
+    valid = [r for r in rows if r.get("clv") and r["clv"] != ""]
+
+    # Agrupar por (sport, pick_side)
+    groups: dict = {}
+    for r in valid:
+        key = (r.get("sport", "?"), r.get("pick_side", "?"))
+        groups.setdefault(key, []).append(float(r["clv"]))
+
+    dashboard = {}
+    for (sport, market), clvs in sorted(groups.items()):
+        recent = clvs[-50:]
+        clv_rolling = sum(recent) / len(recent)
+        n = len(recent)
+        kill = check_clv_kill_switch(sport, market, clv_rolling, n)
+        dashboard[(sport, market)] = {
+            "clv_rolling": round(clv_rolling, 4),
+            "n": n,
+            "estado": "❌ DESACTIVADO" if kill else ("✅ OK" if clv_rolling > 0 else "⚠️ NEGATIVO"),
+        }
+    return dashboard
+
+
+def print_clv_dashboard():
+    """Imprime el dashboard de salud del CLV."""
+    dashboard = get_clv_dashboard()
+    if not dashboard:
+        print("[CLV Dashboard] Sin datos de CLV calculados aún.")
+        return
+    print(f"\n{'═'*60}")
+    print("  CLV DASHBOARD — estado por deporte × mercado")
+    print(f"{'═'*60}")
+    print(f"  {'Deporte':<8} {'Mercado':<10} {'CLV rolling':>12} {'N':>5}  Estado")
+    print(f"  {'-'*55}")
+    for (sport, market), d in dashboard.items():
+        print(f"  {sport:<8} {market:<10} {d['clv_rolling']:>+12.2%} {d['n']:>5}  {d['estado']}")
+    print(f"{'═'*60}\n")
+
+
 def is_positive_ev(model_p: float, pinnacle_odds: float) -> tuple:
     """
     Verifica si hay +EV comparando probabilidad del modelo vs odds de Pinnacle.
