@@ -296,25 +296,48 @@ def analizar_deporte(code, today, filtros, banco_info):
         print("  Sin datos de entrenamiento disponibles."); return []
 
     # Usar ContextualEngine si disponible (sub-modelos por contexto)
-    if _HAS_CONTEXTUAL:
+    import pickle, time as _time
+    _model_cache_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "_cache", f"{code}_engine.pkl"
+    )
+    _use_cached = (
+        not filtros.get("refrescar", False)
+        and os.path.exists(_model_cache_path)
+        and (_time.time() - os.path.getmtime(_model_cache_path)) < 86400
+    )
+    if _use_cached:
         try:
-            eng = ContextualEngine(sport=SPORT_CONFIG[code]["sport"],
+            with open(_model_cache_path, "rb") as _f:
+                eng = pickle.load(_f)
+            print(f"  ⚡ Modelo cargado desde caché ({code})")
+        except Exception:
+            _use_cached = False
+
+    if not _use_cached:
+        if _HAS_CONTEXTUAL:
+            try:
+                eng = ContextualEngine(sport=SPORT_CONFIG[code]["sport"],
+                                       edge_threshold=filtros["edge_threshold"],
+                                       confidence_floor=filtros["confidence_floor"],
+                                       market_trust=filtros["market_trust"])
+                eng.fit(df)
+            except Exception:
+                eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
                                    edge_threshold=filtros["edge_threshold"],
                                    confidence_floor=filtros["confidence_floor"],
                                    market_trust=filtros["market_trust"])
-            eng.fit(df)
-        except Exception:
+                eng.fit(df)
+        else:
             eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
                                edge_threshold=filtros["edge_threshold"],
                                confidence_floor=filtros["confidence_floor"],
                                market_trust=filtros["market_trust"])
             eng.fit(df)
-    else:
-        eng = SportsEngine(sport=SPORT_CONFIG[code]["sport"],
-                           edge_threshold=filtros["edge_threshold"],
-                           confidence_floor=filtros["confidence_floor"],
-                           market_trust=filtros["market_trust"])
-        eng.fit(df)
+        try:
+            with open(_model_cache_path, "wb") as _f:
+                pickle.dump(eng, _f)
+        except Exception:
+            pass
 
     # Modelo secuencial (momentum, rachas, H2H) — se entrena una vez por deporte
     if _HAS_SEQUENCE and code not in _SEQ_MODELS:

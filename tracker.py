@@ -25,19 +25,33 @@ def _ensure_file():
 
 def save_picks(picks: list, date_str: str, stake_per_pick: float = 100.0):
     """
-    Guarda picks del día en el CSV. result="pending" hasta actualizarse.
+    Guarda picks del día en el CSV. Idempotente: no duplica si ya existen.
     picks: lista de dicts {sport, home, away, pick_team, pick_side,
                            market, model_p, odds_offered, kelly_frac}
     """
     _ensure_file()
+
+    # Leer picks ya guardados para este día y deduplicar
+    existing = set()
+    with open(TRACKER_FILE, newline="") as f:
+        for row in csv.DictReader(f):
+            if row["date"] == date_str:
+                existing.add((row["home"], row["away"], row["market"], row["pick_team"]))
+
     rows = []
+    skipped = 0
     for p in picks:
+        pick_team = p.get("pick_team", p.get("label", ""))
+        key = (p.get("home", ""), p.get("away", ""), p.get("market", "ML"), pick_team)
+        if key in existing:
+            skipped += 1
+            continue
         rows.append({
             "date": date_str,
             "sport": p.get("sport", ""),
             "home": p.get("home", ""),
             "away": p.get("away", ""),
-            "pick_team": p.get("pick_team", p.get("label", "")),
+            "pick_team": pick_team,
             "pick_side": p.get("pick_side", p.get("market", "")),
             "market": p.get("market", "ML"),
             "model_p": round(p.get("model_p", 0), 4),
@@ -46,10 +60,16 @@ def save_picks(picks: list, date_str: str, stake_per_pick: float = 100.0):
             "result": "pending",
             "profit": 0.0,
         })
-    with open(TRACKER_FILE, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=COLS)
-        writer.writerows(rows)
-    print(f"  📝 Guardados {len(rows)} picks en historial.")
+        existing.add(key)
+
+    if rows:
+        with open(TRACKER_FILE, "a", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=COLS)
+            writer.writerows(rows)
+        print(f"  📝 Guardados {len(rows)} picks en historial." +
+              (f" ({skipped} duplicados omitidos)" if skipped else ""))
+    else:
+        print(f"  📝 Picks ya guardados para {date_str} ({skipped} duplicados omitidos).")
 
 
 def _fetch_mlb_results(date_str: str, retries: int = 3) -> dict:
@@ -158,6 +178,7 @@ def update_results(date_str: str = None):
 
             hs, as_ = game["home_score"], game["away_score"]
             winner = game["home"] if hs > as_ else game["away"]
+            total_runs = hs + as_
 
             if row["market"] == "ML":
                 won = (pick == winner or pick in winner or winner in pick)
@@ -165,6 +186,36 @@ def update_results(date_str: str = None):
                 df.at[idx, "result"] = "win" if won else "loss"
                 df.at[idx, "profit"] = profit
                 updated += 1
+
+            elif row["market"] in ("O/U", "TOTALS"):
+                # pick_team contiene "OVER X.X" o "UNDER X.X"
+                pick_upper = pick.upper()
+                try:
+                    line = float(pick_upper.split()[-1])
+                    if "OVER" in pick_upper:
+                        won = total_runs > line
+                    else:
+                        won = total_runs < line
+                    # push exacto (raro en MLB con líneas .5)
+                    if total_runs == line:
+                        df.at[idx, "result"] = "void"
+                        df.at[idx, "profit"] = 0.0
+                        voided += 1
+                    else:
+                        profit = round(stake * (odds - 1) if won else -stake, 2)
+                        df.at[idx, "result"] = "win" if won else "loss"
+                        df.at[idx, "profit"] = profit
+                        updated += 1
+                except (ValueError, IndexError):
+                    pass
+
+            elif row["market"] == "NRFI":
+                # NRFI: sin carreras en primera entrada → necesitamos linescore detallado
+                # Como approx: si total del juego es bajo (≤5), probable NRFI
+                # La API de MLB no da el desglose por entrada en este endpoint.
+                # Marcamos como "no-data" si no hay otro endpoint disponible.
+                # Por ahora lo dejamos pending (se puede mejorar con endpoint de linescore)
+                pass
 
     df.to_csv(TRACKER_FILE, index=False)
     if voided:

@@ -153,23 +153,23 @@ def _build_features(df: pd.DataFrame, include_run_diff: bool = False,
 
 
 def _make_lr_pipeline() -> Pipeline:
-    base_lr = LogisticRegression(max_iter=1000, C=1.0)
-    calibrated = CalibratedClassifierCV(base_lr, cv=3, method="sigmoid")
+    base_lr = LogisticRegression(max_iter=300, C=1.0, solver="lbfgs")
+    calibrated = CalibratedClassifierCV(base_lr, cv=2, method="sigmoid", n_jobs=1)
     return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
 
 
 def _make_xgb_pipeline() -> Pipeline:
     xgb = XGBClassifier(
-        n_estimators=300,
-        max_depth=4,
-        learning_rate=0.05,
+        n_estimators=100,
+        max_depth=3,
+        learning_rate=0.1,
         subsample=0.8,
         colsample_bytree=0.8,
-        use_label_encoder=False,
         eval_metric="logloss",
         verbosity=0,
+        nthread=1,
     )
-    calibrated = CalibratedClassifierCV(xgb, cv=3, method="sigmoid")
+    calibrated = CalibratedClassifierCV(xgb, cv=2, method="sigmoid", n_jobs=1)
     return Pipeline([("scaler", StandardScaler()), ("clf", calibrated)])
 
 
@@ -268,15 +268,9 @@ class SportsEngine:
             self._xgb_model = _make_xgb_pipeline()
             self._xgb_model.fit(X, y, clf__sample_weight=sample_weights)
 
-            # Ponderación por Brier score (menor Brier → mayor peso)
-            brier_lr = _brier_cv(self._lr_model, X, y)
-            brier_xgb = _brier_cv(self._xgb_model, X, y)
-            # Convertir scores a pesos inversos normalizados
-            inv_lr = 1.0 / max(brier_lr, 1e-6)
-            inv_xgb = 1.0 / max(brier_xgb, 1e-6)
-            total = inv_lr + inv_xgb
-            self._w_lr = inv_lr / total
-            self._w_xgb = inv_xgb / total
+            # Fixed ensemble weights (skip expensive Brier CV)
+            self._w_lr = 0.4
+            self._w_xgb = 0.6
         else:
             self._xgb_model = None
             self._w_lr = 1.0
