@@ -385,10 +385,11 @@ class SportsEngine:
 
         if self.sport.lower() == "mlb":
             league_era = 4.50
+            # Exponent aumentado 0.5→0.7: pitchers elite penalizan más la anotación
             if era_away_sp and era_away_sp > 0:
-                mu_home *= (era_away_sp / league_era) ** 0.5
+                mu_home *= (era_away_sp / league_era) ** 0.7
             if era_home_sp and era_home_sp > 0:
-                mu_away *= (era_home_sp / league_era) ** 0.5
+                mu_away *= (era_home_sp / league_era) ** 0.7
 
         return max(mu_home, 0.05), max(mu_away, 0.05)
 
