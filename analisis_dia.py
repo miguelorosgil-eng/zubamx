@@ -418,11 +418,21 @@ def analizar_deporte(code, today, filtros, banco_info):
         # Buscar pitcher data para este juego
         nr = None
         era_home_sp, era_away_sp = None, None
+        ip_home_sp, ip_away_sp = None, None
+        career_era_home, career_era_away = None, None
         if code == "MLB" and nrfi_data:
             nr = _find(r.home, r.away, nrfi_data)
             if nr:
                 era_home_sp = nr.get("era_home_sp")
                 era_away_sp = nr.get("era_away_sp")
+                ip_home_sp = nr.get("ip_home_sp")
+                ip_away_sp = nr.get("ip_away_sp")
+                career_era_home = nr.get("career_era_home")
+                career_era_away = nr.get("career_era_away")
+
+        # Coors Field (Colorado Rockies home) — altitud infla anotación.
+        # Excluir picks UNDER para este estadio ya que el modelo no conoce el efecto.
+        _is_coors = (code == "MLB" and "Colorado Rockies" in r.home)
 
         # Ajuste climático (solo MLB estadios abiertos)
         weather_info = ""
@@ -589,10 +599,17 @@ def analizar_deporte(code, today, filtros, banco_info):
             if "spread" in e_mk:
                 lines["spread"] = e_mk["spread"]
             for b in evaluate_markets(eng, r.home, r.away, lines, filters=filtros):
+                # Coors Field: excluir picks UNDER (altitud infla anotación, modelo no lo sabe)
+                if _is_coors and b["market"] == "O/U" and "UNDER" in b["label"]:
+                    continue
                 match_bets.append((b["market"], b["label"], b["odds_offered"],
                                    b["model_p"], b["edge"], b["kelly_frac"]))
             if "totals" in lines:
-                mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
+                mh, ma = eng.expected_scores(
+                    r.home, r.away, era_home_sp, era_away_sp,
+                    ip_home_sp=ip_home_sp, ip_away_sp=ip_away_sp,
+                    career_era_home=career_era_home, career_era_away=career_era_away,
+                )
                 # Ajustar mu esperado con clima antes de la guardia de divergencia
                 mh_adj = mh + _weather_total_adj / 2.0
                 ma_adj = ma + _weather_total_adj / 2.0
@@ -666,7 +683,11 @@ def analizar_deporte(code, today, filtros, banco_info):
                     print(f"  {flag}[NRFI info] {r.home} vs {r.away}  p={p_nrfi:.0%}  edge {nrfi_edge:.1%}  ({sp_line})")
 
         if match_bets or nrfi_bets:
-            mh, ma = eng.expected_scores(r.home, r.away, era_home_sp, era_away_sp)
+            mh, ma = eng.expected_scores(
+                r.home, r.away, era_home_sp, era_away_sp,
+                ip_home_sp=ip_home_sp, ip_away_sp=ip_away_sp,
+                career_era_home=career_era_home, career_era_away=career_era_away,
+            )
             inj_h = injury_summary(r.home, injuries) if _HAS_INJURIES else ""
             inj_a = injury_summary(r.away, injuries) if _HAS_INJURIES else ""
             print(f"  {r.home} vs {r.away}  (μ {mh:.1f}-{ma:.1f}, total {mh+ma:.1f})")

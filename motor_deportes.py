@@ -363,11 +363,27 @@ class SportsEngine:
     # ------------------------------------------------------------------
     # expected_scores
     # ------------------------------------------------------------------
+    @staticmethod
+    def _regress_era(era: float, ip: float,
+                     career_era: float = 4.50,
+                     prior_ip: float = 60.0) -> float:
+        """
+        Regresión bayesiana de ERA para muestras pequeñas.
+        Con <40 IP la ERA corriente regresa hacia la ERA de carrera/liga.
+        prior_ip=60 equivale a ~una temporada de referencia.
+        """
+        if ip <= 0:
+            return career_era
+        return (ip * era + prior_ip * career_era) / (ip + prior_ip)
+
     def expected_scores(self, home: str, away: str,
-                        era_home_sp: float = None, era_away_sp: float = None):
+                        era_home_sp: float = None, era_away_sp: float = None,
+                        ip_home_sp: float = None, ip_away_sp: float = None,
+                        career_era_home: float = None, career_era_away: float = None):
         """
         Anotación esperada (μ) por equipo — modelo multiplicativo Pythagorean.
-        Para MLB acepta ERA de los pitchers abridores.
+        Para MLB acepta ERA + IP de los pitchers abridores.
+        Si se proveen ip_*_sp, aplica regresión bayesiana para muestras pequeñas.
         Retorna (mu_home, mu_away).
         """
         def off(team):
@@ -385,11 +401,21 @@ class SportsEngine:
 
         if self.sport.lower() == "mlb":
             league_era = 4.50
-            # Exponent aumentado 0.5→0.7: pitchers elite penalizan más la anotación
+            # Exponent 0.7: pitchers elite penalizan más la anotación
             if era_away_sp and era_away_sp > 0:
-                mu_home *= (era_away_sp / league_era) ** 0.7
+                eff_era_away = self._regress_era(
+                    era_away_sp,
+                    ip_away_sp or 999.0,
+                    career_era=career_era_away or league_era,
+                )
+                mu_home *= (eff_era_away / league_era) ** 0.7
             if era_home_sp and era_home_sp > 0:
-                mu_away *= (era_home_sp / league_era) ** 0.7
+                eff_era_home = self._regress_era(
+                    era_home_sp,
+                    ip_home_sp or 999.0,
+                    career_era=career_era_home or league_era,
+                )
+                mu_away *= (eff_era_home / league_era) ** 0.7
 
         return max(mu_home, 0.05), max(mu_away, 0.05)
 
