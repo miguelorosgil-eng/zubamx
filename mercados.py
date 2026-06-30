@@ -84,8 +84,15 @@ def evaluate_three_way(p_home, p_draw, p_away, odds_home, odds_draw, odds_away,
     blended = (1 - lam) * p_model + lam * novig
 
     labels = [f"{home} gana", "Empate", f"{away} gana"]
+    # En knockout, solo se apuesta a "gana" si el equipo es FAVORITO CLARO del
+    # mercado (momio < 2.0). Un favorito moderado (momio >= 2.0) contra un rival
+    # defensivo empata demasiado seguido — caso Arabia Saudita @2.70 → 0-0.
+    knockout_max_odds = 2.0
     bets = []
     for i, lab in enumerate(labels):
+        # i==1 es el empate; el guard de favorito aplica solo a "gana" (i 0 y 2)
+        if knockout and i != 1 and odds[i] >= knockout_max_odds:
+            continue
         implied_vig = 1.0 / odds[i]
         edge = blended[i] - implied_vig
         kelly = edge / (odds[i] - 1) if odds[i] > 1 else 0.0
