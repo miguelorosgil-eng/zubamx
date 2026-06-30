@@ -62,14 +62,21 @@ def evaluate_two_way(p_model_a, p_model_b, odds_a, odds_b,
 
 def evaluate_three_way(p_home, p_draw, p_away, odds_home, odds_draw, odds_away,
                        home, away, market_trust=0.5, confidence_floor=0.65,
-                       edge_threshold=0.02):
+                       edge_threshold=0.02, knockout=False):
     """
     Moneyline 1X2 de fútbol (con empate). Mismo filtro: novig + shrinkage +
     piso de confianza + edge. Devuelve value_bets que pasan.
+
+    knockout=True eleva el piso de confianza: en eliminatorias/grupos cerrados
+    los equipos débiles juegan a no perder y empatan 0-0 contra favoritos.
+    Hallazgo (jun 2026): "Arabia Saudita gana" a momio 2.70 terminó 0-0 — un
+    favorito moderado vs un rival ultra-defensivo no es apuesta de valor.
     """
     odds = [odds_home, odds_draw, odds_away]
     if any(o is None or o <= 1 for o in odds):
         return []
+    if knockout:
+        confidence_floor = max(confidence_floor, 0.62)
     raw = np.array([1.0 / o for o in odds])
     novig = raw / raw.sum()
     p_model = np.array([p_home, p_draw, p_away])
@@ -258,10 +265,28 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
             scale = anchored / max(model_total, 1e-6)
             amh, ama = mu_home * scale, mu_away * scale
             p_over, p_under = prob_over_under(amh, ama, line, sport, sigma_total)
-            all_bets += evaluate_two_way(
-                p_over, p_under, m.get("over_odds"), m.get("under_odds"),
-                f"OVER {line}", f"UNDER {line}", "O/U",
-                mt, cf_ou, et)
+
+            # ── Floor asimétrico OVER vs UNDER ──────────────────────────
+            # Hallazgo empírico (jun 2026): los picks OVER rinden 44% de acierto
+            # mientras los UNDER rinden 67%. El modelo de anotación sobre-proyecta
+            # carreras/goles de forma sistemática (pitchers/defensas con ERA media
+            # tienen días dominantes más seguido de lo que la media sugiere).
+            # Corrección: exigir MÁS confianza para entrar a un OVER que a un UNDER.
+            over_premium = f.get("over_confidence_premium", 0.05)
+            cf_over = min(cf_ou + over_premium, 0.95)
+
+            # OVER con floor elevado
+            for b in evaluate_two_way(
+                    p_over, p_under, m.get("over_odds"), m.get("under_odds"),
+                    f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_over, et):
+                if "OVER" in b["label"]:
+                    all_bets.append(b)
+            # UNDER con floor normal
+            for b in evaluate_two_way(
+                    p_over, p_under, m.get("over_odds"), m.get("under_odds"),
+                    f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_ou, et):
+                if "UNDER" in b["label"]:
+                    all_bets.append(b)
         # si divergencia > max_div: se omite (modelo fuera de distribución)
 
     # Hándicap / Spread
