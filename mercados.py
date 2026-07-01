@@ -282,13 +282,24 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
             p_over, p_under = prob_over_under(amh, ama, line, sport, sigma_total)
 
             # ── Floor asimétrico OVER vs UNDER ──────────────────────────
-            # Hallazgo empírico (jun 2026): los picks OVER rinden 44% de acierto
-            # mientras los UNDER rinden 67%. El modelo de anotación sobre-proyecta
-            # carreras/goles de forma sistemática (pitchers/defensas con ERA media
-            # tienen días dominantes más seguido de lo que la media sugiere).
-            # Corrección: exigir MÁS confianza para entrar a un OVER que a un UNDER.
+            # El OVER exige más confianza que el UNDER (el modelo sobre-proyecta
+            # en ERAs medias). Pero ver también el guard de línea alta abajo.
             over_premium = f.get("over_confidence_premium", 0.05)
             cf_over = min(cf_ou + over_premium, 0.95)
+
+            # ── Guard de LÍNEA ALTA anti-UNDER (lección 2026-06-30) ─────
+            # Cuando el mercado pone un total MUY ALTO (MLB >=10, fútbol >=3.5),
+            # está codificando info que el modelo no ve: parque de bateadores,
+            # viento a favor, bullpen cansado. Ese día el modelo proyectó 8.7 y
+            # 6.8 en juegos que terminaron 16 y 12 runs — el mercado tenía razón
+            # en las 3 líneas altas. Regla: en líneas altas NO se apuesta UNDER
+            # salvo confianza extrema (0.80), porque el riesgo de goleada es real.
+            high_line_mlb = sport.lower() == "mlb" and line >= 10.0
+            high_line_soccer = _is_poisson(sport) and sport.lower() != "mlb" and line >= 3.5
+            if high_line_mlb or high_line_soccer:
+                cf_under = max(cf_ou, 0.80)
+            else:
+                cf_under = cf_ou
 
             # OVER con floor elevado
             for b in evaluate_two_way(
@@ -296,10 +307,10 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
                     f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_over, et):
                 if "OVER" in b["label"]:
                     all_bets.append(b)
-            # UNDER con floor normal
+            # UNDER con floor normal (o elevado si la línea del mercado es alta)
             for b in evaluate_two_way(
                     p_over, p_under, m.get("over_odds"), m.get("under_odds"),
-                    f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_ou, et):
+                    f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_under, et):
                 if "UNDER" in b["label"]:
                     all_bets.append(b)
         # si divergencia > max_div: se omite (modelo fuera de distribución)
