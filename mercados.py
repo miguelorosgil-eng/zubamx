@@ -252,7 +252,15 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
     # Mercados ilíquidos (P1 NHL, Q1 NBA, alt totals) mantienen el 20%.
     _LIQUID_SPORTS = {"mlb", "nba"}
     _sport_lower = sport.lower() if hasattr(sport, "lower") else ""
-    max_div = min(max_div, 0.12) if _sport_lower in _LIQUID_SPORTS else max_div
+    max_div_ml = min(max_div, 0.12) if _sport_lower in _LIQUID_SPORTS else max_div
+
+    # Gate de divergencia SEPARADO para totales (O/U). El valor en un O/U VIENE
+    # de la divergencia modelo-mercado, así que el 0.12 del moneyline lo mata:
+    # el pick KC@TB UNDER 8.0 (proy 6.4 = 20% divergencia) GANÓ pero habría sido
+    # rechazado. Cap totales en 0.28: admite value real (20-25%) pero rechaza
+    # divergencias extremas (>28%) donde el mercado suele saber algo del parque/
+    # clima que el modelo ignora (líneas de 11.5 en Coors/Wrigley con viento).
+    max_div_totals = f.get("max_divergence_totals", 0.28)
 
     # Umbral específico para O/U — el modelo Poisson/Normal tiene más ruido
     # que el moneyline, así que exigimos mayor confianza para evitar falsos edge
@@ -266,7 +274,7 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
         line = m["line"]
         model_total = mu_home + mu_away
         divergence = abs(model_total - line) / max(line, 1e-6)
-        if divergence <= max_div:
+        if divergence <= max_div_totals:
             # Anclar total esperado a la línea del mercado (consenso afilado)
             anchored = (1 - anchor_w) * model_total + anchor_w * line
             scale = anchored / max(model_total, 1e-6)
@@ -305,7 +313,7 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
         market_margin = -line
         # gate: divergencia absoluta de margen (en unidades de sigma)
         sig = sigma_margin or 4.0
-        if abs(model_margin - market_margin) <= max(max_div * 10, 2.5 * sig):
+        if abs(model_margin - market_margin) <= max(max_div_ml * 10, 2.5 * sig):
             anchored_margin = (1 - anchor_w) * model_margin + anchor_w * market_margin
             # reconstruir mu manteniendo el total
             tot = mu_home + mu_away
