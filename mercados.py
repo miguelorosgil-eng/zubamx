@@ -14,7 +14,7 @@ import numpy as np
 from scipy.stats import poisson, skellam, norm
 
 # Deportes cuyo marcador se modela como conteo (Poisson)
-POISSON_SPORTS = {"mlb", "nhl", "soccer"}
+POISSON_SPORTS = {"mlb", "nhl", "soccer", "kbo", "npb"}
 # Deportes de alto marcador (Normal)
 NORMAL_SPORTS = {"nba", "wnba"}
 

@@ -188,6 +188,10 @@ SPORT_CONFIG = {
     "NBA":  {"sport": "nba",  "seasons": ["2024-25"]},
     "NHL":  {"sport": "nhl",  "seasons": ["20242025"]},
     "WNBA": {"sport": "wnba", "seasons": [2024, 2025, 2026]},
+    # Béisbol asiático: datos se acumulan día a día vía The Odds API
+    # (ESPN no los cubre). Entrenan automáticamente al juntar >=50 partidos.
+    "KBO":  {"sport": "kbo",  "seasons": []},
+    "NPB":  {"sport": "npb",  "seasons": []},
 }
 
 # Ligas de fútbol importantes (códigos Football-Data). Usan Dixon-Coles.
@@ -258,6 +262,9 @@ def _load_training(code, refrescar=False):
     elif code == "WNBA":
         from conector_wnba import build_wnba_training
         df = build_wnba_training(cfg["seasons"])
+    elif code in ("KBO", "NPB"):
+        from conector_asia_baseball import build_asia_training
+        df = build_asia_training(code)
     else:
         return pd.DataFrame()
 
@@ -285,6 +292,9 @@ def _fetch_upcoming_today(code, today):
     elif code == "WNBA":
         from conector_wnba import fetch_wnba_upcoming
         up = fetch_wnba_upcoming(days=1)
+    elif code in ("KBO", "NPB"):
+        from conector_asia_baseball import fetch_asia_upcoming
+        up = fetch_asia_upcoming(code)
     else:
         return pd.DataFrame()
     if up.empty:
@@ -301,6 +311,9 @@ def analizar_deporte(code, today, filtros, banco_info):
     df = _load_training(code)
     if df.empty:
         print("  Sin datos de entrenamiento disponibles."); return []
+    if len(df) < 50:
+        print(f"  Datos insuficientes para entrenar ({len(df)}/50 partidos). "
+              f"Acumulando — el modelo se activará al juntar 50."); return []
 
     # Usar ContextualEngine si disponible (sub-modelos por contexto)
     import pickle, time as _time

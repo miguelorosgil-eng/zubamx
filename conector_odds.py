@@ -15,6 +15,8 @@ ODDS_BASE = "https://api.the-odds-api.com/v4"
 SPORT_KEYS = {
     # Béisbol
     "MLB": "baseball_mlb",
+    "KBO": "baseball_kbo",
+    "NPB": "baseball_npb",
     # Baloncesto
     "NBA": "basketball_nba",
     "WNBA": "basketball_wnba",
