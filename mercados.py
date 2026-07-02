@@ -262,6 +262,14 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
     # clima que el modelo ignora (líneas de 11.5 en Coors/Wrigley con viento).
     max_div_totals = f.get("max_divergence_totals", 0.28)
 
+    # Cap de divergencia ASIMÉTRICO para UNDER (lección 2026-06-30/07-01).
+    # El modelo subestimó runs en 7 de 7 juegos recientes (proy 9.0 vs real 13.2).
+    # Como el modelo se equivoca hacia ABAJO, un UNDER (modelo < línea) con mucha
+    # divergencia es casi siempre error del modelo, no value. Datos:
+    #   KC@TB UNDER (20% div) → GANÓ | Skenes/Wheeler (29%) y SD@CHC (24%) → perdían.
+    # Cap UNDER en 0.22 conserva el ganador y bloquea los dos perdedores.
+    max_div_under = f.get("max_divergence_under", 0.22)
+
     # Umbral específico para O/U — el modelo Poisson/Normal tiene más ruido
     # que el moneyline, así que exigimos mayor confianza para evitar falsos edge
     cf_ou = ou_confidence_floor if ou_confidence_floor is not None else min(cf + 0.06, 0.72)
@@ -301,18 +309,20 @@ def evaluate_markets(engine, home, away, market_lines, filters=None,
             else:
                 cf_under = cf_ou
 
-            # OVER con floor elevado
+            # OVER con floor elevado (usa el cap de divergencia amplio 0.28)
             for b in evaluate_two_way(
                     p_over, p_under, m.get("over_odds"), m.get("under_odds"),
                     f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_over, et):
                 if "OVER" in b["label"]:
                     all_bets.append(b)
-            # UNDER con floor normal (o elevado si la línea del mercado es alta)
-            for b in evaluate_two_way(
-                    p_over, p_under, m.get("over_odds"), m.get("under_odds"),
-                    f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_under, et):
-                if "UNDER" in b["label"]:
-                    all_bets.append(b)
+            # UNDER: solo si la divergencia es MODERADA (<=0.22). Con divergencia
+            # grande el modelo suele estar subestimando, no encontrando value.
+            if divergence <= max_div_under:
+                for b in evaluate_two_way(
+                        p_over, p_under, m.get("over_odds"), m.get("under_odds"),
+                        f"OVER {line}", f"UNDER {line}", "O/U", mt, cf_under, et):
+                    if "UNDER" in b["label"]:
+                        all_bets.append(b)
         # si divergencia > max_div: se omite (modelo fuera de distribución)
 
     # Hándicap / Spread
