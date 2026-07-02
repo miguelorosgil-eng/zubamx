@@ -184,9 +184,10 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 # Config por deporte: cómo entrenar y traer fixtures
 SPORT_CONFIG = {
-    "MLB": {"sport": "mlb", "seasons": [2024, 2025]},
-    "NBA": {"sport": "nba", "seasons": ["2024-25"]},
-    "NHL": {"sport": "nhl", "seasons": ["20242025"]},
+    "MLB":  {"sport": "mlb",  "seasons": [2024, 2025]},
+    "NBA":  {"sport": "nba",  "seasons": ["2024-25"]},
+    "NHL":  {"sport": "nhl",  "seasons": ["20242025"]},
+    "WNBA": {"sport": "wnba", "seasons": [2024, 2025, 2026]},
 }
 
 # Ligas de fútbol importantes (códigos Football-Data). Usan Dixon-Coles.
@@ -254,6 +255,9 @@ def _load_training(code, refrescar=False):
     elif code == "NHL":
         from conector_nhl import build_nhl_training
         df = build_nhl_training(cfg["seasons"])
+    elif code == "WNBA":
+        from conector_wnba import build_wnba_training
+        df = build_wnba_training(cfg["seasons"])
     else:
         return pd.DataFrame()
 
@@ -278,6 +282,9 @@ def _fetch_upcoming_today(code, today):
     elif code == "NHL":
         from conector_nhl import fetch_nhl_upcoming
         up = fetch_nhl_upcoming()
+    elif code == "WNBA":
+        from conector_wnba import fetch_wnba_upcoming
+        up = fetch_wnba_upcoming(days=1)
     else:
         return pd.DataFrame()
     if up.empty:

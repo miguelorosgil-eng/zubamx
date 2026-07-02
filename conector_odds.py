@@ -17,6 +17,7 @@ SPORT_KEYS = {
     "MLB": "baseball_mlb",
     # Baloncesto
     "NBA": "basketball_nba",
+    "WNBA": "basketball_wnba",
     # Hockey
     "NHL": "icehockey_nhl",
     # Ligas de fútbol (clubes)
