@@ -1032,6 +1032,10 @@ def main():
         "market_trust": a.market_trust,
         "anchor_weight": 0.5,
         "max_divergence": a.max_div,
+        # Gates de totales asimétricos (reevaluación completa, ver config_deportes)
+        "max_divergence_totals": 0.28,   # OVER: valor viene de la divergencia
+        "max_divergence_under": 0.22,    # UNDER: el modelo sub-proyecta, más estricto
+        "over_confidence_premium": 0.05, # default; MLB/WNBA lo suben a 0.12
     }
 
     # P0.4: sobrescribir filtros por deporte si hay config
@@ -1045,6 +1049,9 @@ def main():
                 "edge_min":         _cfg["edge_min"],
                 "market_trust":     _cfg["market_trust"],
                 "max_picks_per_game": _cfg["max_picks_per_game"],
+                # Nuevos: piso ML y premium OVER por deporte (si la config los define)
+                "ml_floor":                _cfg.get("ml_floor"),
+                "over_confidence_premium": _cfg.get("over_confidence_premium", 0.05),
             }
 
     deportes_str = ", ".join(a.deportes + (a.futbol or []))

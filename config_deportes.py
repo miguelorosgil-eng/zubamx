@@ -26,6 +26,13 @@ SPORT_CONFIG = {
         # perdió 6-1). A 58% con la comisión de la casa el edge es diminuto y la
         # varianza del béisbol enorme — 58% no se distingue de 50% juego a juego.
         "ml_floor": 0.60,
+        # Premium OVER = 0.12 → piso OVER efectivo 0.75 (reevaluación completa).
+        # Los OVER de MLB rendían 3W-5L (-232). El modelo SUB-proyecta runs, así
+        # que solo hay que confiar en un OVER de altísima convicción (>=75%),
+        # cuando el modelo lo grita a pesar de su sesgo a la baja. Subir el piso
+        # de 0.68 a 0.75 convierte esa categoría de -232 a +87 en el histórico.
+        # ROI histórico total: +40% -> +74%.
+        "over_confidence_premium": 0.12,
         "edge_min": 0.035,
         "market_trust": 0.70,
         "kelly_fraction": 0.25,
@@ -37,6 +44,7 @@ SPORT_CONFIG = {
         "enabled_markets": None,
         "cf_floor": 0.62,
         "ml_floor": 0.60,
+        "over_confidence_premium": 0.12,
         "edge_min": 0.02,
         "market_trust": 0.45,
         "kelly_fraction": 0.25,
