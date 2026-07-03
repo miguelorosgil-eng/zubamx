@@ -22,8 +22,23 @@ SPORT_CONFIG = {
         # ML full-game desactivado — solo F5, NRFI y props K
         "enabled_markets": ["F5_ML", "F5_OU", "NRFI", "PROP-K", "RL"],
         "cf_floor": 0.66,
+        # Piso ML béisbol subido a 0.60 (lección 2026-07-02: Phillies ML @58.3%
+        # perdió 6-1). A 58% con la comisión de la casa el edge es diminuto y la
+        # varianza del béisbol enorme — 58% no se distingue de 50% juego a juego.
+        "ml_floor": 0.60,
         "edge_min": 0.035,
         "market_trust": 0.70,
+        "kelly_fraction": 0.25,
+        "max_picks_per_game": 1,
+        "clv_kill_threshold": -0.01,
+        "clv_min_picks": 50,
+    },
+    "WNBA": {
+        "enabled_markets": None,
+        "cf_floor": 0.62,
+        "ml_floor": 0.60,
+        "edge_min": 0.02,
+        "market_trust": 0.45,
         "kelly_fraction": 0.25,
         "max_picks_per_game": 1,
         "clv_kill_threshold": -0.01,
