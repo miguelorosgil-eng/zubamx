@@ -17,24 +17,40 @@ from mercados import prob_nrfi
 ODDS_API_KEY = "0e72a2907fb18699be347a6507f018b3"
 BASE = "https://api.the-odds-api.com/v4"
 
-# Tasa base real de YRFI (una carrera anota en la 1ª): 54% (backtest 445 juegos)
+# Tasa base real de YRFI (una carrera anota en la 1ª): 54% (backtest 603 juegos)
 BASE_YRFI = 0.54
 
 
+def clasificar_partido(era_home_sp, era_away_sp):
+    """
+    Regla ganadora del backtest segmentado (603 juegos). Clasifica el partido
+    según el ERA del pitcher MÁS FLOJO (max de los dos), que es lo que predice
+    si cae carrera en la 1ª:
+
+      max ERA >= 5.5  -> YRFI (SÍ carrera), acierta 67%
+      max ERA <= 4.0  -> NRFI (NO carrera), acierta 62%
+      en medio (4.0-5.5) -> NO apostar (volado, 54%)
+
+    Devuelve (lado, prob_real) o (None, None) si es zona media.
+    """
+    if era_home_sp is None or era_away_sp is None:
+        return None, None
+    max_era = max(era_home_sp, era_away_sp)
+    if max_era >= 5.5:
+        return "YRFI", 0.67
+    if max_era <= 4.0:
+        return "NRFI", 0.62
+    return None, None  # zona media: sin edge, no se apuesta
+
+
 def yrfi_calibrada(era_home_sp, era_away_sp):
-    """
-    Probabilidad REAL de YRFI, recalibrada con el backtest.
-    El modelo ERA crudo sobre-estima; se mapea a la realidad observada:
-      modelo >=0.60 -> 0.60 real | 0.55-0.60 -> 0.49 | <0.55 -> 0.40
-    """
-    p_nrfi, p_yrfi = prob_nrfi(era_home_sp, era_away_sp)
-    if p_yrfi is None:
-        return None
-    if p_yrfi >= 0.60:
-        return 0.60
-    if p_yrfi >= 0.55:
-        return 0.49
-    return 0.40
+    """Retrocompat: devuelve prob YRFI o None si es zona media."""
+    lado, prob = clasificar_partido(era_home_sp, era_away_sp)
+    if lado == "YRFI":
+        return prob
+    if lado == "NRFI":
+        return 1 - prob
+    return None
 
 
 def _events(date_str):
