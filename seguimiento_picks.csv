@@ -1,3 +1,10 @@
 fecha,deporte,mercado,partido,pick,pitcher_info,resultado_1i,acierto,notas
 2026-07-06,MLB,1er inning,Yankees @ Rays,NRFI (no carrera),Schlittler 2.08 / Jax 3.22 (ambos ases maxERA 3.2),0 carreras (NRFI),GANO,zona extrema ambos-ases
 2026-07-06,MLB,1er inning,Astros @ Nationals,YRFI (si carrera),Burrows 5.56 / Mikolas 5.87 (flojos maxERA 5.9),2 carreras (YRFI),GANO,zona extrema pitcher-flojo
+2026-07-07,MLB,1er inning,Colorado Rockies @ Los Angeles Dodgers,YRFI (si carrera),Lorenzen 6.91 / Wrobleski 2.8 (maxERA 6.9),,pendiente,fuerte-YRFI
+2026-07-07,MLB,1er inning,Houston Astros @ Washington Nationals,YRFI (si carrera),Imai 6.14 / Alvarez 3.05 (maxERA 6.1),,pendiente,fuerte-YRFI
+2026-07-07,MLB,1er inning,Boston Red Sox @ Chicago White Sox,YRFI (si carrera),Tolle 3.39 / Schultz 5.86 (maxERA 5.9),,pendiente,YRFI
+2026-07-07,MLB,1er inning,Athletics @ Detroit Tigers,NRFI (no carrera),Ginn 3.04 / Skubal 3.15 (maxERA 3.1),,pendiente,fuerte-NRFI
+2026-07-07,MLB,1er inning,Los Angeles Angels @ Texas Rangers,NRFI (no carrera),Soriano 3.42 / deGrom 3.48 (maxERA 3.5),,pendiente,fuerte-NRFI
+2026-07-07,MLB,1er inning,Atlanta Braves @ Pittsburgh Pirates,NRFI (no carrera),Waldrep 3.68 / Skenes 3.62 (maxERA 3.7),,pendiente,NRFI
+2026-07-07,MLB,1er inning,Cleveland Guardians @ Minnesota Twins,NRFI (no carrera),Cantillo 3.86 / Bradley 3.86 (maxERA 3.9),,pendiente,NRFI
