@@ -1,0 +1,3 @@
+fecha,deporte,mercado,partido,pick,pitcher_info,momio,resultado_1i,acierto,notas
+2026-07-06,MLB,1er inning,Yankees @ Rays,NRFI (no carrera),Schlittler 2.08 / Jax 3.22 (ambos ases maxERA 3.2),,,pendiente,revisar en Caliente momio>=1.70
+2026-07-06,MLB,1er inning,Astros @ Nationals,YRFI (si carrera),Burrows 5.56 / Mikolas 5.87 (flojos maxERA 5.9),,,pendiente,revisar en Caliente momio>=1.70
